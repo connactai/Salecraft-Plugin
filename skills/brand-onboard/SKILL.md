@@ -257,43 +257,44 @@ mcp_tool_call("landing_ai_mcp", "update_session", {
 })
 ```
 
-**Complete list of supported image fields** (use the ones matching your industry):
+**Step 0: Determine industry category FIRST** — this decides which image fields to ask for.
 
-**General (all industries)**:
-| Field | Description |
-|-------|-------------|
-| `product_images` | Main product photos |
-| `base_description_images` | Product description reference |
-| `phase1_notes_images` | Additional notes/references |
-| `landing_page_images` | Existing landing page screenshots |
-| `inner_packaging_images` | Inner packaging |
-| `outer_packaging_images` | Outer packaging |
-| `ingredients_images` | Ingredient list photos |
-| `device_angle_images` | Device/product angle shots |
-| `spec_sheet_images` | Specification documents |
-| `texture_images` | Product texture close-ups |
-| `before_after_images` | Before/after comparison |
-| `handheld_product_images` | Handheld product shots |
-| `handheld_outer_packaging_images` | Handheld outer packaging |
-| `handheld_inner_packaging_images` | Handheld inner packaging |
-| `handheld_container_images` | Handheld container |
-| `handheld_swatch_images` | Handheld color swatches |
-| `product_closeup_images` | Product close-up |
-| `packaging_images` | General packaging |
-| `certification_images` | Certification/awards |
-| `screenshot_images` | App/software screenshots |
-| `mockup_images` | Design mockups |
+The user's `industry_category` (set during brand creation) determines the relevant fields.
+Only ask for images that match their industry. DO NOT show all 50+ fields.
 
-**Cosmetics**: `cosmetic_product_images`
-**Food/Agriculture**: `harvest_images`, `farmer_story_images`, `handheld_produce_images`, `handheld_packaging_images`
-**Publishing**: `cover_images`, `sample_page_images`, `author_images`
-**Biotech**: `biotech_lab_images`, `biotech_cert_images`, `biotech_product_images`
-**Restaurant**: `restaurant_exterior_images`, `restaurant_interior_images`, `dish_images`, `menu_images`
-**Medical Aesthetics**: `clinic_images`, `procedure_before_after_images`, `doctor_team_images`, `medical_cert_images`
-**Person/Consultant**: `portrait_images`, `portfolio_images`, `event_speaking_images`
-**Film**: `film_still_images`, `poster_images`, `behind_scenes_images`, `cast_images`
-**Real Estate**: `property_exterior_images`, `property_interior_images`, `floor_plan_images`, `amenity_images`, `location_images`
-**Automotive**: `vehicle_exterior_images`, `vehicle_interior_images`, `vehicle_engine_images`, `vehicle_action_images`
+**Always ask (all industries):**
+- `product_images` — Main product/service photos
+- `certification_images` — Awards, certifications (if any)
+
+**Then ask ONLY the industry-specific fields:**
+
+| industry_category | Additional fields to ask |
+|-------------------|------------------------|
+| `cosmetics` | `cosmetic_product_images`, `texture_images`, `before_after_images`, `ingredients_images`, `handheld_product_images`, `inner_packaging_images`, `outer_packaging_images` |
+| `food`, `healthy_meals` | `harvest_images`, `farmer_story_images`, `handheld_produce_images`, `packaging_images`, `ingredients_images` |
+| `supplements`, `biotech` | `biotech_lab_images`, `biotech_cert_images`, `biotech_product_images`, `ingredients_images`, `spec_sheet_images` |
+| `restaurant` | `restaurant_exterior_images`, `restaurant_interior_images`, `dish_images`, `menu_images` |
+| `medical_aesthetics` | `clinic_images`, `procedure_before_after_images`, `doctor_team_images`, `medical_cert_images` |
+| `person`, `consultant` | `portrait_images`, `portfolio_images`, `event_speaking_images` |
+| `film` | `film_still_images`, `poster_images`, `behind_scenes_images`, `cast_images` |
+| `property`, `real_estate` | `property_exterior_images`, `property_interior_images`, `floor_plan_images`, `amenity_images`, `location_images` |
+| `automotive` | `vehicle_exterior_images`, `vehicle_interior_images`, `vehicle_engine_images`, `vehicle_action_images` |
+| `software`, `electronics` | `screenshot_images`, `mockup_images`, `device_angle_images`, `spec_sheet_images` |
+| `education` | `screenshot_images`, `portfolio_images`, `event_speaking_images` |
+| `fashion` | `handheld_product_images`, `texture_images`, `before_after_images`, `inner_packaging_images` |
+| `general` (fallback) | `product_closeup_images`, `packaging_images`, `before_after_images` |
+
+**Example conversation for `person` industry:**
+```
+Your brand is categorized as "person" (personal brand).
+For the best LP, I need these images:
+
+1. 📸 Portrait photo — professional headshot or graduation photo
+2. 💼 Portfolio images — screenshots of your best projects
+3. 🎤 Event/speaking images — conference talks, presentations (if any)
+
+Which ones do you have? You can provide file paths or URLs.
+```
 
 **Special entries (NOT in wizard_shared_data)**:
 | Asset | Where | Tool |
