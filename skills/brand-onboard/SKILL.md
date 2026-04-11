@@ -248,14 +248,29 @@ mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
 
 ### Wizard Generation (初次生成) — put URL into session via `wizard_shared_data`
 
-Upload `public_url` into session using `update_session`:
+Upload `public_url` into session using `update_session`.
+
+**⚠️ CRITICAL: `wizard_shared_files` vs `wizard_shared_data` — different purposes!**
+
+| What | Where | Format |
+|------|-------|--------|
+| Product images (main) | `wizard_shared_files.product_images` | `["url1", "url2"]` (array) |
+| Logo | `wizard_shared_files.logo_image` | `"url"` (single string, NOT array) |
+| Evidence/certs | `wizard_shared_files.evidence_images` | `["url1"]` (array) |
+| Spokesperson faces | `wizard_shared_data.spokesperson_faces` | `["url1"]` (array) |
+| Industry-specific images | `wizard_shared_data.{field}_images` | `["url1"]` (array) |
+
+Example — uploading product images + logo:
 ```
 mcp_tool_call("landing_ai_mcp", "update_session", {
   "user_token": token,
   "session_id": session_id,
-  "data_json": "{\"wizard_shared_data\": {\"product_images\": [\"url1\", \"url2\"]}}"
+  "data_json": "{\"wizard_shared_files\": {\"product_images\": [\"url1\", \"url2\"], \"logo_image\": \"url3\"}, \"wizard_shared_data\": {\"spokesperson_faces\": [\"url4\"]}}"
 })
 ```
+
+**Brand auto-enrichment**: When `create_session` is called with a brand that has
+spokesperson/logo assets, they are auto-injected. In `update_session`, you must pass explicitly.
 
 **Step 0: Determine industry category FIRST** — this decides which image fields to ask for.
 
@@ -296,12 +311,19 @@ For the best LP, I need these images:
 Which ones do you have? You can provide file paths or URLs.
 ```
 
-**Special entries (NOT in wizard_shared_data)**:
-| Asset | Where | Tool |
-|-------|-------|------|
-| Logo | `wizard_shared_files.logo_image` (single URL, not array) | `update_session` |
-| Evidence/certs | `wizard_shared_files.evidence_images[]` | `update_session` |
-| Spokesperson | `create_spokesperson(photo_urls)` | Separate MCP tool |
+### Regeneration (重新生成) — put URL into regenerate_stripe params
+
+| Asset | Parameter | Example |
+|-------|-----------|---------|
+| Style reference | `reference_image_urls_json` | `'["https://...style.jpg"]'` |
+| Text override | `mandatory_text_overrides_json` | `'{"headline": "New"}'` |
+
+⚠️ Do NOT put regeneration reference images into `wizard_shared_files` — they go directly into `regenerate_stripe` params.
+
+### Spokesperson — two valid paths
+
+1. **`create_spokesperson` MCP tool** — creates a named spokesperson entity on the brand. Auto-injected on `create_session`.
+2. **`wizard_shared_data.spokesperson_faces`** — direct URL array in session. Use when skipping brand spokesperson setup.
 
 ### Regeneration (重新生成) — put URL into regenerate_stripe
 
