@@ -110,15 +110,40 @@ mcp_tool_call("landing_ai_mcp", "undo_stripe", {
 
 ## Editing Workflow
 
-### Step 1: Understand the request
-Parse what the user wants. If ambiguous, ask:
-- "Which stripe do you want to edit? (1=hero, 2=features, 3=testimonial, 4=CTA)"
-- "What should the new text say?"
+### Step 1: Understand the request + LOOK AT THE IMAGE
+Parse what the user wants. **You MUST look at the current stripe image** (via `download_stripe` or the sales page) to understand the visual layout before deciding which tool/params to use.
 
-### Step 2: Execute the edit
+**Decision tree for regeneration:**
+- User wants to **change text content only** (no visual change) → use `update_stripe_texts`
+- User wants to **remove or modify a specific visual element** → use `regenerate_stripe` with `rect_annotations_json` to red-box the exact area
+- User wants a **full visual redesign** → use `regenerate_stripe` with `user_feedback`
+
+### Step 2: Use red-box annotations for precision (IMPORTANT)
+
+When the user points to a specific area ("remove that subtitle", "move this text", "delete that element"), you MUST:
+
+1. **Look at the stripe image** to identify the element's position
+2. **Calculate normalized coordinates** (0.0-1.0) for the target area
+3. **Use `rect_annotations_json`** to mark it precisely
+
+Example — removing a repeated subtitle at the bottom 30% of the stripe:
+```
+mcp_tool_call("landing_ai_mcp", "regenerate_stripe", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 7,
+  "user_feedback": "移除紅框內的重複副標題文字",
+  "rect_annotations_json": "[{\"x\": 0.05, \"y\": 0.65, \"width\": 0.9, \"height\": 0.15, \"color\": \"#EF4444\", \"notes\": \"移除此區域的重複文字\"}]",
+  "mandatory_text_overrides_json": "{\"subheadline\": \"\"}"
+})
+```
+
+**DO NOT** rely solely on natural language like "remove the subtitle" — the AI image generator needs visual coordinates to know WHERE to act.
+
+### Step 3: Execute the edit
 Call the appropriate MCP tool with exact parameters.
 
-### Step 3: Verify the result
+### Step 4: Verify the result
 ```
 mcp_tool_call("landing_ai_mcp", "get_stripe_detail", {
   "user_token": token,
