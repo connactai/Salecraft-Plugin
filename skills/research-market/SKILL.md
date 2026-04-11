@@ -36,15 +36,17 @@ mcp__claude_ai_Service_System_Deep_Research__mcp_tool_call(
 )
 ```
 
-| MCP | Best For | Key Tools |
+| MCP | Best For | Key Tools (prefixed names!) |
 |-----|----------|-----------|
 | `google_trends_mcp` | News & trending topics | `get_trending_terms`, `get_news_by_keyword`, `get_news_by_topic`, `get_top_news`, `get_news_by_location` |
-| `x_mcp` | Real-time sentiment | search posts, user profiles, timelines |
-| `reddit_mcp` | Community pain points | search posts, subreddit discovery, comments |
-| `tiktok_mcp` | Gen-Z trends | video search, trending hashtags, creator profiles |
-| `youtube_mcp` | Video content patterns | search videos, channel info, trending |
-| `linkedin_mcp` | B2B audience | company search, people search, company posts |
-| `meta_mcp` | Social engagement | Instagram hashtag, user profiles, Facebook pages |
+| `x_mcp` | Real-time sentiment | `x_search_recent`(min 10), `x_get_user`, `x_get_timeline`, `x_batch_users` |
+| `reddit_mcp` | Community pain points | `reddit_search_posts`, `reddit_get_subreddit_info`, `reddit_get_post_comments`, `reddit_search_subreddits`, `reddit_trending_posts` |
+| `tiktok_mcp` | Gen-Z trends | `tiktok_search_videos`(param: query), `tiktok_trending_hashtags`, `tiktok_get_video_info`, `tiktok_get_creator_profile` |
+| `youtube_mcp` | Video content patterns | `youtube_search_videos`(min 5), `youtube_get_video_details`, `youtube_get_channel_info`, `youtube_trending_videos` |
+| `linkedin_mcp` | B2B audience | `linkedin_search_companies`, `linkedin_get_company_info`, `linkedin_get_company_posts`, `linkedin_search_people` |
+| `meta_mcp` | Social engagement | `instagram_search_hashtags`, `instagram_get_user_profile`, `instagram_get_user_media`, `facebook_search_pages`, `facebook_get_page_posts` |
+
+**IMPORTANT**: Research MCP tools use **prefixed names** (e.g., `x_search_recent` not `search_recent`). Some have minimum parameter values (X: max_results≥10, YouTube: max_results≥5). Most require API keys configured in the Service System.
 
 ## Research Workflow
 
@@ -73,40 +75,42 @@ mcp_tool_call("google_trends_mcp", "get_trending_terms", {})
 
 #### Sentiment Analysis (X/Twitter)
 ```
-mcp_tool_call("x_mcp", "search_recent", {
+mcp_tool_call("x_mcp", "x_search_recent", {
   "query": "product OR brand OR category",
-  "max_results": 50
+  "max_results": 10
 })
 → Recent posts, sentiment, common themes
+// NOTE: max_results minimum is 10. Requires X API key.
 ```
 
 #### Pain Points (Reddit)
 ```
-mcp_tool_call("reddit_mcp", "search_posts", {
+mcp_tool_call("reddit_mcp", "reddit_search_posts", {
   "query": "problem with [category]",
-  "subreddit": "relevant_subreddit",
   "sort": "relevance"
 })
 → Real user complaints, desires, recommendations
+// NOTE: Requires REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET.
 ```
 
 #### Trending Content (TikTok)
 ```
-mcp_tool_call("tiktok_mcp", "search_videos", {
-  "keyword": "product category",
-  "max_results": 20
+mcp_tool_call("tiktok_mcp", "tiktok_search_videos", {
+  "query": "product category"
 })
 → Popular videos, hashtags, content formats
+// NOTE: Parameter is "query" not "keyword". Requires TIKTOK_CLIENT_KEY.
 ```
 
 #### Competitor Analysis (YouTube + LinkedIn)
 ```
-mcp_tool_call("youtube_mcp", "search_videos", {
+mcp_tool_call("youtube_mcp", "youtube_search_videos", {
   "query": "competitor brand review",
-  "max_results": 10
+  "max_results": 5
 })
+// NOTE: max_results minimum is 5. Requires YOUTUBE_API_KEY.
 
-mcp_tool_call("linkedin_mcp", "company_search", {
+mcp_tool_call("linkedin_mcp", "linkedin_search_companies", {
   "keywords": "competitor company name"
 })
 → Company profile, recent posts, employee count

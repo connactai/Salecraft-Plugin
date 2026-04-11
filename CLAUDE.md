@@ -141,8 +141,9 @@ regenerate_stripe(user_token, campaign_id, stripe_idx: int) -> regenerated_strip
 update_stripe_text_styling(user_token, campaign_id, stripe_idx, styling_json) -> updated
 update_stripe_background(user_token, campaign_id, stripe_idx, ...) -> updated
 update_image_layers(user_token, campaign_id, stripe_idx, ...) -> updated
-set_stripe_overlay(user_token, campaign_id, stripe_idx, overlay_json) -> updated
-set_stripe_soft_edge(user_token, campaign_id, stripe_idx, ...) -> updated
+set_stripe_overlay(user_token, campaign_id, stripe_idx, enabled: bool, overlay_json) -> updated
+set_stripe_soft_edge(user_token, campaign_id, stripe_idx, enabled: bool, soft_edge_json) -> updated
+# NOTE: Both require `enabled` as a mandatory parameter (true to apply, false to remove).
 crop_stripe(user_token, campaign_id, stripe_idx, crop_json) -> updated
 reset_crop(user_token, campaign_id, stripe_idx) -> updated
 undo_stripe(user_token, campaign_id, stripe_idx) -> previous_state

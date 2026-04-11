@@ -68,8 +68,8 @@ mcp_tool_call("landing_ai_mcp", "update_stripe_text_styling", {
 |-----------|------|
 | "Change the background image" | `update_stripe_background` |
 | "Replace the product photo" | `update_image_layers` |
-| "Add a dark overlay" | `set_stripe_overlay` |
-| "Add a gradient fade" | `set_stripe_soft_edge` |
+| "Add a dark overlay" | `set_stripe_overlay` (requires `enabled` param!) |
+| "Add a gradient fade" | `set_stripe_soft_edge` (requires `enabled` param!) |
 | "Crop this stripe" | `crop_stripe` |
 | "Reset the crop" | `reset_crop` |
 
@@ -77,7 +77,7 @@ mcp_tool_call("landing_ai_mcp", "update_stripe_text_styling", {
 
 | User says | Tool |
 |-----------|------|
-| "Move stripe 3 to the top" | `reorder_stripes` |
+| "Move stripe 3 to the top" | `reorder_stripes` (order_json must be object format) |
 | "Hide the testimonial stripe" | `hide_stripe` |
 | "Bring back the hidden stripe" | `restore_stripe` |
 | "Completely redo stripe 2" | `regenerate_stripe` |
