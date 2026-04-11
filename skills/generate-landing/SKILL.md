@@ -215,10 +215,52 @@ If user selected "both" in Phase 2:
 Which version would you like to edit first?
 ```
 
+## Phase 6: Provide Preview Links (MANDATORY)
+
+After generation completes, you MUST give the user clickable preview links:
+
+### Step 1: Create share token
+```
+mcp_tool_call("landing_ai_mcp", "create_share_token", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+→ Returns: { "share_token": "abc123" }
+```
+
+### Step 2: Get public landing page data
+```
+mcp_tool_call("landing_ai_mcp", "get_public_landing_page", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+→ Returns: full LP config with stitched_image_url and per-stripe background_urls
+```
+
+### Step 3: Present to user
+```
+✅ LP 生成完畢！
+
+📄 完整長圖預覽:
+{stitched_image_url}
+
+📑 各頁 Stripe 預覽:
+1. {gra_tis_stripes[0].background_url} — {stripes[0].headline}
+2. {gra_tis_stripes[1].background_url} — {stripes[1].headline}
+... (list all stripes)
+
+🔗 分享連結 Token: {share_token}
+```
+
+**This step is critical** — the user needs to SEE the LP before deciding to edit.
+If multiple LPs were generated, provide links for ALL of them.
+
 ## Output
 
 Store for subsequent phases:
 - `session_id` — for content import (publishing)
 - `campaign_id` — for editing and export (primary identifier)
-- `landing_page_id` — for homepage embedding
+- `share_token` — for public sharing
 - `stripe_count` — number of generated stripes
+- `stitched_image_url` — full LP preview image
+- `stripe_urls[]` — per-stripe preview images

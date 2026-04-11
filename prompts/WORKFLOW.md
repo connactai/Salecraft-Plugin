@@ -93,7 +93,12 @@ Phase 6b: Ad Campaigns [publish-ads]
    ```
 5. Retrieve stripes: `list_stripes(user_token, session_id)` → verify all generated
 6. Quality check: inspect each stripe for completeness
-7. If generating both aspect ratios: repeat steps 1-6 for the second ratio
+7. **MANDATORY: Provide preview links to the user**:
+   - Call `create_share_token(user_token, campaign_id)` → get share_token
+   - Call `get_public_landing_page(user_token, campaign_id)` → get stitched_image_url + per-stripe URLs
+   - Present ALL links to the user (full LP image + each stripe image)
+   - User MUST see the LP before deciding to edit or proceed
+8. If generating both aspect ratios: repeat steps 1-7 for the second ratio
 
 **Progress reporting**: Show which agent is currently active (Strategist → Architect → Factory → Reflector).
 
