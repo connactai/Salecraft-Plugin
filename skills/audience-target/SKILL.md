@@ -133,16 +133,40 @@ B) Use single aspect ratio (halves cost)
 C) Contact admin for more credits
 ```
 
-## Phase 5: Confirmation
+## Phase 5: Save TAs to Session (CRITICAL)
 
-On user confirmation, store and pass forward:
+After user confirms, save the selected TAs into the session:
+
+### Step 1: Save via update_session
+```
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session_id,
+  "data_json": "{\"wizard_ta_groups\": [<selected TA objects with ta_name, ta_description, fabt_*, spokesperson_prompt, etc.>]}"
+})
+```
+
+### Step 2: Verify TAs are assigned
+```
+mcp_tool_call("landing_ai_mcp", "get_ta_statuses", {
+  "user_token": token,
+  "session_id": session_id
+})
+→ Returns: [{ "ta_group_id": "ta_1", ... }]
+```
+
+Record `ta_group_id` values — these are needed for `generate_session`.
+
+## Phase 6: Pass Forward
+
+Store and pass to Phase 3 (generate-landing):
 - `ta_groups`: array of selected TA configs
+- `ta_group_ids`: IDs from get_ta_statuses (e.g., `["ta_1"]`)
 - `aspect_ratio`: "16:9" | "9:16" | "both"
 - `locale`: user's preferred language
 - `brand_id`: from Phase 1
+- `session_id`: from create_session (created in Phase 3 or here)
 - `user_token`: JWT
-
-These are the inputs for Phase 3 (generate-landing).
 
 ## Optional: Market Research Enhancement
 

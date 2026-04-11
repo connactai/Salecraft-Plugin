@@ -41,12 +41,13 @@ mcp_tool_call("landing_ai_mcp", "get_landing_page", {
 ### Get stripe image URLs (for image embed strategy)
 ```
 // For each stripe:
-mcp_tool_call("landing_ai_mcp", "get_export_image_url", {
+mcp_tool_call("landing_ai_mcp", "download_stripe", {
   "user_token": token,
   "campaign_id": campaign_id,
   "stripe_idx": 0  // 0, 1, 2, ...
 })
-→ Returns: downloadable image URL (PNG/WebP)
+→ Returns: { "download_url": "https://...", "method": "GET", "auth_header": "Bearer eyJ...", "content_type": "image/png" }
+// NOTE: You must fetch the download_url with the auth_header to get the actual image.
 ```
 
 ### Get full HTML (for iframe embed strategy)

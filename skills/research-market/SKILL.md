@@ -38,7 +38,7 @@ mcp__claude_ai_Service_System_Deep_Research__mcp_tool_call(
 
 | MCP | Best For | Key Tools |
 |-----|----------|-----------|
-| `google_trends_mcp` | Search trend validation | trend search, related queries, geographic interest |
+| `google_trends_mcp` | News & trending topics | `get_trending_terms`, `get_news_by_keyword`, `get_news_by_topic`, `get_top_news`, `get_news_by_location` |
 | `x_mcp` | Real-time sentiment | search posts, user profiles, timelines |
 | `reddit_mcp` | Community pain points | search posts, subreddit discovery, comments |
 | `tiktok_mcp` | Gen-Z trends | video search, trending hashtags, creator profiles |
@@ -62,12 +62,13 @@ Based on the product/brand, formulate 3-5 questions:
 
 #### Trend Validation (Google Trends)
 ```
-mcp_tool_call("google_trends_mcp", "search_trends", {
-  "keyword": "product category",
-  "timeframe": "today 12-m",
-  "geo": "TW"
+mcp_tool_call("google_trends_mcp", "get_news_by_keyword", {
+  "keyword": "product category"
 })
-→ Interest over time, related queries, rising topics
+→ Related news articles and trending content
+
+mcp_tool_call("google_trends_mcp", "get_trending_terms", {})
+→ Currently trending search terms
 ```
 
 #### Sentiment Analysis (X/Twitter)

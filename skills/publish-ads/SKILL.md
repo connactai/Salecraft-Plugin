@@ -66,11 +66,11 @@ Present:
 ```
 Campaign Objective:
 
-A) 👁 Awareness — Get your brand seen by new people
-B) 🔗 Traffic — Drive visitors to your landing page
-C) 💰 Conversions — Optimize for purchases/sign-ups
-D) 📝 Leads — Collect contact information
-E) 📲 App Installs — Drive app downloads
+A) 👁 OUTCOME_AWARENESS — Get your brand seen by new people
+B) 🔗 OUTCOME_TRAFFIC — Drive visitors to your landing page
+C) 💬 OUTCOME_ENGAGEMENT — Likes, comments, shares
+D) 📝 OUTCOME_LEADS — Collect contact information
+E) 💰 OUTCOME_SALES — Optimize for purchases
 
 Recommendation: [based on TA and product type]
 - New brand → Awareness
@@ -93,25 +93,19 @@ mcp_tool_call("zereo_social_mcp", "get_cta_types", {
 mcp_tool_call("landing_ai_mcp", "generate_ad", {
   "user_token": token,
   "session_id": session_id,
-  "platform": "meta"  // or "google"
+  "data_json": "{\"platform\": \"meta\"}"  // platform goes INSIDE data_json
 })
-→ Returns: { "task_id": "..." }
+→ Returns: { "project_id": "..." }
 ```
 
 ### Poll for creative completion
 ```
 mcp_tool_call("landing_ai_mcp", "get_ad_result", {
   "user_token": token,
-  "task_id": task_id
+  "session_id": session_id,
+  "project_id": project_id  // NOT task_id
 })
-→ Returns: {
-  "status": "complete",
-  "creative_id": "...",
-  "variants": [
-    { "headline": "...", "description": "...", "image_url": "..." },
-    { "headline": "...", "description": "...", "image_url": "..." }
-  ]
-}
+→ Returns: ad generation result with creative assets
 ```
 
 Present creative variants:

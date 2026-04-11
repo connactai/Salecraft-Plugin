@@ -38,6 +38,7 @@ mcp_tool_call(server_name="landing_ai_mcp", tool_name="login", arguments={"email
 ```
 
 Store the `access_token` as `user_token` for all subsequent calls.
+**Note**: Login returns `access_token` + `token_type` only (no refresh_token). On 401, simply re-login.
 
 ## Session State
 
@@ -61,7 +62,7 @@ Track these across the workflow:
 
 ## Error Handling
 
-- **401 Unauthorized**: Token expired → call `refresh_tokens`
+- **401 Unauthorized**: Token expired → re-call `login` (no refresh_token available)
 - **402 Payment Required**: Insufficient credits → inform user, show balance
 - **429 Rate Limited**: Wait and retry (Gemini rate limits)
 - **500 Server Error**: Report to user, suggest retry

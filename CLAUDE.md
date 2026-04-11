@@ -62,7 +62,7 @@ mcp_tool_call(server_name="landing_ai_mcp", tool_name="login", arguments={"email
 | `audience-target` | 2 | `landing_ai_mcp` | `generate_ta_options`, `get_me`, `get_generation_settings` |
 | `generate-landing` | 3 | `landing_ai_mcp` | `create_session`, `generate_session`, `get_session`, `list_stripes` |
 | `edit-landing` | 4 | `landing_ai_mcp` | `update_stripe_texts`, `regenerate_stripe`, `crop_stripe`, `undo_stripe` |
-| `homepage-builder` | 5 | `landing_ai_mcp` | `export_html`, `get_export_image_url`, `get_landing_page` |
+| `homepage-builder` | 5 | `landing_ai_mcp` | `export_html`, `download_stripe`, `get_landing_page` |
 | `publish-social` | 6a | `zereo_social_mcp` | `list_accounts`, `publish_multi`, `suggest_schedule` |
 | `publish-ads` | 6b | `zereo_social_mcp` + `landing_ai_mcp` | `create_ad_campaign`, `generate_ad`, `get_ad_objectives` |
 | `i18n-adapt` | any | `landing_ai_mcp` | `update_stripe_texts`, `update_stripe_text_styling`, `regenerate_stripe` |
@@ -98,7 +98,8 @@ mcp_tool_call(server_name="landing_ai_mcp", tool_name="login", arguments={"email
 
 ### Authentication
 ```
-login(email: str, password: str) -> { access_token, refresh_token }
+login(email: str, password: str) -> { access_token, token_type: "bearer" }
+# NOTE: No refresh_token returned. Token expires in ~12 hours. Re-login when 401.
 ```
 
 ### Brand
@@ -118,7 +119,11 @@ update_session(user_token, session_id, ...) -> updated_session
 get_session(user_token, session_id) -> { status, stripes[], ... }
 generate_ta_options(user_token, brand_name, description, industry_category, product_name?, ..., ui_locale="zh-TW") -> ta_options[]
 get_generation_settings(user_token) -> settings
-generate_session(user_token, session_id) -> { status: "generating" }
+generate_session(user_token, session_id, ta_group_ids_json, requested_stripe_count?) -> { status: "processing", project_ids[] }
+# IMPORTANT: Before calling generate_session, you MUST:
+# 1. Call update_session with wizard_ta_groups data (from generate_ta_options output)
+# 2. Call get_ta_statuses to get the auto-assigned ta_group_id values
+# 3. Pass those IDs as ta_group_ids_json: '["ta_1"]'
 get_me(user_token) -> { credits_remaining, tier, ... }
 ```
 
@@ -152,7 +157,10 @@ update_faq_content(user_token, campaign_id, faq_json) -> updated
 ### Landing Page Export
 ```
 export_html(user_token, campaign_id) -> html_string
-get_export_image_url(user_token, campaign_id, stripe_idx: int) -> image_url
+download_stripe(user_token, campaign_id, stripe_idx: int) -> { download_url, method, auth_header }
+download_all_stripes(user_token, campaign_id) -> { download_url, ... }
+export_landing_image(user_token, campaign_id) -> { download_url, ... }
+# NOTE: download_stripe returns a URL that requires the auth_header to fetch the actual image.
 ```
 
 ### Publishing
@@ -177,8 +185,10 @@ list_ad_campaigns(user_token) -> campaigns[]
 get_ad_campaign(user_token, campaign_id, refresh?) -> campaign_status
 pause_ad_campaign(user_token, campaign_id) -> result
 resume_ad_campaign(user_token, campaign_id) -> result
-generate_ad(user_token, session_id, platform) -> { task_id }
-get_ad_result(user_token, task_id) -> { status, creative_id, variants[] }
+generate_ad(user_token, session_id, data_json) -> { project_id, ... }
+# data_json example: '{"platform": "meta"}' — platform goes INSIDE data_json
+get_ad_result(user_token, session_id, project_id) -> { status, creative, ... }
+# NOTE: Uses session_id + project_id, NOT task_id
 ```
 
 ## Aspect Ratio Support

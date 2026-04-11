@@ -73,17 +73,44 @@ mcp_tool_call("landing_ai_mcp", "update_session", {
 })
 ```
 
+## Phase 2.5: Save TA Groups to Session (CRITICAL)
+
+Before generation, TA options must be saved into the session:
+
+### Step 1: Save selected TAs
+```
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session_id,
+  "data_json": "{\"wizard_ta_groups\": [<selected TA objects from generate_ta_options>]}"
+})
+```
+
+### Step 2: Get assigned TA group IDs
+```
+mcp_tool_call("landing_ai_mcp", "get_ta_statuses", {
+  "user_token": token,
+  "session_id": session_id
+})
+→ Returns: [{ "ta_group_id": "ta_1", "ta_name": "...", ... }]
+```
+
 ## Phase 3: Trigger Generation
 
 ```
 mcp_tool_call("landing_ai_mcp", "generate_session", {
   "user_token": token,
-  "session_id": session_id
+  "session_id": session_id,
+  "ta_group_ids_json": "[\"ta_1\"]",
+  "requested_stripe_count": 8
 })
-→ Returns: { "status": "generating" }
+→ Returns: { "message": "Started generation...", "status": "processing", "project_ids": ["..."] }
 ```
 
-**Important**: This is an async operation. The backend runs the 4-agent pipeline which takes 30-120 seconds.
+**Important**:
+- `ta_group_ids_json` is REQUIRED — JSON array of IDs from Phase 2.5 Step 2.
+- `requested_stripe_count`: set to 8 for 8-page LP (0 = backend default ~10).
+- This is an async operation. The backend runs the 4-agent pipeline which takes 30-120 seconds.
 
 ## Phase 4: Poll for Completion
 

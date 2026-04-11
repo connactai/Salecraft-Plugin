@@ -165,12 +165,13 @@ mcp_tool_call("landing_ai_mcp", "export_html", {
 
 ### Export stripe image
 ```
-mcp_tool_call("landing_ai_mcp", "get_export_image_url", {
+mcp_tool_call("landing_ai_mcp", "download_stripe", {
   "user_token": token,
   "campaign_id": campaign_id,
   "stripe_idx": 0
 })
-→ Returns: downloadable image URL
+→ Returns: { "download_url": "https://...", "auth_header": "Bearer ...", "content_type": "image/png" }
+// Fetch the download_url with the auth_header to get the actual image file.
 ```
 
 ## Conversation Tips

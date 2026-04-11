@@ -34,14 +34,16 @@ mcp_tool_call(
 )
 ```
 
-### Step 3: Refresh (on 401)
+### Step 3: Re-login (on 401)
 ```
+# NOTE: login does NOT return a refresh_token. When you get 401, simply re-login:
 mcp_tool_call(
   server_name = "landing_ai_mcp",
-  tool_name   = "refresh_tokens",
-  arguments   = { "refresh_token": "eyJ..." }
+  tool_name   = "login",
+  arguments   = { "email": "...", "password": "..." }
 )
-→ Returns: new { "access_token": "eyJ...", "refresh_token": "eyJ..." }
+→ Returns: new { "access_token": "eyJ...", "token_type": "bearer" }
+# Token expires in ~12 hours.
 ```
 
 ## Common Patterns
@@ -57,13 +59,29 @@ session = mcp_tool_call("landing_ai_mcp", "create_session", {
   "base_description": "Premium widget for professionals"
 })
 
-# 2. Trigger
-mcp_tool_call("landing_ai_mcp", "generate_session", {
+# 2. Save TA groups to session
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session.id,
+  "data_json": json.dumps({"wizard_ta_groups": [selected_ta_from_generate_ta_options]})
+})
+
+# 3. Get TA group IDs
+ta_statuses = mcp_tool_call("landing_ai_mcp", "get_ta_statuses", {
   "user_token": token,
   "session_id": session.id
 })
+# Extract ta_group_id values, e.g. ["ta_1"]
 
-# 3. Poll (every 5 seconds, max 60 times)
+# 4. Trigger generation
+mcp_tool_call("landing_ai_mcp", "generate_session", {
+  "user_token": token,
+  "session_id": session.id,
+  "ta_group_ids_json": json.dumps(["ta_1"]),
+  "requested_stripe_count": 8
+})
+
+# 5. Poll (every 10 seconds, max 30 times = 5 min)
 while True:
   status = mcp_tool_call("landing_ai_mcp", "get_session", {
     "user_token": token,
