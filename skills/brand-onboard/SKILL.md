@@ -173,7 +173,33 @@ Ask ALL of the following:
 - What should the CTA button say? ("View My Work", "Let's Talk", "Hire Me", etc.)
 - Any information you explicitly DON'T want shown?
 
-### User Photos → Spokesperson (IMPORTANT)
+### Spokesperson Explanation & Photo Collection (CRITICAL — must explain to user)
+
+**What is a spokesperson?**
+The LP uses a "spokesperson" — a person's image that appears across multiple stripes
+as the visual face of the brand. This could be:
+
+1. **User's own photo** — their headshot, graduation photo, professional portrait
+2. **AI-generated person** — the system auto-generates a fictional person based on the TA description
+3. **No person** — text + graphics only, no human face
+
+**You MUST proactively explain this to the user BEFORE generation:**
+```
+Your LP will include a "spokesperson" — a person who appears across the page
+as the visual face of your brand. You have 3 options:
+
+1. 📸 Use YOUR photo — upload your headshot/portrait, and YOU appear in the LP
+   (Best for personal brands, CVs, portfolios)
+2. 🤖 AI-generated person — the system creates a fictional person matching your target audience
+   (Best for product/service brands where the "face" is not you)
+3. 🚫 No person — pure text, graphics, and product images only
+
+Which do you prefer?
+```
+
+**If user chooses option 1** → upload their photo as spokesperson:
+**If user chooses option 2** → leave it to the generation pipeline (default)
+**If user chooses option 3** → note this preference for the session config
 
 If the user provides a personal photo (headshot, portrait, graduation photo, etc.),
 **upload it as a spokesperson** — it will appear in the LP as the "face" of the brand:
@@ -188,18 +214,30 @@ mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
 })
 ```
 
-Or if the photo is a local file, first upload it as a brand asset:
+**For local files** — MCP doesn't support multipart upload. Use curl instead:
+```bash
+curl -X POST "https://marketing-backend-v2-876464738390.asia-east1.run.app/brands/{brand_id}/assets/upload" \
+  -H "Authorization: Bearer {user_token}" \
+  -F "files=@/path/to/photo.jpg" \
+  -F "asset_type=spokesperson"
 ```
-mcp_tool_call("landing_ai_mcp", "upload_brand_asset", {
+
+**For URLs** (photo already online):
+```
+mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
   "user_token": token,
   "brand_id": brand_id,
-  "asset_type": "spokesperson",
-  "file_url": "<photo_url>"
+  "name": "User Name",
+  "description": "Professional headshot",
+  "photo_urls": ["https://example.com/photo.jpg"]
 })
 ```
 
 **DO NOT ignore user photos.** If they give you a photo, it MUST be used as spokesperson.
 The LP Factory agent will incorporate the spokesperson into stripe images.
+
+⚠️ **KNOWN LIMITATION**: `upload_brand_asset` MCP tool is a stub — it does NOT actually upload.
+Always use the `curl` method for local files, or `create_spokesperson` with a URL for online images.
 
 ### Discovery Tips
 
