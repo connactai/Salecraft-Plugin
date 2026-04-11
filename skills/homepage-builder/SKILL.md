@@ -167,8 +167,11 @@ Use the selected layout template and compose sections. The homepage consists of:
 </div>
 ```
 
-**iframe Embed**:
+**iframe Embed** (⚠️ USUALLY BLOCKED):
 ```html
+<!-- WARNING: Most sites including landingai.info block iframe embedding via X-Frame-Options/CSP.
+     Only use this if you KNOW the target allows iframe embedding.
+     Default to Image Embed instead. -->
 <div class="lp-embed-container">
   <div class="lp-embed" data-ratio="{aspect_ratio}">
     <iframe src="{public_lp_url}" loading="lazy" allowfullscreen></iframe>
