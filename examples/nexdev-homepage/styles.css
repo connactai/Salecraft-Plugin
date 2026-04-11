@@ -203,14 +203,52 @@ body {
   text-align: center;
 }
 
-.portfolio-lp {
-  max-width: 420px;
+/* Phone Mockup — scrollable device frame */
+.phone-mockup {
+  position: relative;
+  width: 320px;
+  height: 640px;
   margin: 0 auto 32px;
+  background: #1a1a1a;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow:
+    0 0 0 3px #333,
+    0 0 0 6px #1a1a1a,
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(0, 212, 255, 0.08);
 }
 
-.portfolio-lp .lp-embed[data-ratio="9:16"] {
-  box-shadow: 0 12px 48px rgba(0, 212, 255, 0.15), 0 4px 16px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+.phone-notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 24px;
+  background: #1a1a1a;
+  border-radius: 0 0 16px 16px;
+  z-index: 10;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.phone-screen::-webkit-scrollbar {
+  display: none;
+}
+
+.phone-screen img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* CTA Section */
