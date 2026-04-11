@@ -85,7 +85,103 @@ On 401 error, re-call `login` (no refresh_token available).
 
 **Test account**: `user@example.com` / `123` (for development only).
 
-## Phase 2: Brand Discovery
+## Phase 2: Deep Discovery (CRITICAL — do NOT skip)
+
+**Goal**: Gather comprehensive information BEFORE creating the brand. The quality of the LP depends entirely on how much you know about the user/product.
+
+### For PERSONAL BRANDS (students, freelancers, developers):
+
+Ask ALL of the following (adapt wording to context):
+
+**Identity & Background**
+- Full name / preferred display name
+- Current role (student, freelancer, employed, etc.)
+- School/company + department/title
+- One-sentence self-introduction
+
+**Skills & Expertise**
+- Technical skills (list with proficiency: expert/intermediate/learning)
+- Frameworks, languages, tools used daily
+- Certifications, awards, competitions
+
+**Portfolio & Proof**
+- GitHub URL or portfolio site
+- 2-3 best projects (name + what it does + your role)
+- Open source contributions
+- Published articles, talks, or videos
+
+**Career Intent**
+- What is this LP for? (job hunting, freelance clients, grad school, networking)
+- Target audience (recruiters, startup founders, professors, etc.)
+- What impression do you want to make? (technical depth, creativity, leadership)
+
+**Assets**
+- Professional photo / headshot (file path or URL)
+- Resume / CV file (PDF, DOCX)
+- Any existing portfolio site to scrape
+
+**Visual Preferences**
+- Color preference (dark/light/specific hex)
+- Style (tech, minimal, bold, elegant)
+- Language (zh-TW, en, bilingual)
+
+### For PRODUCT/SERVICE BRANDS (companies, products):
+
+Ask ALL of the following:
+
+**Product Core**
+- Product/service name
+- What problem does it solve? (1 sentence)
+- How does it work? (1 sentence)
+- Key features (3-5 bullet points)
+- Price range / pricing model
+
+**Market Position**
+- Target customer profile
+- Main competitors (2-3)
+- Unique selling proposition (why choose you?)
+- Industry category
+
+**Assets**
+- Logo (file or URL)
+- Product images / screenshots
+- Customer testimonials
+- Certifications / awards
+- Website URL (for auto-scraping via `analyze_brand_url`)
+
+**Visual & Tone**
+- Brand colors (primary + accent)
+- Tone of voice (professional, friendly, bold, elegant)
+- Language preference
+
+### Strategic Planning (ask AFTER collecting basic info)
+
+**Target & Purpose**
+- Who will see this LP? (specific people: recruiters at FAANG, VC partners, university professors, etc.)
+- What action do you want them to take? (contact you, visit GitHub, schedule call, apply to program)
+- Where will you share this link? (LinkedIn, email signature, resume QR code, portfolio site)
+
+**Content Strategy**
+- How many LPs do you need? (one general, or multiple for different audiences?)
+- What aspect ratio? (9:16 for mobile/social, 16:9 for desktop/presentation, both?)
+- What language? (single language or multilingual?)
+- How many pages/stripes? (8 = standard, 10 = comprehensive, 6 = concise)
+
+**Tone & Messaging**
+- What's the ONE thing you want people to remember? (your speed, your AI expertise, your design sense)
+- Any specific phrases or taglines you want included?
+- What should the CTA button say? ("View My Work", "Let's Talk", "Hire Me", etc.)
+- Any information you explicitly DON'T want shown?
+
+### Discovery Tips
+
+- **Ask in batches of 3-4 questions** — don't overwhelm with 20 questions at once
+- **Offer to read files**: if user provides a resume/CV, READ it and extract info
+- **Offer URL scraping**: if they have a website, use `analyze_brand_url` to auto-fill
+- **Summarize back**: after gathering, confirm with user: "Here's what I have — anything to add?"
+- **The more you gather, the better the LP** — spending 5 minutes here saves regeneration later
+
+## Phase 3: Brand Creation
 
 **Goal**: Find or create the user's brand profile.
 
