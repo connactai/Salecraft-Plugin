@@ -62,6 +62,11 @@ MarketingX provides 9 skills covering the full marketing workflow:
 - **Red-box annotations** for precise visual editing (multi-box per stripe)
 - **3-step regeneration**: trigger → poll → confirm
 - **Batch edits**: combine all changes into one call per stripe
+- **MCP file upload**: signed URL workflow (no multipart needed)
+- **Spokesperson management**: user photos as LP spokesperson
+- **Industry-specific image fields**: 50+ fields across 10 industries, auto-selected by category
+- **Multi-LP strategy**: generate Overview + Projects + Experience LPs for personal brands
+- **Deep discovery**: structured info gathering before generation (personal brand & product flows)
 - **SEO**: JSON-LD, Open Graph, hreflang, semantic HTML
 
 ## Architecture
@@ -119,6 +124,10 @@ marketingx.plugin/
 - **Text Updates**: `update_stripe_texts` uses `{"index": N, "headline": "..."}` format (not stripe_idx/text_key)
 - **Regeneration**: 3-step flow — `regenerate_stripe` → `get_stripe_regen_status` → `complete_regeneration`
 - **Overlay/Soft Edge**: `set_stripe_overlay` and `set_stripe_soft_edge` require `enabled: bool` parameter
+- **File Upload**: `get_asset_upload_url` → `curl -T file <signed_url>` → use `public_url` in MCP calls
+- **Wizard Images**: product/logo → `wizard_shared_files`, industry-specific → `wizard_shared_data`, spokesperson → `create_spokesperson`
+- **Industry Category**: must be English (`person`, `software`, `cosmetics`, etc.) — Chinese values cause validation error
+- **Register**: `register(email, password, full_name)` for new users
 
 ## Tested
 
