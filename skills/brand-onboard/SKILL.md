@@ -51,6 +51,35 @@ mcp_tool_call("landing_ai_mcp", "register", {
 → creates account + returns access_token
 ```
 
+### If forgot password
+```
+mcp_tool_call("landing_ai_mcp", "forgot_password", { "email": "<user_email>" })
+→ sends password reset email
+```
+Then:
+```
+mcp_tool_call("landing_ai_mcp", "reset_password", { "token": "<from_email_link>", "new_password": "<new>" })
+```
+
+### After registration — email verification (if required)
+```
+mcp_tool_call("landing_ai_mcp", "verify_email", { "token": "<from_email_link>" })
+```
+If user didn't receive:
+```
+mcp_tool_call("landing_ai_mcp", "resend_verification", { "email": "<user_email>" })
+```
+
+### Other account tools available
+```
+get_me(user_token) → user profile + credits
+update_me(user_token, data_json) → update profile
+update_user_settings(user_token, data_json) → update settings
+logout(user_token) → end session
+delete_account(user_token) → delete account (reversible)
+cancel_deletion(user_token) → cancel pending deletion
+```
+
 Store `access_token` as `user_token` for all subsequent calls.
 On 401 error, re-call `login` (no refresh_token available).
 

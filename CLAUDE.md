@@ -115,14 +115,23 @@ mcp_tool_call("landing_ai_mcp", "google_auth", {"credential": "<google_id_token>
 
 ## Key Tool Signatures
 
-### Authentication
+### Authentication & Account Management
 ```
 login(email: str, password: str) -> { access_token, token_type: "bearer" }
 register(email: str, password: str, full_name: str) -> { user, access_token }
 google_auth(credential: str) -> { access_token, token_type }
+refresh_tokens(refresh_token: str) -> { access_token }
+forgot_password(email: str) -> { message }
+reset_password(token: str, new_password: str) -> { message }
+verify_email(token: str) -> { message }
+resend_verification(email: str) -> { message }
 get_me(user_token) -> { id, email, full_name, credits, tier, is_admin, ... }
 update_me(user_token, data_json) -> updated_user
-# NOTE: No refresh_token returned. Token expires in ~12 hours. Re-login when 401.
+update_user_settings(user_token, data_json) -> updated_settings
+logout(user_token) -> { message }
+delete_account(user_token) -> { message }
+cancel_deletion(user_token) -> { message }
+# NOTE: login returns access_token only (no refresh_token). Token expires ~12h. Re-login on 401.
 ```
 
 ### Brand
