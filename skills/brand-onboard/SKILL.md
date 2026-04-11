@@ -244,12 +244,28 @@ mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
 })
 ```
 
-**This same flow works for:**
-- Spokesperson photos (`asset_type: "spokesperson"`)
-- Product images (`asset_type: "product"`)
-- Logos (`asset_type: "logo"`)
-- Certifications (`asset_type: "certification"`)
-- Reference images for regeneration (`reference_image_urls_json`)
+**This upload flow works for ALL file types.** But WHERE you put the `public_url` depends on the use case:
+
+### Wizard Generation (初次生成) — put URL into session
+
+| Asset | Where to put public_url | How |
+|-------|------------------------|-----|
+| Product images | `wizard_shared_files.product_images[]` | `update_session(data_json: {"wizard_shared_files": {"product_images": ["url1", "url2"]}})` |
+| Logo | `wizard_shared_files.logo_image` | `update_session(data_json: {"wizard_shared_files": {"logo_image": "url"}})` |
+| Certificates | `wizard_shared_files.evidence_images[]` | `update_session(data_json: {"wizard_shared_files": {"evidence_images": ["url"]}})` |
+| Spokesperson photo | `create_spokesperson(photo_urls)` | Separate tool — NOT in wizard_shared_files |
+
+### Regeneration (重新生成) — put URL into regenerate_stripe
+
+| Asset | Where to put public_url | How |
+|-------|------------------------|-----|
+| Reference/style image | `reference_image_urls_json` | `regenerate_stripe(reference_image_urls_json: '["url"]')` |
+| Product correction | Same as above | Factory compares against reference photos |
+
+⚠️ **DO NOT mix these up:**
+- Wizard images → `update_session` with `wizard_shared_files`
+- Regeneration images → `regenerate_stripe` with `reference_image_urls_json`
+- Spokesperson → always `create_spokesperson`, never `wizard_shared_files`
 
 **DO NOT ignore user photos.** If they give you a photo, it MUST be uploaded and used.
 The LP Factory agent will incorporate the spokesperson into stripe images.
