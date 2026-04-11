@@ -104,20 +104,61 @@ User can:
 - Modify a suggestion ("Make #2 focus on mothers specifically")
 - Add custom TA ("Add: senior skincare, age 50+")
 
-## Phase 3: Aspect Ratio Selection
+## Phase 3: Multi-LP Strategy (IMPORTANT — proactively suggest)
 
+**Before asking aspect ratio, suggest a multi-LP plan.** A single LP is rarely enough
+for a personal brand or multi-product business. Proactively propose:
+
+### For Personal Brands:
 ```
-Choose landing page format:
+A homepage needs multiple LPs to showcase different aspects of you.
+I recommend generating these LPs:
 
-A) 16:9 Landscape — Best for desktop websites, presentations
-B) 9:16 Portrait — Best for mobile, social media stories
-C) Both — Generate two versions (costs 2× credits)
+1. 🎯 Overview LP (8 pages) — Your main intro, skills summary, CTA
+2. 💻 Projects LP (8 pages) — Deep dive into 2-3 key projects
+3. 🏆 Experience LP (6 pages) — Education, awards, timeline
 
-Recommendation: [based on TA demographics]
-- Younger audience (18-30) → 9:16 (mobile-first)
-- Professional/B2B → 16:9 (desktop-first)
-- Mixed → Both
+We'd generate 3 LPs × 1 TA = 3 sessions (cost: ~4,800 credits)
+Or start with just LP #1 and add more later.
+
+How many would you like to start with?
 ```
+
+### For Products/Services:
+```
+I recommend these LPs for your business:
+
+1. 🛒 Main Product LP (8 pages) — Core product pitch
+2. 💰 Pricing LP (6 pages) — Plans, comparison, FAQ
+3. 🤝 About Us LP (6 pages) — Team, story, trust signals
+
+Start with #1 or build all?
+```
+
+### Key Rules:
+- **Always suggest multi-LP** — don't assume one LP is enough
+- Let user choose how many to generate now vs later
+- Each LP = separate session + separate TA (can reuse same TA)
+- Homepage can embed LPs, but also pure HTML sections, videos, forms, etc.
+- LP is one type of content for the homepage — not the only option
+
+## Phase 4: Aspect Ratio Selection
+
+For EACH LP, ask aspect ratio:
+```
+Choose format for LP #1 [Overview]:
+
+A) 9:16 Portrait (Recommended) — Mobile-first, social sharing, phone mockup embed
+B) 16:9 Landscape — Desktop presentations, email embeds
+C) Both — Two versions (2× credits)
+```
+
+**Recommendation logic:**
+- Personal brand / portfolio → 9:16（phone mockup on homepage looks best）
+- Corporate / B2B pitch deck → 16:9
+- Social media campaign → 9:16
+- General website → Both
+- **Always state your recommendation with reason**
 
 ## Phase 4: Credit Estimation
 

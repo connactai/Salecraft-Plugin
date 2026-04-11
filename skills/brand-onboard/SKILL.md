@@ -173,11 +173,40 @@ Ask ALL of the following:
 - What should the CTA button say? ("View My Work", "Let's Talk", "Hire Me", etc.)
 - Any information you explicitly DON'T want shown?
 
+### User Photos → Spokesperson (IMPORTANT)
+
+If the user provides a personal photo (headshot, portrait, graduation photo, etc.),
+**upload it as a spokesperson** — it will appear in the LP as the "face" of the brand:
+
+```
+mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
+  "user_token": token,
+  "brand_id": brand_id,
+  "name": "User's Name",
+  "description": "Professional headshot",
+  "photo_urls": ["<file_url_or_gcs_path>"]
+})
+```
+
+Or if the photo is a local file, first upload it as a brand asset:
+```
+mcp_tool_call("landing_ai_mcp", "upload_brand_asset", {
+  "user_token": token,
+  "brand_id": brand_id,
+  "asset_type": "spokesperson",
+  "file_url": "<photo_url>"
+})
+```
+
+**DO NOT ignore user photos.** If they give you a photo, it MUST be used as spokesperson.
+The LP Factory agent will incorporate the spokesperson into stripe images.
+
 ### Discovery Tips
 
 - **Ask in batches of 3-4 questions** — don't overwhelm with 20 questions at once
 - **Offer to read files**: if user provides a resume/CV, READ it and extract info
 - **Offer URL scraping**: if they have a website, use `analyze_brand_url` to auto-fill
+- **If user provides a photo** → immediately upload as spokesperson (see above)
 - **Summarize back**: after gathering, confirm with user: "Here's what I have — anything to add?"
 - **The more you gather, the better the LP** — spending 5 minutes here saves regeneration later
 

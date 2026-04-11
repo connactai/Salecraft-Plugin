@@ -142,6 +142,11 @@ list_brands(user_token) -> brands[]
 brand_gap_analysis(user_token, brand_id) -> { missing_assets, readiness_score }
 analyze_brand_url(user_token, url) -> extracted_brand_info
 upload_brand_asset(user_token, brand_id, asset_type, file_url) -> asset
+create_spokesperson(user_token, brand_id, name, description, photo_urls[]) -> spokesperson
+# IMPORTANT: When user provides a personal photo, upload as spokesperson — it becomes the LP's face
+list_spokespersons(user_token, brand_id) -> spokespersons[]
+update_spokesperson(user_token, brand_id, spokesperson_id, data_json) -> updated
+delete_spokesperson(user_token, brand_id, spokesperson_id) -> { message }
 ```
 
 ### Session / Generation
