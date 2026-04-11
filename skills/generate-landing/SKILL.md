@@ -241,7 +241,7 @@ mcp_tool_call("landing_ai_mcp", "get_public_landing_page", {
 
 The Landing AI frontend renders the LP as an interactive sales page at:
 ```
-https://landingai.info/{locale}/landing-page?campaign_id={campaign_id}
+https://landingai.info/{locale}/landing-page?id={campaign_id}
 ```
 
 Present to user:

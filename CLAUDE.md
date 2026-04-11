@@ -238,7 +238,7 @@ marketingx.plugin/
 Generated LPs are viewable as interactive sales pages on the Landing AI frontend:
 
 ```
-https://landingai.info/{locale}/landing-page?campaign_id={campaign_id}
+https://landingai.info/{locale}/landing-page?id={campaign_id}
 ```
 
 - `locale`: `zh-TW`, `en`, `ja`, `ko`, etc.
