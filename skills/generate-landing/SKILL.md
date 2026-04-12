@@ -355,3 +355,38 @@ Store for subsequent phases:
 - `stripe_count` — number of generated stripes
 - `stitched_image_url` — full LP preview image
 - `stripe_urls[]` — per-stripe preview images
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### After generation complete:
+```
+✅ LP 生成完畢！
+
+🔗 你的連結：
+1. 📱 銷售頁預覽：[sales_page_url]
+2. ✏️ 圖像編輯器：[editor_url]
+
+接下來你可以：
+1. 👀 先去看看成品（點上面連結）
+2. ✏️ 編輯修改 — 文字、圖片、版面都能改
+3. 📸 截圖標註 — 圈出要改的地方，我直接修
+4. 🔍 SEO 優化 — 搜尋引擎和社群分享優化
+5. 🏠 建立首頁 — 把 LP 嵌入完整網站
+6. 📤 社群發佈 — 發到 IG / FB / TikTok
+7. 📊 投放廣告 — Meta / Google Ads 一條龍
+8. 🌐 多語言版本 — 翻譯成其他語言
+9. 🎯 生成另一個版本（不同受眾/比例）
+```
+
+### CTA button reminder:
+```
+💡 提醒：你的 CTA 按鈕目前寫著「[cta_text]」
+按鈕要連到哪裡？
+
+1. 🔗 輸入網址（官網、購買頁、預約頁）
+2. 💬 LINE 官方帳號
+3. 📅 預約連結（Calendly 等）
+4. 📱 App 下載連結
+5. ⬇️ 滑動到頁面某個區塊
+6. ⏭ 之後再設定
+```

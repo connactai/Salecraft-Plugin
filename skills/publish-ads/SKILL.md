@@ -273,3 +273,30 @@ Active Campaigns:
 ━━━━━━━━━━━━━━━━━
 Total daily spend: $90
 ```
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### Before ad creation:
+```
+準備投放廣告！
+
+1. ✅ 確認廣告帳號（Meta / Google）
+2. 🎯 選擇投放目標（曝光 / 流量 / 互動 / 名單 / 銷售）
+3. 🎨 AI 生成廣告素材
+4. 💰 設定每日預算
+5. 📊 查看現有廣告表現
+```
+
+### After campaign created:
+```
+✅ 廣告活動已建立！
+
+狀態：等待平台審核（通常 24 小時內）
+
+接下來：
+1. 📊 監控廣告表現
+2. ⏸ 暫停 / 恢復廣告
+3. 🎨 建立另一個平台的廣告（Meta → Google）
+4. 📱 回到社群發佈
+5. 🏠 回到首頁建置
+```

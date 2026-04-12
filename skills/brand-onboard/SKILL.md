@@ -889,3 +889,35 @@ The LP Factory agent will incorporate the spokesperson into stripe images.
 - **Never let the user silently skip key assets** — always ask specifically about missing items
 - **Always present the full checklist** before moving to the next phase
 - **Always get explicit confirmation** ("looks good" / "proceed") before advancing
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### After authentication:
+```
+登入成功！接下來我需要了解你的品牌資訊。
+
+1. 📎 提供網站網址 — 我會自動抓取 logo、色系、產品圖（最快）
+2. 📁 提供 Google Drive 連結 — 批量匯入所有品牌素材
+3. 💬 直接告訴我 — 我一步步問你品牌資訊
+4. 📂 選擇已有品牌 — 使用之前建立的品牌檔案
+```
+
+### After asset collection:
+```
+品牌素材收集完成！接下來：
+
+1. ✅ 確認無誤，進入受眾設定（Phase 2）
+2. ➕ 補充更多素材（logo / 產品圖 / 證書 / 代言人照片）
+3. 🔍 讓我幫你分析品牌完整度（AI Gap Analysis）
+4. ✏️ 修改剛才填的資訊
+```
+
+### After readiness assessment:
+```
+品牌準備度：[A/B/C]
+
+1. 🎯 進入受眾設定 → 選擇目標客群
+2. ➕ 補充缺少的素材以提升品質
+3. 📊 查看完整品牌分析報告
+4. 🔄 重新開始品牌設定
+```

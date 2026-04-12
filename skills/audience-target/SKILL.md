@@ -732,3 +732,41 @@ Phase 7: Hand off to generate-landing skill
 ```
 
 **At NO point in this flow should credits be deducted without the user seeing and confirming the Phase 5 summary.**
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### After showing TA options:
+```
+AI 為你生成了 [N] 組目標受眾。接下來：
+
+1. ✅ 選擇受眾（輸入編號，如 "1 和 3"）
+2. ✏️ 修改某個受眾（如 "把 #2 改成針對媽媽族群"）
+3. ➕ 新增自訂受眾
+4. 🔍 先做市場研究再決定
+```
+
+### After TA selection + config:
+```
+設定完成！生成前確認：
+
+📊 即將生成 [N] 個 LP，預估花費 [X] 點數
+目前餘額：[Y] 點數
+
+1. ✅ 確認生成（扣除點數）
+2. ✏️ 調整設定（顏色/字體/風格/語言/CTA）
+3. 📉 減少生成數量以節省點數
+4. ❌ 取消，回到受眾選擇
+```
+
+### After generation triggered:
+```
+⏳ 正在生成中（約 1-3 分鐘）...
+
+生成完成後你可以：
+📱 在手機上預覽銷售頁
+✏️ 編輯任何文字、圖片、版面
+📸 截圖圈出要改的地方，我幫你修
+🔍 優化 SEO 和搜尋引擎排名
+🏠 建立完整的品牌首頁
+📤 發佈到社群媒體或投放廣告
+```

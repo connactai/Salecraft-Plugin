@@ -538,3 +538,42 @@ regenerate_stripe(stripe_idx=7, user_feedback="移除 debug 文字")
 - For major changes, suggest regeneration over manual editing
 - **Remind users about screenshot editing** — "You can also take a screenshot, circle what to change, and paste it here"
 - **Provide the sales page and editor links** after every significant edit so users can verify visually
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### Before editing starts:
+```
+準備編輯你的 LP！你可以用以下方式告訴我要改什麼：
+
+1. 📸 截圖標註 — 截圖後用手機/電腦畫圈，貼過來我自動修
+2. 💬 直接說 — 如「把標題改成 XXX」「第三頁背景太暗」
+3. 🖥️ 用圖像編輯器 — 開啟 [editor_url] 自己拖拉修改
+4. 🔍 SEO 優化 — 讓我優化搜尋引擎設定
+```
+
+### After each edit:
+```
+✅ 已修改 Stripe [N]：[描述]
+
+繼續操作：
+1. ✏️ 繼續編輯這一頁
+2. 📄 編輯其他頁面
+3. ↩️ 復原剛才的修改
+4. 📸 截圖標註新的修改
+5. ✂️ 裁剪 / 調整柔邊 / 加遮罩
+6. 🔄 AI 重新生成這一頁（大幅修改時用）
+7. 👀 預覽完整 LP → [sales_page_url]
+8. ✅ 編輯完成，進入下一步
+```
+
+### When editing is done:
+```
+LP 編輯完成！接下來：
+
+1. 🏠 建立品牌首頁 — 把 LP 嵌入完整網站
+2. 📤 社群發佈 — 發到 IG / FB / TikTok
+3. 📊 投放廣告 — Meta / Google Ads
+4. 🌐 多語言版本 — 翻譯成其他語言
+5. 📥 匯出 — 下載 HTML / 圖片
+6. 🔗 分享連結 — 產生分享用的短網址
+```

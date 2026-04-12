@@ -423,3 +423,31 @@ B) Check post history & engagement
 C) Generate QR code for print materials
 D) Done
 ```
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### Before publishing:
+```
+準備發佈到社群媒體！
+
+1. 📱 連接社群帳號（Meta / TikTok）
+2. 📝 AI 生成貼文文案
+3. 📷 從 LP 匯入素材
+4. ⏰ 查看最佳發佈時間
+5. 📊 查看過去的發佈記錄
+```
+
+### After publishing:
+```
+✅ 發佈成功！
+
+📱 [平台] — [貼文連結]
+
+接下來：
+1. 📊 投放廣告 — 把這則貼文推廣出去
+2. 📝 發佈到其他平台
+3. ⏰ 排程更多貼文
+4. 📈 查看貼文表現數據
+5. 🔲 產生 QR Code — 印刷品或實體展示用
+6. 🏠 回到首頁建置
+```

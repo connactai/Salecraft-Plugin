@@ -830,3 +830,37 @@ nextBtn?.addEventListener('click', () => {
 [ ] Phase 8: Guide deployment (static hosting / embed / headless JSON / hosted URL)
 [ ] Phase 9: Provide developer JSON guide (if applicable)
 ```
+
+## Transition Prompts (MANDATORY — show at every decision point)
+
+### After homepage built:
+```
+✅ 首頁建置完成！
+
+📁 已產生檔案：
+- index.html / styles.css / script.js / assets/
+
+接下來：
+1. 👀 用瀏覽器預覽（我幫你開啟）
+2. 🚀 部署上線：
+   A) Netlify — 拖拉資料夾即可上線
+   B) Vercel — 一行指令部署
+   C) GitHub Pages — 推到 repo 自動部署
+   D) 嵌入現有網站 — 我給你程式碼片段
+3. ✏️ 修改首頁內容（標題、CTA、版面）
+4. 📤 社群發佈 LP 內容
+5. 📊 投放廣告
+6. 🌐 建立多語言版本
+```
+
+### CTA destination prompt:
+```
+💡 首頁上的按鈕要連到哪裡？
+
+1. 🔗 你的官網網址
+2. 🛒 產品購買頁面
+3. 💬 LINE / WhatsApp 官方帳號
+4. 📅 預約諮詢連結
+5. 📱 App 下載頁面
+6. 📄 LP 銷售頁（預設）
+```
