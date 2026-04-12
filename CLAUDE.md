@@ -311,13 +311,17 @@ curl -X PUT -H "Content-Type: image/jpeg" -T "/path/to/photo.jpg" "{upload_url}"
 
 | Target | Where to put public_url |
 |--------|------------------------|
-| Wizard product images | `update_session` → `wizard_shared_files.product_images: ["url"]` |
-| Wizard logo | `update_session` → `wizard_shared_files.logo_image: "url"` (string, not array) |
-| Wizard evidence | `update_session` → `wizard_shared_files.evidence_images: ["url"]` |
-| Wizard spokesperson | `update_session` → `wizard_shared_data.spokesperson_faces: ["url"]` |
-| Wizard industry images | `update_session` → `wizard_shared_data.{field}_images: ["url"]` |
+| Wizard product images | **BOTH** `wizard_shared_data.product_images` + `wizard_shared_files.product_images` |
+| Wizard logo | `wizard_shared_files.logo_image: "url"` (single string, not array) |
+| Wizard evidence/certs | **BOTH** `wizard_shared_data.certification_images` + `wizard_shared_files.evidence_images` |
+| Wizard LP reference | `wizard_shared_data.landing_page_images: ["url"]` |
+| Wizard spokesperson | `wizard_shared_data.spokesperson_faces: ["url"]` |
+| Wizard industry images | `wizard_shared_data.{field}_images: ["url"]` |
 | Regeneration reference | `regenerate_stripe` → `reference_image_urls_json: '["url"]'` |
 | Spokesperson entity | `create_spokesperson` → `photo_urls: ["url"]` |
+
+⚠️ **CRITICAL**: `wizard_shared_data` = frontend UI display, `wizard_shared_files` = Factory AI reads.
+Product images and evidence MUST be written to BOTH or one side won't see them.
 
 Allowed `asset_type`: `product`, `logo`, `spokesperson`, `certification`
 Allowed `content_type`: `image/jpeg`, `image/png`, `image/webp`, `image/heic`, `application/pdf`

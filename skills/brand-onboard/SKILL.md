@@ -283,22 +283,27 @@ mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
 
 Upload `public_url` into session using `update_session`.
 
-**⚠️ CRITICAL: `wizard_shared_files` vs `wizard_shared_data` — different purposes!**
+**⚠️ CRITICAL: Must write to BOTH `wizard_shared_data` AND `wizard_shared_files`!**
 
-| What | Where | Format |
-|------|-------|--------|
-| Product images (main) | `wizard_shared_files.product_images` | `["url1", "url2"]` (array) |
-| Logo | `wizard_shared_files.logo_image` | `"url"` (single string, NOT array) |
-| Evidence/certs | `wizard_shared_files.evidence_images` | `["url1"]` (array) |
-| Spokesperson faces | `wizard_shared_data.spokesperson_faces` | `["url1"]` (array) |
-| Industry-specific images | `wizard_shared_data.{field}_images` | `["url1"]` (array) |
+- `wizard_shared_data` → **Frontend wizard UI displays from here**
+- `wizard_shared_files` → **Factory AI reads from here during generation**
+- **If you only write to one, the other side won't see it!**
 
-Example — uploading product images + logo:
+| What | wizard_shared_data (UI display) | wizard_shared_files (Factory) |
+|------|------|------|
+| Product images | `product_images: ["url"]` ✅ | `product_images: ["url"]` ✅ |
+| Logo | ❌ (not displayed) | `logo_image: "url"` (single string) ✅ |
+| Evidence/certs | `certification_images: ["url"]` ✅ | `evidence_images: ["url"]` ✅ |
+| LP reference | `landing_page_images: ["url"]` ✅ | ❌ |
+| Spokesperson | `spokesperson_faces: ["url"]` ✅ | ❌ (use `create_spokesperson` instead) |
+| Industry-specific | `{field}_images: ["url"]` ✅ | ❌ (auto-read from shared_data) |
+
+Example — uploading product images (write to BOTH):
 ```
 mcp_tool_call("landing_ai_mcp", "update_session", {
   "user_token": token,
   "session_id": session_id,
-  "data_json": "{\"wizard_shared_files\": {\"product_images\": [\"url1\", \"url2\"], \"logo_image\": \"url3\"}, \"wizard_shared_data\": {\"spokesperson_faces\": [\"url4\"]}}"
+  "data_json": "{\"wizard_shared_data\": {\"product_images\": [\"url1\"], \"spokesperson_faces\": [\"url2\"], \"certification_images\": [\"url3\"], \"landing_page_images\": [\"url1\"]}, \"wizard_shared_files\": {\"product_images\": [\"url1\"], \"logo_image\": \"url4\", \"evidence_images\": [\"url3\"]}}"
 })
 ```
 
