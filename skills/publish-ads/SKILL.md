@@ -93,9 +93,11 @@ mcp_tool_call("zereo_social_mcp", "get_cta_types", {
 mcp_tool_call("landing_ai_mcp", "generate_ad", {
   "user_token": token,
   "session_id": session_id,
-  "data_json": "{\"platform\": \"meta\"}"  // platform goes INSIDE data_json
+  "data_json": "{\"platform\": \"meta\", \"ta_group_id\": \"ta_1\"}"
+  // platform + ta_group_id go INSIDE data_json
+  // ta_group_id = the TA group from generate_session (e.g. "ta_1")
 })
-→ Returns: { "project_id": "..." }
+→ Returns: { "project_id": "...", "status": "processing" }
 ```
 
 ### Poll for creative completion

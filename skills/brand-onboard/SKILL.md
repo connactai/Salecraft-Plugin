@@ -83,7 +83,7 @@ cancel_deletion(user_token) → cancel pending deletion
 Store `access_token` as `user_token` for all subsequent calls.
 On 401 error, re-call `login` (no refresh_token available).
 
-**Test account**: `user@example.com` / `123` (for development only).
+User must provide their own Landing AI credentials to proceed.
 
 ## Phase 2: Deep Discovery (CRITICAL — do NOT skip)
 

@@ -263,18 +263,27 @@ C) Custom schedule
 mcp_tool_call("zereo_social_mcp", "publish_multi", {
   "user_token": token,
   "targets_json": "[
-    {\"account_id\": \"fb_123\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
-    {\"account_id\": \"ig_456\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
-    {\"account_id\": \"tt_789\", \"caption\": \"...\", \"media_ids\": [\"...\"]}
+    {\"social_account_id\": \"fb_123\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
+    {\"social_account_id\": \"ig_456\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
+    {\"social_account_id\": \"tt_789\", \"caption\": \"...\", \"media_ids\": [\"...\"]}
   ]"
 })
 ```
+
+### Or use publish_post for single platform
+```
+mcp_tool_call("zereo_social_mcp", "publish_post", {
+  "user_token": token,
+  "data_json": "{\"social_account_id\": \"...\", \"post_type\": \"ig_post\", \"caption\": \"...\", \"image_url\": \"...\"}"
+})
+```
+⚠️ Parameter name is `social_account_id` in ALL publish tools.
 
 ### Or schedule
 ```
 mcp_tool_call("zereo_social_mcp", "schedule_post", {
   "user_token": token,
-  "data_json": "{\"account_id\": \"...\", \"scheduled_at\": \"2026-04-15T19:00:00+08:00\", ...}"
+  "data_json": "{\"social_account_id\": \"...\", \"scheduled_at\": \"2026-04-15T19:00:00+08:00\", ...}"
 })
 ```
 
@@ -356,9 +365,13 @@ mcp_tool_call("zereo_social_mcp", "delete_content", {
 ```
 mcp_tool_call("zereo_social_mcp", "publish_content", {
   "user_token": token, "content_id": "<content_id>",
-  "data_json": "{\"account_id\": \"<account_id>\", \"post_type\": \"ig_post\"}"
+  "data_json": "{\"social_account_id\": \"<account_id>\", \"post_type\": \"ig_post\"}"
 })
 ```
+⚠️ Parameter name is `social_account_id` (NOT `account_id`).
+
+��️ **Aspect ratio matters for ig_post**: LP images (9:16 tall) will fail on `ig_post` (requires 1:1 or 4:5).
+Use `ig_story` for 9:16 content, or use the `quick_ad` image (1:1) for `ig_post`.
 
 ### Upload to content library (signed URL)
 ```

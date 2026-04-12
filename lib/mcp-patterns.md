@@ -19,9 +19,9 @@ mcp__claude_ai_Service_System_Deep_Research__mcp_tool_call(
 mcp_tool_call(
   server_name = "landing_ai_mcp",
   tool_name   = "login",
-  arguments   = { "email": "user@example.com", "password": "your-password" }
+  arguments   = { "email": "<user_email>", "password": "<user_password>" }
 )
-→ Returns: { "access_token": "eyJ...", "refresh_token": "eyJ..." }
+→ Returns: { "access_token": "eyJ...", "token_type": "bearer" }
 ```
 
 ### Step 2: Use Token

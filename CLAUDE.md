@@ -60,7 +60,7 @@ mcp_tool_call("landing_ai_mcp", "google_auth", {"credential": "<google_id_token>
 ### Auth Notes
 - Pass `user_token` in ALL subsequent calls
 - Token expires ~12 hours. On 401, re-call `login` (no refresh_token)
-- **Test account**: `user@example.com` / `123` (development only)
+- **Test account**: Use your own Landing AI account credentials
 
 ## Available Commands
 
@@ -263,11 +263,16 @@ social_reflect(user_token, data_json) -> { reflection_score, reflection_data }
 ### Content Publishing
 ```
 publish_post(user_token, data_json) -> post_result
+# data_json: {"social_account_id": "...", "post_type": "ig_post", "caption": "...", "image_url": "..."}
+# ⚠️ Parameter name is "social_account_id" (NOT "account_id") in ALL publish tools
 publish_multi(user_token, targets_json) -> results[]
+# targets_json: [{"social_account_id": "...", "caption": "...", "media_ids": ["..."]}]
 schedule_post(user_token, data_json) -> scheduled
 cancel_post(user_token, post_id) -> confirmation
 get_post_history(user_token, limit?, offset?, status_filter?) -> posts[]
 get_post_detail(user_token, post_id) -> post_detail
+# ⚠️ LP images (9:16) → use ig_story. ig_post requires 1:1 or 4:5 aspect ratio.
+# Quick Ad images (1:1) work for ig_post.
 ```
 
 ### Content Library
@@ -277,11 +282,12 @@ get_content(user_token, content_id) -> content_detail
 import_from_session(user_token, session_id) -> imported_content
 update_content(user_token, content_id, data_json) -> updated
 delete_content(user_token, content_id) -> { message }
-publish_content(user_token, content_id, data_json) -> result
+publish_content(user_token, content_id, data_json) -> { post_id, status }
+# data_json: {"social_account_id": "...", "post_type": "ig_post|ig_story|fb_post|tt_video"}
 validate_content_media(user_token, content_id, target_post_type, duration_seconds?) -> validation
 get_upload_signed_url(user_token, filename, content_type) -> { upload_url }
 confirm_upload(user_token, data_json) -> confirmed
-list_shared_content(user_token, target_user_id) -> shared_content[]
+# list_shared_content — influencer-only, requires is_influencer=True + shared_with permission check
 ```
 
 ### AI Scheduling
@@ -306,8 +312,9 @@ list_ad_campaigns(user_token) -> campaigns[]
 get_ad_campaign(user_token, campaign_id, refresh?) -> campaign_status
 pause_ad_campaign(user_token, campaign_id) -> result
 resume_ad_campaign(user_token, campaign_id) -> result
-generate_ad(user_token, session_id, data_json) -> { project_id, ... }
-# data_json example: '{"platform": "meta"}' — platform goes INSIDE data_json
+generate_ad(user_token, session_id, data_json) -> { project_id, status: "processing" }
+# data_json MUST include: '{"platform": "meta", "ta_group_id": "ta_1"}'
+# ta_group_id is REQUIRED — get it from generate_session or get_ta_statuses
 get_ad_result(user_token, session_id, project_id) -> { status, creative, ... }
 # NOTE: Uses session_id + project_id, NOT task_id
 ```
@@ -420,7 +427,7 @@ https://landingai.info/{locale}/landing-page?id={campaign_id}
 ## Security Rules
 
 - **Never hardcode API keys or tokens** — always use `user_token` parameter
-- **Never modify real user data** — use test account `user@example.com` for development
+- **Never modify real user data** — always confirm with user before destructive operations
 - **Never expose JWT tokens** in generated HTML or client-side code
 - **All MCP calls** go through the Service System proxy — never call backend APIs directly
 

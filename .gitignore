@@ -7,3 +7,7 @@ Thumbs.db
 *.tmp
 output/
 .claude/
+
+# Internal test artifacts (contain credentials and PII)
+TEST_PLAN.md
+TEST_RESULTS.md
