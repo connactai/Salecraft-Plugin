@@ -126,6 +126,23 @@ Must be done BEFORE `generate_session` — Factory reads images from session at 
 
 ## Phase 3: Trigger Generation
 
+### Step 1: Set expectations BEFORE triggering
+
+**MANDATORY** — Always tell the user what to expect before starting generation:
+
+```
+This process takes about 1-3 minutes. The AI pipeline has 4 stages:
+
+1. Strategy — Analyzing your brand and audience positioning
+2. Layout — Designing page structure and writing copy
+3. Image Generation — Creating visual stripes with embedded text
+4. Quality Check — Verifying readability and brand consistency
+
+I'll keep you updated on progress as each stage completes.
+```
+
+### Step 2: Trigger the pipeline
+
 ```
 mcp_tool_call("landing_ai_mcp", "generate_session", {
   "user_token": token,
@@ -141,7 +158,7 @@ mcp_tool_call("landing_ai_mcp", "generate_session", {
 - `requested_stripe_count`: set to 8 for 8-page LP (0 = backend default ~10).
 - This is an async operation. The backend runs the 4-agent pipeline which takes 30-120 seconds.
 
-## Phase 4: Poll for Completion
+## Phase 4: Poll for Completion + Keep User Engaged
 
 Poll every 5 seconds, max 60 attempts (5 minutes):
 
@@ -153,20 +170,36 @@ mcp_tool_call("landing_ai_mcp", "get_session", {
 → Returns: { "status": "generating" | "complete" | "error", ... }
 ```
 
-### Progress Reporting
+### Progress Reporting + User Engagement (MANDATORY)
 
-Keep the user informed during polling:
+Keep the user informed during polling. On the FIRST poll response, show progress AND preview what they'll be able to do next:
 
 ```
-⏳ Generating your landing page...
+Generating your landing page...
 
 [00:05] Strategist analyzing your brand and audience...
+
+While we wait, here's what you'll be able to do once it's ready:
+
+- Preview: You'll get a clickable sales page link to view on any device
+- Edit: You can edit any text, image, or layout directly
+- Screenshot editing: Take a screenshot, circle what to change, and tell me
+- SEO: Auto-generate meta tags, schema markup, and search keywords
+- Crop & adjust: Fine-tune individual stripe images
+- Homepage: Embed the LP into a full website
+
+I'll share all these links once generation is done!
+```
+
+Continue with stage-based updates as polling proceeds:
+
+```
 [00:15] Architect designing page layout and copy...
 [00:30] Factory generating visual stripes...
 [00:45] Quality check in progress...
 [01:00] Almost done — finalizing...
 
-✅ Generation complete! [X] stripes created.
+Generation complete! [X] stripes created.
 ```
 
 ### Error Handling
@@ -203,50 +236,7 @@ mcp_tool_call("landing_ai_mcp", "get_stripe_detail", {
 - [ ] Brand colors are consistent
 - [ ] No error stripes or blank images
 
-## Phase 6: Present Results
-
-```
-✅ Landing Page Generated Successfully!
-
-Session: [session_name]
-Campaign ID: [campaign_id]
-Stripes: [count] generated
-Aspect Ratio: [16:9 / 9:16]
-
-Stripe Preview:
-1. 🎯 Hero — "[headline text]"
-2. 📋 Features — "[feature highlights]"
-3. 💬 Testimonial — "[social proof]"
-4. 🛒 CTA — "[call to action]"
-
-Next steps:
-A) Edit stripes → /mx-edit
-B) Build homepage → /mx-homepage
-C) Publish → /mx-publish
-D) Generate another variant (different TA or ratio)
-```
-
-## Generating Both Aspect Ratios
-
-If user selected "both" in Phase 2:
-
-1. Generate 16:9 version first (steps 1-6)
-2. Create a second session with same config but `aspect_ratio="9:16"`
-3. Generate 9:16 version (steps 1-6)
-4. Present both results together
-
-```
-✅ Both versions generated!
-
-16:9 (Landscape): [campaign_id_landscape] — [X] stripes
-9:16 (Portrait):  [campaign_id_portrait] — [Y] stripes
-
-Which version would you like to edit first?
-```
-
-## Phase 6: Provide Preview Links (MANDATORY)
-
-After generation completes, you MUST give the user clickable preview links:
+## Phase 6: Present Results + All Links (MANDATORY)
 
 ### Step 1: Create share token
 ```
@@ -266,36 +256,95 @@ mcp_tool_call("landing_ai_mcp", "get_public_landing_page", {
 → Returns: full LP config with stitched_image_url and per-stripe background_urls
 ```
 
-### Step 3: Present LP sales page link to user
+### Step 3: Present ALL links and next actions to user
 
-The Landing AI frontend renders the LP as an interactive sales page at:
+**MANDATORY** — After generation, present the full set of links and capabilities:
+
 ```
-https://landingai.info/{locale}/landing-page?id={campaign_id}
-```
+LP Generated Successfully!
 
-Present to user:
-```
-✅ LP 生成完畢！
+Links:
+1. Sales Page (interactive preview):
+   https://landingai.info/{locale}/landing-page?id={campaign_id}
 
-🔗 銷售頁預覽（點擊查看完整互動頁面）:
-https://landingai.info/zh-TW/landing-page?id={campaign_id}
+2. Visual Editor (drag & drop editing):
+   https://landingai.info/{locale}/editor?id={campaign_id}
 
-📄 完整長圖（靜態圖片版）:
-{stitched_image_url}
+3. Full-Length Image (static stitched preview):
+   {stitched_image_url}
 
-📑 各頁 Stripe:
+4. Share Token: {share_token}
+
+Stripe Overview:
 1. {headline_1} — {stripe_type_1}
 2. {headline_2} — {stripe_type_2}
 ... (list all)
 
-🔗 分享 Token: {share_token}
+What you can do now:
+A) Edit text, images, or layout → just tell me what to change
+B) Screenshot editing → open the sales page, take a screenshot, circle what to change, paste here
+C) SEO optimization → I'll generate meta tags, schema markup, and keywords
+D) Crop & adjust → fine-tune individual stripe images
+E) Build homepage → embed this LP into a full website (/mx-homepage)
+F) Publish → push to social media or run ads (/mx-publish)
+G) Generate another variant (different TA or aspect ratio)
+
+Tip: Open the sales page link on your phone to see the mobile experience!
 ```
 
-**CRITICAL RULES:**
+### Step 4: CTA Button Check (MANDATORY)
+
+After presenting the LP, **always** check the CTA stripe and ask about the button destination:
+
+1. Find the CTA stripe from the stripe list (usually the last stripe)
+2. Read its `cta_text` and `cta_url` values from stripe detail
+3. Proactively ask:
+
+```
+The CTA button currently says "[cta_text]" and links to [cta_url or "nowhere (no URL set)"].
+
+Want to set the button destination? Common options:
+- Your website URL
+- LINE official account link
+- Booking/appointment page
+- Product purchase link
+- Contact form
+
+Just paste the URL and I'll update it for you.
+```
+
+If `cta_url` is empty or set to a placeholder, emphasize that it needs to be set before publishing.
+
+**CRITICAL RULES for link presentation:**
 - The **sales page link** (landingai.info) is the PRIMARY link to show — this is the actual rendered page
-- The stitched_image_url is a secondary static preview
+- The **visual editor link** is the SECONDARY link for self-service editing
+- The stitched_image_url is a tertiary static preview
 - If multiple LPs were generated (different TAs), provide a sales page link for EACH campaign_id
 - The locale in the URL should match the user's language (zh-TW, en, ja, etc.)
+- ALWAYS include the visual editor link — many users prefer drag-and-drop
+
+## Generating Both Aspect Ratios
+
+If user selected "both" in Phase 2:
+
+1. Generate 16:9 version first (steps 1-6)
+2. Create a second session with same config but `aspect_ratio="9:16"`
+3. Generate 9:16 version (steps 1-6)
+4. Present both results together
+
+```
+Both versions generated!
+
+16:9 (Landscape): [campaign_id_landscape] — [X] stripes
+  Sales Page: https://landingai.info/{locale}/landing-page?id={campaign_id_landscape}
+  Editor: https://landingai.info/{locale}/editor?id={campaign_id_landscape}
+
+9:16 (Portrait):  [campaign_id_portrait] — [Y] stripes
+  Sales Page: https://landingai.info/{locale}/landing-page?id={campaign_id_portrait}
+  Editor: https://landingai.info/{locale}/editor?id={campaign_id_portrait}
+
+Which version would you like to edit first?
+```
 
 ## Output
 

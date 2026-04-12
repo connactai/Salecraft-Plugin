@@ -325,8 +325,416 @@ Features:
 - SEO: JSON-LD + Open Graph + hreflang
 - Responsive: mobile + tablet + desktop
 
-Next: Open index.html in browser to preview, or proceed to /mx-publish
+Next: Open index.html in browser to preview, or proceed to deployment (see Phase 7)
 ```
+
+## Phase 7: CTA Button Configuration
+
+Every LP has CTA buttons. You **MUST** ask the user where they should link before finalizing the homepage.
+
+### Ask the User
+
+Present this question immediately after building the homepage:
+
+```
+Your LP has a CTA button saying "[current_cta_text]". Where should it link to?
+
+- A website URL? (e.g. your product page, store, or landing page)
+- A LINE / WhatsApp official account?
+- A booking or calendar link? (e.g. Calendly)
+- A product purchase page? (e.g. Shopify checkout)
+- Or should it scroll to a section on this homepage? (e.g. #contact, #pricing)
+```
+
+If the LP has multiple stripes with different CTAs, ask about each one individually.
+
+### Common CTA Destinations
+
+| CTA Text | Typical Link |
+|----------|-------------|
+| "立即購買" / "Buy Now" | Product purchase page / Shopify checkout / ECPay link |
+| "免費諮詢" / "Free Consultation" | Calendly booking link / LINE official account |
+| "了解更多" / "Learn More" | Product detail page / scroll to `#features` or `#faq` |
+| "加入LINE" / "Add LINE" | `https://line.me/R/ti/p/@{line_id}` |
+| "聯絡我們" / "Contact Us" | Contact form section / `mailto:` link / `tel:` link |
+| "立即下載" / "Download Now" | App Store link / Google Play link / direct download URL |
+| "免費試用" / "Free Trial" | SaaS signup page / trial registration form |
+| "預約體驗" / "Book Experience" | Booking system URL / Google Forms |
+| "加入會員" / "Join" | Membership registration page |
+| "獲取報價" / "Get Quote" | Quote request form / WhatsApp business link |
+
+### Implementation in Homepage HTML
+
+CTA buttons in the homepage use standard HTML `<a>` tags with the overlay class:
+
+```html
+<a href="{cta_link}" class="lp-cta-overlay" target="_blank" rel="noopener noreferrer">
+  {cta_text}
+</a>
+```
+
+- Use `target="_blank"` for external links (other domains, LINE, calendly, etc.)
+- Omit `target="_blank"` for same-page anchors (`#contact`, `#pricing`)
+- Always include `rel="noopener noreferrer"` on external links for security
+
+### For LP Internal CTA (Inside Stripe Images)
+
+The CTA button baked into LP stripe images is part of the image itself — it is not clickable by default. To make it functional, add a clickable overlay positioned on top of the CTA area:
+
+1. Get the LP config to find the CTA position within each stripe:
+   ```
+   mcp_tool_call("landing_ai_mcp", "get_landing_page", {
+     "user_token": token, "campaign_id": campaign_id
+   })
+   → stripes[].text_boxes[] contains CTA elements with position data
+   ```
+
+2. Add an absolute-positioned `<a>` tag over the CTA area in the stripe image:
+   ```html
+   <div class="lp-embed" data-ratio="{aspect_ratio}" style="position: relative;">
+     <img src="assets/stripe-0.webp" alt="{stripe_headline}" loading="lazy">
+     <!-- Clickable overlay positioned over the baked-in CTA area -->
+     <a href="{cta_link}"
+        class="lp-cta-overlay"
+        style="position: absolute; bottom: {cta_bottom}%; left: {cta_left}%; width: {cta_width}%; height: {cta_height}%;"
+        target="_blank" rel="noopener noreferrer">
+       <span class="sr-only">{cta_text}</span>
+     </a>
+   </div>
+   ```
+
+3. The overlay `<a>` should be transparent (no background) so the baked-in CTA image shows through, but the entire area is clickable.
+
+4. Add screen-reader-only text for accessibility:
+   ```css
+   .sr-only {
+     position: absolute; width: 1px; height: 1px;
+     padding: 0; margin: -1px; overflow: hidden;
+     clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+   }
+   ```
+
+### Multiple CTAs Per Page
+
+If the homepage has multiple LP stripes, each may have its own CTA. Present them as a numbered list:
+
+```
+Your homepage has 3 CTA buttons:
+
+1. Stripe 0 (Hero): "立即購買" — Where should this link?
+2. Stripe 1 (Features): "了解更多" — Where should this link?
+3. Stripe 2 (Footer CTA): "聯絡我們" — Where should this link?
+
+You can provide a URL for each, or use the same URL for all.
+```
+
+### Standalone CTA Section
+
+In addition to LP stripe CTAs, the homepage itself has a dedicated CTA section (from `templates/sections/cta-banner.html`). This should also be configured:
+
+```html
+<section class="cta-section" id="cta">
+  <div class="cta-content">
+    <h2>{cta_headline}</h2>
+    <p>{cta_subtext}</p>
+    <a href="{primary_cta_link}" class="btn-primary">{primary_cta_text}</a>
+    <a href="{secondary_cta_link}" class="btn-secondary">{secondary_cta_text}</a>
+  </div>
+</section>
+```
+
+## Phase 8: Deployment Options
+
+After the homepage is built and CTA buttons are configured, guide the user on how to deploy it.
+
+### Option A: Static Hosting (Simplest)
+
+The output directory (`output/`) contains a self-contained static website. Upload the entire folder to any static hosting provider:
+
+**Netlify** (drag and drop):
+1. Go to [netlify.com/drop](https://app.netlify.com/drop)
+2. Drag the entire `output/` folder onto the page
+3. Site is live in seconds at a `*.netlify.app` URL
+4. Optional: Connect a custom domain in Site Settings > Domain management
+
+**Vercel** (CLI):
+```bash
+cd output/
+npx vercel --prod
+```
+Follow the prompts. Site deploys to a `*.vercel.app` URL. Custom domains supported.
+
+**GitHub Pages** (free, repo-based):
+1. Create a new GitHub repository (or use an existing one)
+2. Push the `output/` contents to the `main` branch (or a `gh-pages` branch)
+3. Go to repository Settings > Pages > Deploy from branch > select `main` (or `gh-pages`)
+4. Site is live at `https://{username}.github.io/{repo-name}/`
+
+**Cloudflare Pages** (auto-deploy on push):
+1. Push the `output/` contents to a GitHub or GitLab repository
+2. Go to [dash.cloudflare.com](https://dash.cloudflare.com) > Pages > Create a project
+3. Connect the repository > set build output directory to `/` (since files are at root)
+4. Every push auto-deploys. Free SSL and global CDN included.
+
+**Firebase Hosting** (Google ecosystem):
+```bash
+npm install -g firebase-tools
+firebase init hosting   # select output/ as public directory
+firebase deploy
+```
+
+**Amazon S3 + CloudFront**:
+```bash
+aws s3 sync output/ s3://{bucket-name} --acl public-read
+# Then configure CloudFront distribution pointing to the S3 bucket
+```
+
+### Option B: Integrate into Existing Website
+
+If the user already has a website (WordPress, Shopify, Wix, Squarespace, or custom), they do not need a separate deployment. Instead, provide the assets and code snippets for embedding into their existing site:
+
+1. **Export LP stripe images** — download each stripe via `download_stripe` and provide the image files or URLs
+2. **Provide the embed HTML snippet** — the `<div class="lp-embed-container">...</div>` block with CTA overlay
+3. **Provide the required CSS** — the LP embed CSS (aspect ratio, CTA overlay, responsive rules)
+4. The user pastes these into their existing site's page editor (WordPress block editor, Shopify Liquid template, etc.)
+
+**WordPress integration example:**
+```
+1. Upload stripe images to WordPress Media Library
+2. Add a Custom HTML block in the page editor
+3. Paste the embed HTML snippet (update image src to WordPress media URLs)
+4. Add the CSS to Appearance > Customize > Additional CSS
+```
+
+**Shopify integration example:**
+```
+1. Upload stripe images to Shopify Files (Settings > Files)
+2. Edit the page in the Theme Editor
+3. Add a Custom Liquid section with the embed HTML
+4. Add the CSS to theme.css or a <style> block in the section
+```
+
+### Option C: Use Landing Page Config JSON (Headless LP)
+
+For developers who want to integrate LP content into any framework or CMS programmatically, the LP config JSON provides all data needed:
+
+```
+mcp_tool_call("landing_ai_mcp", "get_landing_page", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+→ Returns complete JSON with:
+  - All text content (headlines, body copy, CTA text)
+  - Image URLs for each stripe
+  - Color scheme, fonts, layout structure
+  - SEO metadata (title, description, keywords)
+  - FAQ content
+  - Text box positions and styling
+```
+
+This JSON is the "headless LP" approach — the LP content as structured data, decoupled from any specific rendering. Developers can use it to render the LP in React, Vue, Svelte, plain HTML, a mobile app, or any other platform.
+
+See **Phase 9: For Developers — LP Config JSON Integration** below for the full guide.
+
+### Option D: Link to Hosted LP (Zero Deployment)
+
+If the user does not want to host anything at all, the LP is already live on the Landing AI frontend:
+
+```
+https://landingai.info/{locale}/landing-page?id={campaign_id}
+```
+
+- No deployment needed — the page is already hosted and served
+- Share this URL directly on social media, email campaigns, or ads
+- The frontend fetches data via the public API (no auth needed for viewing)
+- Limitation: user cannot customize the surrounding page (header, footer, domain)
+
+### Deployment Recommendation Matrix
+
+| User Situation | Recommended Option |
+|---------------|-------------------|
+| No existing website, wants a new site | Option A (Netlify or Vercel) |
+| Has a WordPress/Shopify/Wix site | Option B (embed into existing) |
+| Developer building a custom site | Option C (headless JSON) |
+| Just needs a shareable link ASAP | Option D (hosted LP URL) |
+| Wants custom domain + full control | Option A (any provider + custom domain) |
+| Running an ad campaign | Option D (hosted LP URL) or Option A |
+
+## Phase 9: For Developers — LP Config JSON Integration
+
+This section is for developers who want to use the LP config JSON to integrate LP content into any website or application, rather than using the pre-built homepage HTML.
+
+### Fetching the LP Config
+
+```
+mcp_tool_call("landing_ai_mcp", "get_landing_page", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+```
+
+### JSON Structure Overview
+
+The returned JSON contains the complete LP data:
+
+```json
+{
+  "id": "campaign_uuid",
+  "name": "Campaign Name",
+  "brand_id": "brand_uuid",
+  "stripes": [
+    {
+      "index": 0,
+      "type": "hero",
+      "headline": "Your Main Headline",
+      "subheadline": "Supporting text here",
+      "body_text": "Longer body copy...",
+      "background_url": "https://storage.googleapis.com/.../stripe-0.png",
+      "text_boxes": [
+        {
+          "text": "Headline Text",
+          "position": { "x": 120, "y": 300, "width": 800, "height": 100 },
+          "style": { "font_size": 48, "font_weight": "bold", "color": "#FFFFFF" }
+        }
+      ],
+      "image_layers": [
+        {
+          "url": "https://storage.googleapis.com/.../product.png",
+          "position": { "x": 600, "y": 200, "width": 400, "height": 400 }
+        }
+      ],
+      "cta_text": "立即購買",
+      "cta_position": { "x": 350, "y": 800, "width": 300, "height": 60 }
+    }
+  ],
+  "seo": {
+    "title": "Page Title for SEO",
+    "description": "Meta description for search engines",
+    "keywords": ["keyword1", "keyword2"]
+  },
+  "brand": {
+    "name": "Brand Name",
+    "primary_color": "#2fa067",
+    "secondary_color": "#1a5c3a",
+    "fonts": { "heading": "Noto Sans TC", "body": "system-ui" },
+    "logo_url": "https://storage.googleapis.com/.../logo.png"
+  },
+  "settings": {
+    "aspect_ratio": "9:16",
+    "locale": "zh-TW",
+    "stripe_count": 5
+  }
+}
+```
+
+### Integration Examples
+
+**React Component:**
+```jsx
+function LPStripe({ stripe, ctaLink }) {
+  return (
+    <section className="lp-stripe" style={{ position: 'relative' }}>
+      <img
+        src={stripe.background_url}
+        alt={stripe.headline}
+        loading="lazy"
+        style={{ width: '100%', height: 'auto' }}
+      />
+      {stripe.cta_text && (
+        <a
+          href={ctaLink}
+          className="lp-cta-overlay"
+          style={{
+            position: 'absolute',
+            bottom: `${(stripe.cta_position.y / 1920) * 100}%`,
+            left: `${(stripe.cta_position.x / 1080) * 100}%`,
+            width: `${(stripe.cta_position.width / 1080) * 100}%`,
+          }}
+        >
+          {stripe.cta_text}
+        </a>
+      )}
+    </section>
+  );
+}
+
+function LandingPage({ config, ctaLinks }) {
+  return (
+    <div className="landing-page">
+      {config.stripes.map((stripe, i) => (
+        <LPStripe key={i} stripe={stripe} ctaLink={ctaLinks[i]} />
+      ))}
+    </div>
+  );
+}
+```
+
+**Vue Component:**
+```vue
+<template>
+  <section class="lp-stripe" style="position: relative">
+    <img :src="stripe.background_url" :alt="stripe.headline" loading="lazy" />
+    <a v-if="stripe.cta_text" :href="ctaLink" class="lp-cta-overlay">
+      {{ stripe.cta_text }}
+    </a>
+  </section>
+</template>
+
+<script setup>
+defineProps({ stripe: Object, ctaLink: String });
+</script>
+```
+
+**Plain HTML (server-rendered):**
+```html
+<!-- For each stripe in the config JSON: -->
+<section class="lp-stripe" style="position: relative;">
+  <img src="{stripe.background_url}" alt="{stripe.headline}" loading="lazy" style="width: 100%;">
+  <a href="{cta_link}" class="lp-cta-overlay">{stripe.cta_text}</a>
+</section>
+```
+
+### Keeping Content in Sync
+
+The LP config is dynamic — when the user edits the LP in Landing AI (via the editor or MCP tools), the config JSON updates automatically. Developers can:
+
+1. **Fetch on build** — Call `get_landing_page` at build time (SSG) and regenerate the page
+2. **Fetch on request** — Call `get_landing_page` at runtime (SSR) for always-fresh content
+3. **Webhook** — If the LP is updated, the homepage re-fetches (requires custom implementation)
+
+For public access without auth, the LP is also available via the public API:
+```
+GET https://landingai.info/api/landing-page/public/{campaign_id}
+→ Returns the same JSON structure (no user_token needed)
+```
+
+### Using Stripe Images Directly
+
+If developers prefer to use the generated stripe images (rather than reconstructing from text/image layers), download them:
+
+```
+// Download individual stripe as image
+mcp_tool_call("landing_ai_mcp", "download_stripe", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 0
+})
+→ { "download_url": "...", "auth_header": "Bearer ..." }
+
+// Download all stripes as a ZIP
+mcp_tool_call("landing_ai_mcp", "download_all_stripes", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+
+// Download full-page stitched image (all stripes combined)
+mcp_tool_call("landing_ai_mcp", "export_landing_image", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+```
+
+The stitched image is especially useful for the Phone Mockup Embed pattern (see Phase 4b).
 
 ## Multiple LPs in One Homepage
 
@@ -334,3 +742,91 @@ For multi-product layouts:
 1. Get data for each LP (repeat Phase 1 per campaign_id)
 2. Create a grid/carousel of LP sections
 3. Each LP card links to its full interactive version
+
+### Grid Layout for Multiple LPs
+
+```html
+<section class="lp-grid">
+  <div class="lp-card" data-campaign="{campaign_id_1}">
+    <div class="lp-embed" data-ratio="9:16">
+      <img src="assets/campaign-1-stripe-0.webp" alt="{product_1_name}" loading="lazy">
+    </div>
+    <h3>{product_1_name}</h3>
+    <p>{product_1_tagline}</p>
+    <a href="{cta_link_1}" class="btn-primary">{cta_text_1}</a>
+  </div>
+  <div class="lp-card" data-campaign="{campaign_id_2}">
+    <div class="lp-embed" data-ratio="9:16">
+      <img src="assets/campaign-2-stripe-0.webp" alt="{product_2_name}" loading="lazy">
+    </div>
+    <h3>{product_2_name}</h3>
+    <p>{product_2_tagline}</p>
+    <a href="{cta_link_2}" class="btn-primary">{cta_text_2}</a>
+  </div>
+  <!-- More cards... -->
+</section>
+```
+
+```css
+.lp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.lp-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+```
+
+### Carousel Layout for Multiple LPs
+
+For a horizontal scrolling carousel (campaign layout):
+
+```html
+<section class="lp-carousel">
+  <button class="carousel-prev" aria-label="Previous">&#8249;</button>
+  <div class="carousel-track">
+    <!-- LP cards inserted here -->
+  </div>
+  <button class="carousel-next" aria-label="Next">&#8250;</button>
+</section>
+```
+
+```javascript
+// Carousel navigation
+const track = document.querySelector('.carousel-track');
+const prevBtn = document.querySelector('.carousel-prev');
+const nextBtn = document.querySelector('.carousel-next');
+const cardWidth = track?.firstElementChild?.offsetWidth + 32; // card width + gap
+
+prevBtn?.addEventListener('click', () => {
+  track.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+});
+nextBtn?.addEventListener('click', () => {
+  track.scrollBy({ left: cardWidth, behavior: 'smooth' });
+});
+```
+
+## Quick Reference: Full Workflow Checklist
+
+```
+[ ] Phase 1: Fetch LP config + stripe images (get_landing_page, download_stripe)
+[ ] Phase 2: User chooses layout (Single Product / Multi-Product / Campaign)
+[ ] Phase 3: User chooses embed strategy (Image / iframe)
+[ ] Phase 4: Build HTML + CSS + JS
+[ ] Phase 5: Apply i18n (locale, RTL if Arabic)
+[ ] Phase 6: Write output files
+[ ] Phase 7: Configure CTA buttons (ask user for each destination)
+[ ] Phase 8: Guide deployment (static hosting / embed / headless JSON / hosted URL)
+[ ] Phase 9: Provide developer JSON guide (if applicable)
+```

@@ -24,6 +24,64 @@ You are a landing page editor. You translate the user's natural language edit re
 - `user_token` and `campaign_id` from Phase 3 (generate-landing)
 - Read `CLAUDE.md` for full tool signatures
 
+## Screenshot-Based Editing (Easiest Method)
+
+The fastest and most intuitive way for users to request edits. **Always mention this option when the user starts editing.**
+
+### How it works:
+
+1. User opens the sales page link on their device:
+   `https://landingai.info/{locale}/landing-page?id={campaign_id}`
+2. User takes a screenshot of the page (or a specific stripe)
+3. User uses their phone/desktop markup tool to circle, arrow, or annotate what to change
+4. User pastes the annotated screenshot here and describes the desired change
+
+### What you do when you receive a screenshot:
+
+1. **Identify the stripe** — Match the screenshot content to the stripe list (by headline, visual layout, or position)
+2. **Calculate coordinates** — Determine normalized 0.0-1.0 coordinates for the annotated areas
+3. **Map to the right tool** — Text-only changes use `update_stripe_texts`, visual changes use `regenerate_stripe` with `rect_annotations_json`
+4. **Execute and verify** — Make the change and show the updated result
+
+### What screenshot editing supports:
+
+- Text changes ("change this headline to X")
+- Element removal ("remove this subtitle")
+- Repositioning ("move this text higher")
+- Style changes ("make this text bigger/bolder/white")
+- Image replacement ("swap this background")
+- Layout adjustments ("add more spacing here")
+
+**Pro tip to share with users**: Circle in RED what you want removed/changed, circle in GREEN what you want to keep exactly as-is.
+
+## Web-Based Visual Editor
+
+For users who prefer drag-and-drop self-service editing, direct them to the visual editor:
+
+```
+https://landingai.info/{locale}/editor?id={campaign_id}
+```
+
+### What the visual editor supports:
+
+- Click any text to edit inline
+- Drag elements to reposition
+- Upload replacement images
+- Preview mobile/desktop layouts side-by-side
+- Export as image or HTML
+
+### When to recommend the visual editor vs. Claude:
+
+| Use the Visual Editor when... | Use Claude (me) when... |
+|-------------------------------|------------------------|
+| Fine-tuning exact text position | Batch-editing multiple stripes at once |
+| Drag-and-drop element arrangement | AI-powered content rewrites |
+| Quick typo fixes | Regenerating visuals with new style |
+| Previewing responsive layouts | SEO optimization |
+| Manual image cropping | Screenshot-based "circle and fix" editing |
+
+**Always provide both options** — let the user choose their preferred workflow.
+
 ## Intent Mapping — User Language → MCP Tool
 
 ### Text Edits
@@ -152,15 +210,155 @@ mcp_tool_call("landing_ai_mcp", "get_stripe_detail", {
 })
 ```
 
-### Step 4: Present and iterate
+### Step 5: Present and iterate
 ```
-✅ Updated stripe [N]: [description of change]
+Updated stripe [N]: [description of change]
 
 Want to:
 A) Make more edits
-B) See a preview of the full page
-C) Done — proceed to homepage building
+B) See a preview of the full page → https://landingai.info/{locale}/landing-page?id={campaign_id}
+C) Open the visual editor → https://landingai.info/{locale}/editor?id={campaign_id}
+D) Done — proceed to homepage building (/mx-homepage)
 ```
+
+## Crop & Visual Adjustments
+
+### Crop a stripe (zoom into a specific area)
+
+Use cropping to focus on a particular region of a stripe image — useful when the AI generated a good composition but included too much background or the subject is too small.
+
+```
+mcp_tool_call("landing_ai_mcp", "crop_stripe", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 3,
+  "crop_json": "{\"x\": 0.1, \"y\": 0.1, \"width\": 0.8, \"height\": 0.8}"
+})
+```
+
+**Coordinate system:**
+- Values are **normalized 0.0-1.0** (percentage of full image dimensions)
+- `x`, `y` = top-left corner of the crop rectangle
+- `width`, `height` = size of the crop rectangle
+- Example: `{"x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}` = no crop (full image)
+- Example: `{"x": 0.1, "y": 0.2, "width": 0.8, "height": 0.6}` = crop 10% from left, 20% from top, keep 80% width and 60% height
+
+**Common crop scenarios:**
+| User says | Crop approach |
+|-----------|--------------|
+| "Zoom into the product" | Set x/y to center on product, reduce width/height |
+| "Remove the empty space at the bottom" | Keep x=0, y=0, full width, reduce height |
+| "Focus on the headline area" | Set y to top area, reduce height to headline region |
+
+### Reset crop to original
+```
+mcp_tool_call("landing_ai_mcp", "reset_crop", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 3
+})
+```
+
+### Add soft fade edges between stripes
+
+Creates smooth gradient transitions between consecutive stripes, giving the LP a more polished, seamless look instead of hard cuts between sections.
+
+```
+mcp_tool_call("landing_ai_mcp", "set_stripe_soft_edge", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 2,
+  "enabled": true,
+  "soft_edge_json": "{\"top\": 0.05, \"bottom\": 0.05}"
+})
+```
+
+**Parameters:**
+- `enabled`: `true` to apply, `false` to remove
+- `soft_edge_json`: Controls the gradient fade size
+  - `top`: Fade percentage at the top edge (0.0-0.3 recommended)
+  - `bottom`: Fade percentage at the bottom edge (0.0-0.3 recommended)
+  - Higher values = longer, more gradual fade
+
+**When to suggest soft edges:**
+- When stripe backgrounds have very different colors (jarring transitions)
+- When the LP has a "collage" feel and needs visual continuity
+- When the user says "make it flow better" or "smoother transitions"
+
+### Add dark/light overlay for text readability
+
+Adds a semi-transparent color layer over the stripe background, making text more readable when placed over busy or bright backgrounds.
+
+```
+mcp_tool_call("landing_ai_mcp", "set_stripe_overlay", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "stripe_idx": 1,
+  "enabled": true,
+  "overlay_json": "{\"color\": \"#000000\", \"opacity\": 0.4}"
+})
+```
+
+**Parameters:**
+- `enabled`: `true` to apply, `false` to remove
+- `overlay_json`:
+  - `color`: Hex color (`#000000` for dark overlay, `#FFFFFF` for light)
+  - `opacity`: 0.0 (invisible) to 1.0 (fully opaque); 0.3-0.5 is typical
+
+**When to suggest overlays:**
+- White text on light/busy backgrounds → dark overlay
+- Dark text on dark backgrounds → light overlay
+- User says "I can't read the text" or "text is hard to see"
+
+## SEO & Search Optimization
+
+You can optimize any LP for search engines and AI citation systems.
+
+### Basic SEO — Meta Tags & Open Graph
+
+```
+mcp_tool_call("landing_ai_mcp", "update_seo", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "seo_json": "{\"title\": \"Product Name — Tagline | Brand\", \"description\": \"Compelling 150-char meta description with primary keyword.\", \"keywords\": [\"primary keyword\", \"secondary keyword\", \"brand name\"]}"
+})
+```
+
+### What SEO optimization covers:
+
+| Element | What you optimize | Impact |
+|---------|-------------------|--------|
+| Page title | Keyword-rich, under 60 chars, brand included | Google search result title |
+| Meta description | Compelling, 150-160 chars, includes CTA | Search result snippet |
+| Keywords | Primary + secondary + long-tail terms | Search ranking signals |
+| Open Graph tags | Title, description, image for social sharing | Facebook/LINE/Twitter previews |
+| JSON-LD structured data | Product, Organization, FAQ schema | Google rich results |
+| Heading hierarchy | H1 (headline) → H2 (section) → H3 (detail) | Content structure signals |
+| Image alt text | Descriptive alt text on all stripe images | Image search + accessibility |
+| FAQ schema | Question/answer pairs for Google "People Also Ask" | Featured snippet eligibility |
+
+### How to optimize (workflow):
+
+1. **Analyze the LP content** — Read all stripe headlines, body text, and CTA
+2. **Identify target keywords** — Based on brand, product, and audience
+3. **Generate SEO fields** — Title, description, keywords, FAQ pairs
+4. **Apply via `update_seo`** — One call updates all meta fields
+5. **Update FAQ if applicable** — Add Q&A pairs for FAQ schema
+
+### FAQ Schema (for "People Also Ask")
+
+```
+mcp_tool_call("landing_ai_mcp", "update_faq_content", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "faq_json": "[{\"question\": \"What is [product]?\", \"answer\": \"[Product] is...\"}, {\"question\": \"How much does [product] cost?\", \"answer\": \"Starting from...\"}]"
+})
+```
+
+**When to proactively suggest SEO:**
+- After LP generation is complete and user is satisfied with the visuals
+- When user mentions "search", "Google", "SEO", or "marketing"
+- Before publishing — SEO should be set up before the page goes live
 
 ## Stripe Regeneration (3-Step Process)
 
@@ -323,7 +521,7 @@ mcp_tool_call("landing_ai_mcp", "regenerate_stripe", {
 })
 ```
 
-❌ WRONG — two separate calls for the same stripe:
+WRONG — two separate calls for the same stripe:
 ```
 // Call 1: remove subtitle
 regenerate_stripe(stripe_idx=7, user_feedback="移除副標題")
@@ -338,3 +536,5 @@ regenerate_stripe(stripe_idx=7, user_feedback="移除 debug 文字")
 - Offer undo immediately after any edit: "If that's not right, I can undo it"
 - **Collect ALL edits for a stripe before regenerating** — ask "Any other changes for this stripe?"
 - For major changes, suggest regeneration over manual editing
+- **Remind users about screenshot editing** — "You can also take a screenshot, circle what to change, and paste it here"
+- **Provide the sales page and editor links** after every significant edit so users can verify visually
