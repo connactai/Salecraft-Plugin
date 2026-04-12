@@ -126,6 +126,45 @@ Select platforms to publish to (e.g., "1 and 2"):
 
 If no accounts connected → **go to Phase 0 to connect first.**
 
+## Phase 1.5: Generate Social Post Copy (AI)
+
+Before importing or composing manually, use AI to generate platform-optimized captions:
+
+### Generate social media copy
+```
+mcp_tool_call("landing_ai_mcp", "social_copy", {
+  "user_token": token,
+  "data_json": "{\"conversation_id\": \"<optional>\", \"quantity\": 1}"
+})
+→ Deducts credits and returns social copy sets
+```
+
+### Get session-generated content (includes social copy from Architect)
+```
+mcp_tool_call("landing_ai_mcp", "get_session_content", {
+  "user_token": token,
+  "session_id": "<session_id>"
+})
+→ Returns: rendered content with stripes + social copy (caption, hashtags) from generation
+```
+
+### Reflect on post quality (AI scoring)
+```
+mcp_tool_call("landing_ai_mcp", "social_reflect", {
+  "user_token": token,
+  "data_json": "{\"post_text\": \"Your caption here\", \"image_url\": \"https://...\", \"brand_name\": \"Brand\"}"
+})
+→ Returns: { "reflection_score": 8.5, "reflection_data": { strengths, weaknesses, suggestions } }
+```
+Use this to check if the caption is good before publishing. Score < 7 = rewrite recommended.
+
+### Workflow
+1. `get_session_content` → check if Architect already generated social copy
+2. If yes → use it directly
+3. If no or want more → `social_copy` to generate new copies (costs credits)
+4. `social_reflect` → score the copy before publishing
+5. Iterate until score ≥ 7
+
 ## Phase 2: Import LP Content
 
 ```

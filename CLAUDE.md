@@ -249,6 +249,17 @@ get_account_content(user_token, account_id) -> content_list
 disconnect_account(user_token, account_id) -> confirmation (destructive!)
 ```
 
+### Social Post Generation (AI)
+```
+social_copy(user_token, data_json) -> generated_copy
+# data_json: {"conversation_id": "", "quantity": 1} — deducts credits
+get_session_content(user_token, session_id) -> { stripes, social_copy }
+# Returns Architect-generated social copy (caption + hashtags) if available
+social_reflect(user_token, data_json) -> { reflection_score, reflection_data }
+# data_json: {"post_text": "...", "image_url": "...", "brand_name": "..."}
+# Score < 7 = rewrite recommended
+```
+
 ### Content Publishing
 ```
 publish_post(user_token, data_json) -> post_result
