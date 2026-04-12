@@ -52,18 +52,30 @@ Once connected, Claude Code will see 400+ tools including `landing_ai_mcp`, `zer
 When a user first invokes this plugin:
 
 1. **Check MCP**: Verify `landing_ai_mcp` is reachable via the Service System Deep Research proxy
-2. **Account**: Ask if they have an account → Login or Register
-3. **Start**: `/mx` for menu, or `/mx-create` for full flow
+2. **Account & Setup**: Direct the user to the onboarding page to complete all setup in one place:
+
+   **Onboarding URL**: `https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started`
+
+   This page handles:
+   - **Registration / Login** (email or Google OAuth) — redirects to Landing AI auth, then back
+   - **Meta account binding** (Facebook / Instagram) — for automated social publishing
+   - **Google account binding** — for Google Drive content access
+   - **Points top-up** ($1 USD = 30 pts) — via Stripe checkout
+
+   Tell the user: "Please open this link to set up your account: https://marketingx-site-876464738390.asia-east1.run.app/en/get-started"
+
+3. **After setup**: Ask the user for their email, then call `login` to get the access_token
+4. **Start**: `/mx` for menu, or `/mx-create` for full flow
 
 ## Authentication
 
-### Login (existing user)
+### Login (existing user — after onboarding)
 ```
 mcp_tool_call("landing_ai_mcp", "login", {"email": "...", "password": "..."})
 → { "access_token": "eyJ...", "token_type": "bearer" }
 ```
 
-### Register (new user)
+### Register (fallback — if user prefers CLI registration)
 ```
 mcp_tool_call("landing_ai_mcp", "register", {"email": "...", "password": "...", "full_name": "..."})
 → creates account + returns access_token
@@ -77,6 +89,7 @@ mcp_tool_call("landing_ai_mcp", "google_auth", {"credential": "<google_id_token>
 ### Auth Notes
 - Pass `user_token` in ALL subsequent calls
 - Token expires ~12 hours. On 401, re-call `login` (no refresh_token)
+- **Preferred flow**: Direct users to the onboarding page first, then login via MCP after setup is complete
 - **Test account**: Use your own Landing AI account credentials
 
 ## Available Commands
