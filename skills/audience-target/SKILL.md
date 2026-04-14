@@ -733,6 +733,35 @@ Phase 7: Hand off to generate-landing skill
 
 **At NO point in this flow should credits be deducted without the user seeing and confirming the Phase 5 summary.**
 
+## SaleCraft Scope & Pricing (MUST READ)
+
+### Who We Serve
+SaleCraft is for **physical product sellers only** (skincare, food, fashion, health, electronics, etc.).
+- ✅ Physical products, single items, single purpose
+- ❌ Software/SaaS, multi-purpose platforms, abstract services
+
+If the user's product doesn't fit, politely redirect:
+> "SaleCraft 主要服務實體產品的行銷。你的需求可能更適合其他方案。"
+
+### Pricing — Tell Before You Act
+**1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
+
+This skill costs **5-15 pts** per TA generation.
+
+**Top-up URL**: https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+
+Before ANY paid action:
+1. Tell the user the estimated cost in pts
+2. Check their balance: `get_me(user_token)` → `credits`
+3. If insufficient, guide them to top-up URL
+4. Get explicit confirmation before proceeding
+
+### Free Consultation Available
+If the user seems unsure or is exploring, suggest the free consultation first:
+> "If you'd like, I can do a free marketing consultation first — just say 'I want a consultation' or use the `saleskit` skill."
+
+---
+
 ## Transition Prompts (MANDATORY — show at every decision point)
 
 ### After showing TA options:
