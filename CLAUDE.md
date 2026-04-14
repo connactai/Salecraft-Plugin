@@ -84,23 +84,16 @@ mcp__claude_ai_Service_System_Deep_Research__mcp_tool_call(
 | **publish-ads** | Create Meta/Google ad campaigns | 30-100 |
 | **i18n-adapt** | Adapt content for 10 locales | 10-30 |
 
-## LP Content Awareness (Critical for Editing)
+## LP Content Awareness (Automatic)
 
-When a user wants to edit an LP, you MUST first load the full LP content into your context:
+You must always know the full content of the active LP. Users describe stripes naturally — by text content, color, position, or purpose — never by index number.
 
-```
-1. list_campaigns → show all user's LPs (name, id)
-2. User picks one → list_stripes(campaign_id) → get all stripe summaries
-3. For each stripe → get_stripe_detail(campaign_id, stripe_idx) → full text/color/layout
-4. Build a content index: map text content → stripe index
-```
+**After generating or opening an LP, silently load all stripes** (`list_stripes` + `get_stripe_detail` for each). Then when user says:
+- "有寫『給你全新生活』的那頁改成藍色" → search headlines → find → edit
+- "價格那頁的按鈕改掉" → find pricing stripe → update CTA
+- "最後一頁背景變暗" → last stripe → add overlay
 
-This allows you to handle natural language like:
-- "那一頁有寫『給你全新生活』的，改成藍色" → find stripe by headline → edit
-- "價格那頁的按鈕文字改掉" → find pricing stripe → update CTA text
-- "把見證那段的背景變暗" → find testimonial stripe → add overlay
-
-**See `skills/edit-landing/SKILL.md` for the full LP Content Loading protocol.**
+High confidence match → edit directly. Low confidence → briefly ask. No match → list available pages.
 
 ## Pricing (Must Know)
 
