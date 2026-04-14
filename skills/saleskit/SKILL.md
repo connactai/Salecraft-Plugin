@@ -132,6 +132,186 @@ If the user's product/service doesn't fit:
 > 你描述的 [SaaS / 顧問服務 / ...] 比較適合其他行銷方案。
 > 不過如果你有實體產品的部分，我們還是可以幫忙！」
 
+## Agent Knowledge Integration
+
+This skill draws from 9 specialist agents. Load relevant expertise based on user situation:
+
+| User Situation | Agent(s) to Load | Key Contribution |
+|----------------|-------------------|-----------------|
+| New brand, no identity | Brand Guardian | Brand foundation, visual identity, voice |
+| Needs content plan | Content Creator + Instagram + TikTok | Platform-specific formats, calendars |
+| Wants organic growth | SEO Specialist + Growth Hacker | LP optimization, viral mechanics |
+| Wants social presence | Social Media Strategist + Instagram + TikTok | Channel strategy, posting cadence |
+| Unclear on positioning | Product Manager + Discovery Coach | Problem framing, audience clarity |
+| Wants paid ads | Growth Hacker + Social Media Strategist | CAC optimization, channel selection |
+| Entering new market | SEO Specialist + Content Creator | Keyword strategy, localized content |
+
+## Consultation Frameworks
+
+Adapted from the Discovery Coach's methodology for product seller consultation:
+
+### The 6 Questions (ask naturally, not as a checklist)
+
+| # | Question | What It Reveals | Source Framework |
+|---|----------|-----------------|------------------|
+| 1 | What do you sell, and who buys it? | Product-market fit basics | Gap Selling: Current State |
+| 2 | How are you selling today? What works? | Existing channels, strengths | SPIN: Situation |
+| 3 | What's your biggest marketing frustration? | Core pain point | SPIN: Problem |
+| 4 | What happens if nothing changes in 6 months? | Urgency, cost of inaction | SPIN: Implication |
+| 5 | If marketing worked perfectly, what changes? | Desired future state | Gap Selling: Future State |
+| 6 | What have you tried before that didn't work? | Avoid repeating failures | Sandler: Level 2 |
+
+### Diagnosis Depth (Sandler Pain Funnel adapted)
+
+- **Surface**: "I need a landing page" → Dig deeper. Why? For what campaign?
+- **Business**: "Sales are flat" → Quantify. How much? Since when? Which products?
+- **Root Cause**: "We have no online presence" → Now you know the real gap. Recommend brand-onboard first.
+
+### Objection Handling (AECR)
+
+| Objection | What They Mean | Response |
+|-----------|---------------|----------|
+| "Too expensive" | Not convinced of ROI | Reframe: show cost-per-outcome vs. hiring agency |
+| "I don't have time" | Overwhelmed | Show: SaleCraft does the heavy lifting, you approve |
+| "I tried X before" | Burned, skeptical | Acknowledge + differentiate: AI speed + human guidance |
+| "I just want to try one thing" | Low commitment | Great — recommend entry pack (~$10), prove value first |
+
+## Channel Strategy Matrix
+
+Maps product types to recommended marketing channels and content formats:
+
+| Product Type | Primary Channel | Secondary Channel | Content Format | SaleCraft Tools |
+|-------------|-----------------|-------------------|----------------|-----------------|
+| Beauty / Skincare | Instagram | TikTok | Before/after, routine Reels, UGC | LP + Reels + Social |
+| Food / F&B | Instagram | Google (Local SEO) | Process videos, plating shots | LP + Social + QR |
+| Fashion / Apparel | Instagram + TikTok | Pinterest | Lookbook carousels, styling Reels | LP + Reels + Social |
+| Health Supplements | Google (SEO) | Facebook | Educational content, testimonials | LP + Ads + Social |
+| Handmade / Craft | Instagram | Etsy/marketplace | Behind-the-scenes, maker story | LP + Social + Brand |
+| Home / Lifestyle | Instagram + Pinterest | TikTok | Lifestyle flat-lays, room reveals | LP + Social + Reels |
+| Electronics / Gadgets | YouTube/TikTok | Google (SEO) | Demo videos, unboxing, specs | LP + Ads + Reels |
+| Manufacturing / B2B product | LinkedIn | Google (SEO) | Case studies, product specs | LP + Ads |
+
+### Channel Selection Rules (from Growth Hacker)
+
+1. **Start with ONE channel** — master it before expanding
+2. **Go where your customers already are** — don't force a channel
+3. **Viral potential**: TikTok > Instagram Reels > Facebook > LinkedIn
+4. **Purchase intent**: Google Search > Facebook Ads > Instagram > TikTok
+5. **LTV:CAC ratio must be > 3:1** — if a channel can't hit this, drop it
+
+## Content Strategy Quick Reference
+
+### Instagram (from Instagram Curator)
+
+| Format | Best For | Key Rule | Target Metric |
+|--------|----------|----------|---------------|
+| Feed Post (carousel) | Product education, features | 1/3 brand + 1/3 educational + 1/3 community | 3.5%+ engagement |
+| Stories | Behind-the-scenes, polls, flash sales | Interactive elements (polls, questions, sliders) | 80%+ completion |
+| Reels | Trend-riding, product demos, tutorials | Hook in first 1.5 seconds | 70%+ view completion |
+| Shopping Tags | Direct conversion | Multiple angles + lifestyle shots | 2.5%+ conversion |
+
+**Hashtag Strategy**: 5-8 per post. Mix: 2 popular (500K+) + 3 niche (10K-100K) + 2 branded.
+
+### TikTok (from TikTok Strategist)
+
+| Format | Best For | Key Rule | Target Metric |
+|--------|----------|----------|---------------|
+| Educational (40%) | How-to, tips, product knowledge | Teach something in 15-30 seconds | 8%+ engagement |
+| Entertainment (30%) | Trend participation, humor | Use trending audio within 48 hours | Completion rate 70%+ |
+| Inspirational (20%) | Brand story, customer success | Authentic, not polished | Share rate |
+| Promotional (10%) | Product launch, offers | Only 10% — don't over-sell | Click-through 12%+ |
+
+**Viral Formula**: Pattern interrupt (0-3s) → Value delivery (3-20s) → CTA or loop (20-30s).
+
+### General Content (from Content Creator)
+
+| Content Type | Platform | Frequency | Purpose |
+|-------------|----------|-----------|---------|
+| Product hero shot | All | Per launch | Core brand asset |
+| Customer testimonial | IG/FB/LP | 2-3x/week | Social proof |
+| Process / making-of | TikTok/IG Reels | 1-2x/week | Authenticity, engagement |
+| Educational tip | All | 3-4x/week | Authority, SEO value |
+| User-generated content | IG/TikTok | Ongoing | Trust, community |
+| Promotional offer | All | 1x/week max | Conversion (don't overdo) |
+
+## Brand Audit Checklist
+
+Quick assessment from the Brand Guardian — run this during consultation Step 1:
+
+### Brand Foundation (Must Have)
+
+- [ ] **Brand name** — memorable, spellable, domain-available
+- [ ] **Logo** — exists in vector format, works at small sizes
+- [ ] **Color palette** — primary + secondary + neutral defined
+- [ ] **Brand voice** — can articulate personality in 3 adjectives
+- [ ] **Value proposition** — one sentence: [Product] helps [who] [achieve what] without [pain]
+
+### Visual Assets (Needed for Tools)
+
+- [ ] **Product photos** — high-res, white background + lifestyle shots
+- [ ] **Brand fonts** — consistent across materials
+- [ ] **Social media templates** — consistent look for posts/stories
+- [ ] **Brand guidelines doc** — even a 1-pager counts
+
+### Digital Presence (Current State)
+
+- [ ] **Website / LP** — exists and is mobile-friendly
+- [ ] **Google Business Profile** — claimed and updated (for local business)
+- [ ] **Social accounts** — IG / FB / TikTok (whichever is relevant)
+- [ ] **Reviews / testimonials** — collected and displayable
+
+### Brand Health Signals
+
+| Signal | Healthy | Needs Work |
+|--------|---------|------------|
+| Visual consistency | Same colors/fonts everywhere | Different looks per channel |
+| Voice consistency | Recognizable tone across posts | Random, inconsistent messaging |
+| Customer recognition | Customers describe brand accurately | "I don't know what they stand for" |
+| Asset library | Organized, accessible, up-to-date | Scattered across phones/drives |
+
+**Gap found?** → Recommend `brand-onboard` skill before any content generation.
+
+## SEO Quick Wins
+
+For Landing Page optimization — apply these when generating or editing LPs:
+
+### On-Page Essentials (from SEO Specialist)
+
+| Element | Rule | Example |
+|---------|------|---------|
+| Title tag | Primary keyword + modifier + brand, 50-60 chars | "有機玫瑰精華液 - 30天煥膚保養 \| BrandName" |
+| Meta description | Include keyword + CTA, 150-160 chars | "100% 有機玫瑰精華，14天看見改變。限時85折，立即購買。" |
+| H1 | Single, includes primary keyword | "給肌膚最純粹的有機玫瑰精華" |
+| H2-H3 | Cover subtopics, include secondary keywords | "為什麼選擇有機？", "使用方法", "顧客見證" |
+| Images | Alt text with keywords, WebP format, < 100KB | alt="有機玫瑰精華液-質地展示" |
+| Internal links | Link to related products / brand page | At least 2-3 contextual links |
+| Schema markup | Product schema with price, availability, reviews | JSON-LD in page head |
+
+### Core Web Vitals Targets
+
+| Metric | Target | What It Means |
+|--------|--------|---------------|
+| LCP | < 2.5s | Largest image/text loads fast |
+| INP | < 200ms | Page responds to clicks quickly |
+| CLS | < 0.1 | Nothing shifts around during load |
+
+### Quick Keyword Strategy
+
+1. **Head term**: Product category (e.g., "有機精華液") — high volume, hard to rank
+2. **Long-tail**: Specific benefit (e.g., "敏感肌有機精華液推薦") — lower volume, easier to rank
+3. **Intent match**: Transactional pages → transactional keywords ("買", "價格", "推薦")
+4. **Local**: Add location if physical store ("台北有機保養品專櫃")
+
+### LP-Specific SEO Checklist
+
+- [ ] One clear H1 with primary keyword
+- [ ] FAQ section targeting "People Also Ask" queries
+- [ ] Product schema (JSON-LD) with price + reviews
+- [ ] Mobile-first design (Google indexes mobile version)
+- [ ] Page load under 3 seconds
+- [ ] Hreflang tags if using i18n-adapt for multiple locales
+- [ ] Open Graph tags for social sharing preview
+
 ## Key Rules
 
 1. **Never skip consultation** — Don't jump straight to tools. Understand first.
