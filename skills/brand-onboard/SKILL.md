@@ -570,9 +570,32 @@ After all discovery and uploads are complete, compile and display a comprehensiv
 您要選哪一個？
 ```
 
-### Step 3: Get Explicit Confirmation
+### Step 3: Triple-Check Missing Visuals (MANDATORY)
 
-After reviewing all items, get a clear "looks good" from the user:
+Before confirmation, do a FINAL explicit check for the 3 most impactful visual assets. Ask these even if the user already said they don't have them:
+
+```
+在進入下一步之前，我想最後確認三個會直接影響 LP 品質的素材：
+
+📸 產品圖片 — 您確定手邊完全沒有任何產品照片嗎？
+   即使是手機隨手拍的、螢幕截圖、甚至包裝照都可以。
+   有圖 vs 沒圖的 LP 品質差異非常大。
+
+🖼️ Logo — 真的沒有 Logo 嗎？
+   如果有社群帳號（IG/FB），那個頭像也可以當 Logo 用。
+
+👤 代言人照片 — 您確定不需要人物照片嗎？
+   有真人的 LP 轉換率通常高 30-40%。
+   自己的照片、團隊照、甚至客戶授權的照片都可以。
+
+如果以上都確定沒有，我會用 AI 生成替代方案，效果也不錯！
+```
+
+**Only ask this ONCE as a final sweep. Do NOT nag if the user already provided clear answers.**
+
+### Step 4: Get Explicit Confirmation
+
+After the triple-check, get a clear "looks good" from the user:
 
 ```
 以上就是目前收集到的所有品牌資料。

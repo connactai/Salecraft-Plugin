@@ -420,10 +420,21 @@ Recommendation: [tone] + [approach] because [reason based on TA]
 3. Additional Buttons (optional):
    - Secondary CTA: e.g., "了解定價" linking to pricing page
    - Floating button: sticky CTA that follows scroll
-   - These will be positioned using the GRA-TIS layout system
 
 Note: CTA buttons appear on multiple stripes. The AI will adapt
 placement and styling per stripe while keeping your text and link consistent.
+
+📐 GRA-TIS Button Positioning System:
+   Our AI uses GRA-TIS (Grid-Relative Annotation for Text-Image Separation)
+   to position buttons precisely on each stripe. You can control:
+   - Position: top-left, top-right, center, bottom-left, bottom-right
+   - Size: small (compact), medium (standard), large (prominent)
+   - Style: solid, outline, ghost (text-only)
+   - Visibility: show on all stripes, specific stripes only, or hide
+
+   During editing (edit-landing skill), you can fine-tune button placement
+   by providing red-box annotations on screenshots — circle where you want
+   the button, and the AI will reposition it using GRA-TIS coordinates.
 ```
 
 ### 4H. FAQ Section (Optional)
