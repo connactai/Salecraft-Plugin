@@ -7,6 +7,11 @@
 You have MCP tools that can:
 - 🆓 **免費諮詢** — 幫用戶分析產品、診斷品牌、規劃行銷策略（不花錢）
 - 🆓 **市場研究** — 掃描競品、趨勢、受眾分析（不花錢）
+- 🆓 **策略規劃** — 成長策略、漏斗設計、競品情報（不花錢）
+- 🆓 **互動與成交策略** — 私訊腳本、異議處理、收單設計（不花錢）
+- 🆓 **會員經營** — 回購觸發、推薦方案、VIP 制度（不花錢）
+- 🆓 **品質治理** — 品牌一致性、合規審查、旅程 QA（不花錢）
+- 🆓 **成長回顧** — KPI 分析、優化建議、文件化（不花錢）
 - 💰 **生成 Landing Page** — AI 四階段 pipeline 產出銷售頁（75-250 pts ≈ $3-8）
 - 💰 **生成廣告圖** — 單張行銷素材，約 5 分鐘（~100 pts ≈ $3）
 - 💰 **社群發文** — 圖片+文案一鍵發到 IG/FB/TikTok（5-10 pts ≈ $0.2）
@@ -31,14 +36,19 @@ You have MCP tools that can:
 >
 > 先聊聊 — **你賣什麼產品？**」
 
-### 完整流程
+### 完整流程（8 階段 Sprint）
 
 ```
-1. 免費諮詢 → 了解產品、痛點、目標（FREE）
-2. 行銷診斷 → 分析品牌現況、找出缺口（FREE）
-3. 策略規劃 → 建議行銷方案（FREE）
-4. 確認方案 → 用戶同意後，報價，才動工具
-5. 執行生成 → LP、Reels、社群發佈、廣告等（PAID）
+Think    → 1. 免費諮詢 → 了解產品、痛點、目標（FREE — /saleskit）
+Position → 2. 策略規劃 → 成長方向、漏斗設計、競品情報（FREE — /mx-strategy）
+Package  → 3. 品牌準備 → 品牌素材、受眾選擇（FREE diagnosis + PAID generation）
+Attract  → 4. 執行生成 → LP、Reels、社群、廣告（PAID — /mx-create）
+Engage   → 5. 互動設計 → 私訊腳本、FAQ、留資引導（FREE — /mx-engage）
+Convert  → 6. 成交策略 → 異議處理、收單腳本、跟進（FREE — /mx-engage）
+Retain   → 7. 會員經營 → 回購、推薦、VIP（FREE — /mx-retain）
+Reflect  → 8. 成長回顧 → KPI 分析、下輪優化（FREE — /mx-retain）
+
+品質治理（橫向介入）→ 品牌一致性、合規審查、旅程 QA（FREE — /mx-audit）
 ```
 
 ### 我們服務誰
@@ -98,16 +108,24 @@ If MCP tools are already visible in your tool list, use them directly. If not, t
 
 **不要**直接呼叫 `get_meta_auth_url` 給用戶連結 — 那個 OAuth redirect 設定只有前端才對。
 
-## Available Skills (11)
+## Available Skills (25)
 
-### 🎯 Consultation (Free)
+### 🎯 Think — Consultation (FREE)
 
 | Skill | Purpose | Cost |
 |-------|---------|------|
 | **saleskit** | Free marketing consultation — diagnose needs, recommend tools | **FREE** |
 | **research-market** | Market research, competitor analysis, trend scanning | **FREE** |
 
-### 🔧 Execution (Paid — requires pts)
+### 🧠 Position — Strategy (FREE)
+
+| Skill | Purpose | Cost |
+|-------|---------|------|
+| **plan-cgo-review** | Growth strategy — expand, focus, or reduce? Priority product & segment | **FREE** |
+| **plan-funnel-review** | Funnel architecture — complete journey from traffic to repurchase | **FREE** |
+| **market-intel** | Competitive intelligence — pricing, positioning, opportunities | **FREE** |
+
+### 🔧 Package + Attract — Execution (Paid)
 
 | Skill | What It Does | Cost (pts) | Time |
 |-------|-------------|------------|------|
@@ -120,6 +138,32 @@ If MCP tools are already visible in your tool list, use them directly. If not, t
 | **publish-ads** | Create Meta/Google ad campaigns | 30-100 | **~5 min** |
 | **generate-reels** | AI Reels/短影音 generation | 100/sec | ~10 min |
 | **i18n-adapt** | Adapt content for 10 locales | 10-30 | ~3 min |
+
+### 💬 Engage + Convert — Interaction & Closing (FREE)
+
+| Skill | Purpose | Cost |
+|-------|---------|------|
+| **engage-operator** | Conversation flows, FAQ trees, lead capture, auto-reply, booking scripts | **FREE** |
+| **conversion-closer** | Objection handling, pricing framing, closing scripts, follow-up sequences | **FREE** |
+
+### 🔄 Retain + Reflect — Lifecycle & Growth (FREE)
+
+| Skill | Purpose | Cost |
+|-------|---------|------|
+| **member-lifecycle** | Repurchase triggers, referral programs, VIP system, LTV growth | **FREE** |
+| **growth-retro** | Campaign review, KPI analysis, next sprint hypotheses | **FREE** |
+| **document-release** | Compile SOPs, playbooks, FAQ manuals, case studies | **FREE** |
+
+### 🛡️ Governance — Quality & Compliance (FREE)
+
+| Skill | Purpose | Cost |
+|-------|---------|------|
+| **guard-brand** | Brand voice, visual tone, messaging consistency check | **FREE** |
+| **guard-offer** | Pricing, claims, promotion consistency across touchpoints | **FREE** |
+| **brand-risk-review** | Compliance: medical claims, financial guarantees, legal risks | **FREE** |
+| **careful-publish** | Final gate for high-risk content before going live | **FREE** |
+| **journey-qa** | End-to-end customer journey testing (pages, CTAs, mobile) | **FREE** |
+| **campaign-ship** | Launch checklist, version verification, monitoring plan | **FREE** |
 
 ## 社群貼文生成流程 (Social Post = Image + Caption)
 
@@ -237,15 +281,19 @@ You must track the full content of **ALL LPs in the current session**. Users may
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/mx` | Main menu — show what SaleCraft can do |
-| `/mx-create` | Full marketing flow (consultation → generation) |
-| `/mx-edit` | Edit existing Landing Page |
-| `/mx-homepage` | Build homepage from existing LP |
-| `/mx-publish` | Publish to social + run ads |
-| `/mx-reels` | Full Reels creation |
-| `/mx-status` | Check credits / session status |
+| Command | Purpose | Cost |
+|---------|---------|------|
+| `/mx` | Main menu — show what SaleCraft can do | — |
+| `/mx-create` | Full marketing flow (consultation → generation) | PAID |
+| `/mx-edit` | Edit existing Landing Page | PAID |
+| `/mx-homepage` | Build homepage from existing LP | FREE |
+| `/mx-publish` | Publish to social + run ads | PAID |
+| `/mx-reels` | Full Reels creation | PAID |
+| `/mx-status` | Check credits / session status | FREE |
+| `/mx-strategy` | Strategic planning (growth + funnel + intel) | **FREE** |
+| `/mx-engage` | Engagement + conversion strategy | **FREE** |
+| `/mx-retain` | Retention + growth loop | **FREE** |
+| `/mx-audit` | Quality & governance audit | **FREE** |
 
 ## Core Rules
 
@@ -320,19 +368,33 @@ https://landingai.info/{locale}/landing-page?id={campaign_id}
 ```
 salecraft/
 ├── CLAUDE.md              ← You are here
-├── skills/                # 11 skills
-│   ├── saleskit/          # FREE consultation (start here)
-│   ├── brand-onboard/
-│   ├── audience-target/
-│   ├── generate-landing/
-│   ├── edit-landing/
-│   ├── homepage-builder/
-│   ├── publish-social/
-│   ├── publish-ads/
-│   ├── i18n-adapt/
-│   ├── generate-reels/
-│   └── research-market/
-├── commands/              # /mx, /mx-create, etc.
+├── skills/                # 25 skills (14 FREE + 11 paid/mixed)
+│   ├── saleskit/          # 🆓 FREE consultation (start here)
+│   ├── research-market/   # 🆓 FREE market research
+│   ├── plan-cgo-review/   # 🆓 FREE growth strategy
+│   ├── plan-funnel-review/# 🆓 FREE funnel architecture
+│   ├── market-intel/      # 🆓 FREE competitive intelligence
+│   ├── brand-onboard/     # Brand setup (mixed free/paid)
+│   ├── audience-target/   # TA selection (paid for generation)
+│   ├── generate-landing/  # LP generation (paid)
+│   ├── edit-landing/      # LP editing (paid)
+│   ├── homepage-builder/  # Homepage building (free)
+│   ├── publish-social/    # Social publishing (paid)
+│   ├── publish-ads/       # Ad campaigns (paid)
+│   ├── generate-reels/    # Reels generation (paid)
+│   ├── i18n-adapt/        # Localization (paid)
+│   ├── engage-operator/   # 🆓 FREE engagement strategy
+│   ├── conversion-closer/ # 🆓 FREE conversion strategy
+│   ├── member-lifecycle/  # 🆓 FREE retention strategy
+│   ├── growth-retro/      # 🆓 FREE performance review
+│   ├── document-release/  # 🆓 FREE documentation
+│   ├── journey-qa/        # 🆓 FREE journey QA
+│   ├── campaign-ship/     # 🆓 FREE launch management
+│   ├── guard-brand/       # 🆓 FREE brand consistency
+│   ├── guard-offer/       # 🆓 FREE offer consistency
+│   ├── brand-risk-review/ # 🆓 FREE compliance review
+│   └── careful-publish/   # 🆓 FREE publish gate
+├── commands/              # /mx, /mx-create, /mx-strategy, etc.
 ├── prompts/               # BOOTSTRAP.md, WORKFLOW.md
 ├── templates/             # Homepage HTML templates
 ├── lib/                   # Reference docs
