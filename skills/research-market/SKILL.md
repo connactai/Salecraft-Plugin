@@ -183,7 +183,7 @@ If the user's product doesn't fit, politely redirect:
 
 This skill is **FREE** (uses public research MCPs, no pts deducted).
 
-**Top-up URL**: https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+**Top-up URL**: https://salecraft.ai/{locale}/get-started
 
 Before ANY paid action:
 1. Tell the user the estimated cost in pts

@@ -287,9 +287,9 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-This skill costs **30-100 pts** per ad campaign created.
+This skill's cost depends on the ad creative generation: quick ad image = 200 pts (~$7), carousel = 300 + 100×N pts. Campaign creation itself uses the generated creative.
 
-**Top-up URL**: https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+**Top-up URL**: https://salecraft.ai/{locale}/get-started
 
 Before ANY paid action:
 1. Tell the user the estimated cost in pts

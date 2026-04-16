@@ -363,7 +363,7 @@ mcp_tool_call("landing_ai_mcp", "cancel_reel", {
 | Script revision | FREE |
 | Full video generation | 100 pts/second |
 | Scene regeneration | ~50 pts |
-| Publish to social | 5-10 pts/post |
+| Publish to social | social copy 100 pts/set |
 
 ---
 

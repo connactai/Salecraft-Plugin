@@ -296,8 +296,8 @@ Entry → Standard → Premium → Advocate
 No credits required. Retention strategy is part of SaleCraft's free consultation.
 
 Paid actions that MAY follow:
-- Creating referral LP → 75-250 pts
-- Publishing retention posts → 5-10 pts/post
+- Creating referral LP → 1,600-2,000 pts
+- Publishing retention posts → social copy 100 pts/set, quick ad 200 pts
 - Generating QR codes for referral → 5 pts
 - These are separate actions requiring explicit confirmation.
 

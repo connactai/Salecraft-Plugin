@@ -36,7 +36,7 @@ If user has no connected accounts, **direct them to the SaleCraft frontend** —
 
 **正確步驟**：
 > 「請到這個頁面連結你的 Meta 帳號：
-> https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+> https://salecraft.ai/{locale}/get-started
 > 
 > 注意：你的 IG 帳號必須是**專業帳戶**或**商業帳戶**，個人帳戶無法透過 API 發文。
 > 如果還不是，到 IG App → 設定 → 帳號 → 切換為專業帳號。」
@@ -451,9 +451,9 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-This skill costs **5-10 pts per post** published.
+Social copy generation costs **100 pts per set** (~$3). Publishing itself is free; the cost is in content generation (social_copy = 100 pts, quick ad image = 200 pts).
 
-**Top-up URL**: https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+**Top-up URL**: https://salecraft.ai/{locale}/get-started
 
 Before ANY paid action:
 1. Tell the user the estimated cost in pts

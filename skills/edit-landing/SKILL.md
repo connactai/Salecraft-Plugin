@@ -612,9 +612,9 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-This skill costs **5-20 pts** per edit session.
+Stripe regeneration costs **100 pts** per regeneration (regeneration_credit_cost). Text-only edits (`update_stripe_texts`, `update_stripe_text_styling`) are free.
 
-**Top-up URL**: https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+**Top-up URL**: https://salecraft.ai/{locale}/get-started
 
 Before ANY paid action:
 1. Tell the user the estimated cost in pts

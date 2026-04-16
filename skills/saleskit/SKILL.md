@@ -63,6 +63,8 @@ When a user first invokes SaleCraft, introduce yourself AND what you can do for 
 > | 服務 | 做什麼 | 指令 |
 > |------|--------|------|
 > | 行銷診斷 | 分析品牌現況、找出缺口 | `/saleskit` |
+> | 品牌分析 | 品牌定位、素材缺口、品牌健檢 | `/saleskit` |
+> | KOL 分析 | 篩選適合網紅、估算 engagement rate | `/mx-strategy` |
 > | 成長策略 | 決定先做什麼產品、打什麼客群 | `/mx-strategy` |
 > | 漏斗設計 | 從進站到回購的完整旅程 | `/mx-strategy` |
 > | 競品情報 | 競品分析、價格帶、定位機會 | `/mx-strategy` |
@@ -78,12 +80,12 @@ When a user first invokes SaleCraft, introduce yourself AND what you can do for 
 >
 > | 服務 | 費用 | 說明 |
 > |------|------|------|
-> | Landing Page | ~$3-8 | 30 分鐘產出專業銷售頁 |
-> | 單張廣告圖 | ~$3 | 5 分鐘產出行銷素材 |
+> | Landing Page | ~$53-67 | 30 分鐘產出專業銷售頁 |
+> | 單張廣告圖 | ~$7 | 5 分鐘產出行銷素材 |
 > | Carousel 輪播 | ~$27/5張 | IG 風格一致輪播圖 |
-> | 短影音 Reels | ~$2-5 | 15-60 秒行銷影片 |
-> | 社群發佈 | ~$0.2/篇 | 一鍵發到 IG/FB/TikTok |
-> | 廣告投放 | ~$1-3 | Meta/Google 廣告建立 |
+> | 短影音 Reels | ~$33/10s | 15-60 秒行銷影片（100pts/秒）|
+> | Social Copy | ~$3/set | AI 生成文案 |
+> | 廣告投放 | 依素材而定 | Meta/Google 廣告建立 |
 > | QR Code | ~$0.2 | 產品包裝導流 |
 >
 > 最低儲值 $20 美金，可以做不少事。
@@ -173,18 +175,32 @@ Based on answers, recommend the appropriate **SaleCraft Toolbox**:
 
 #### 🔧 SaleCraft Toolbox
 
+**🆓 免費（AI 諮商，不用帳號不用錢）：**
+
+| Tool | What It Does | Best For |
+|------|-------------|----------|
+| **行銷診斷** | 分析品牌現況、行銷缺口 | 所有人 |
+| **品牌分析** | 品牌定位、素材缺口、品牌健檢 | 新品牌、品牌重整 |
+| **KOL 分析** | 篩選適合的網紅、估算 engagement rate | 品牌推廣、口碑行銷 |
+| **競品研究** | 競品定位、價格帶、市場趨勢 | 策略制定 |
+| **成長策略** | 決定先推什麼、打什麼客群 | 不知道從哪開始 |
+| **漏斗設計** | 從進站到回購的完整旅程設計 | 轉換率低 |
+| **互動策略** | 私訊腳本、FAQ、自動回覆 | 有流量沒詢問 |
+| **成交策略** | 異議處理、價格鋪墊、收單腳本 | 客人問了不買 |
+| **會員經營** | 回購觸發、推薦方案、VIP 制度 | 客人不回來 |
+| **品質把關** | 品牌一致性、合規審查、旅程 QA | 上線前 |
+
+**💰 付費（AI 生成 + 發佈，需要帳號和點數）：**
+
 | Tool | What It Does | Cost (pts) | Best For |
 |------|-------------|------------|----------|
-| **AI Landing Page** | 30 分鐘產出專業銷售頁面 | 75-250 pts | 新品上市、促銷活動 |
-| **單張廣告圖** | 一張行銷素材，5 分鐘 | ~100 pts | 單篇社群貼文 |
+| **AI Landing Page** | 30 分鐘產出專業銷售頁面 | 1,600-2,000 pts | 新品上市、促銷活動 |
+| **單張廣告圖** | 一張行銷素材，5 分鐘 | 200 pts | 單篇社群貼文 |
 | **Carousel 輪播** | 多張風格一致的圖（2-10 張） | 300 + 100×N pts | IG 輪播、故事系列 |
-| **Reels 短影音** | AI 生成 15-60 秒行銷影片 | 50-150 pts | 社群曝光、品牌故事 |
-| **社群發佈** | 一鍵發到 IG/FB/TikTok | 5-10 pts/篇 | 日常社群經營 |
-| **KOL 分析** | AI 篩選適合的網紅合作 | 20-50 pts/人 | 品牌推廣、口碑行銷 |
-| **品牌分析** | AI 分析品牌定位和素材缺口 | 10-30 pts | 品牌健檢、新品牌建立 |
-| **廣告投放** | Meta/Google 廣告一鍵建立 | 30-100 pts | 付費流量、精準投放 |
+| **Reels 短影音** | AI 生成 15-60 秒行銷影片 | 100 pts/秒 | 社群曝光、品牌故事 |
+| **Social Copy** | AI 生成文案 | 100 pts/set | 日常社群經營 |
+| **廣告投放** | Meta/Google 廣告一鍵建立 | 依廣告素材而定 | 付費流量、精準投放 |
 | **QR Code** | 產品包裝/名片導流 | 5 pts | 線下導線上 |
-| **深度研究** | 競品分析、市場趨勢 | 30-100 pts | 策略制定 |
 | **Homepage** | 將 Landing Page 組成完整網站 | 免費（已有 LP 後） | 品牌官網 |
 
 #### 建議幾張圖？（AI 建議，用戶決定）
@@ -193,17 +209,17 @@ Based on answers, recommend the appropriate **SaleCraft Toolbox**:
 
 | 情境 | 建議張數 | 費用 | 原因 |
 |------|---------|------|------|
-| 單一促銷/限時特價 | **1 張** | ~100 pts ≈ $3 | 訊息單純，一張最有衝擊力 |
-| Before/After | **2 張** | ~500 pts ≈ $17 | 對比就是兩張 |
-| 教學步驟 | **3-5 張** | ~600-800 pts | 步驟拆解，知識遞增 |
-| 新品上市 | **5 張** | ~800 pts ≈ $27 | Hook→功能→見證→情境→品牌 |
-| 品牌故事 | **5-7 張** | ~800-1000 pts | 故事弧線需要展開 |
-| 日常經營 | **1 張** | ~100 pts ≈ $3 | 頻率高，成本要低 |
+| 單一促銷/限時特價 | **1 張** | 200 pts ≈ $7 | 訊息單純，一張最有衝擊力 |
+| Before/After | **2 張** | 500 pts ≈ $17 | 對比就是兩張 |
+| 教學步驟 | **3-5 張** | 600-800 pts | 步驟拆解，知識遞增 |
+| 新品上市 | **5 張** | 800 pts ≈ $27 | Hook→功能→見證→情境→品牌 |
+| 品牌故事 | **5-7 張** | 800-1000 pts | 故事弧線需要展開 |
+| 日常經營 | **1 張** | 200 pts ≈ $7 | 頻率高，成本要低 |
 
 **費用公式**：
-- **1 張** = ~100 pts（走 generate_ad）
+- **1 張** = 200 pts（走 generate_ad / quick_ad_cost）
 - **2-10 張** = 300 + 100×N pts（走 generate_carousel）
-- **發佈** = +5-10 pts/篇
+- **Social Copy** = 100 pts/set
 
 **不要替用戶決定張數**。先建議，然後問：
 > 「根據你的情境，我建議 [N] 張。不過 1 張也完全可以。
@@ -218,12 +234,12 @@ Based on answers, recommend the appropriate **SaleCraft Toolbox**:
 **常見組合包價格估算**：
 | 組合 | 內容 | 預估 pts | 約 USD |
 |------|------|---------|--------|
-| 試水溫 | 1 單圖 + 1 社群發佈 | ~110 pts | ~$4 |
-| 入門包 | 1 LP + 3 社群發佈 | ~280 pts | ~$10 |
-| 標準包 | 1 LP + 1 Reel + 5 社群 + QR | ~400 pts | ~$14 |
-| 完整包 | 品牌分析 + LP + Reel + 社群 + 廣告 | ~600 pts | ~$20 |
-| 輪播包 | 5 張 Carousel + 發佈 | ~810 pts | ~$27 |
-| 旗艦包 | 全套 + Carousel + KOL + 深度研究 | ~2000 pts | ~$67 |
+| 試水溫 | 1 quick ad (200) + 1 social copy (100) | ~300 pts | ~$10 |
+| 入門包 | 1 LP 8頁 (1,600) + social copy (100) | ~1,700 pts | ~$57 |
+| 標準包 | 1 LP (1,600) + 1 Reel 10s (1,000) + social copy (100) + QR (5) | ~2,705 pts | ~$90 |
+| 完整包 | LP (1,600) + Reel 10s (1,000) + social copy (100) + ad (200) | ~2,900 pts | ~$97 |
+| 輪播包 | 5 張 Carousel (800) + social copy (100) | ~900 pts | ~$30 |
+| 旗艦包 | LP (1,600) + Carousel 5張 (800) + Reel 10s (1,000) + social copy (100) | ~3,500 pts | ~$117 |
 
 ### Step 3: Onboard (ONLY when user wants PAID features)
 
@@ -244,7 +260,7 @@ through AI conversation. No login, no token, no credits needed.
 > 接下來如果你想做 [LP / 發文 / 廣告]，需要先建立帳號。
 > 很快，2 分鐘搞定：
 >
-> 👉 https://marketingx-site-876464738390.asia-east1.run.app/zh-TW/get-started
+> 👉 https://salecraft.ai/zh-TW/get-started
 >
 > 在那裡可以：
 > - 用 Google 快速註冊
@@ -317,11 +333,11 @@ Example:
 
 ━━━ 以上全部免費完成後 ━━━
 
-⑧ 🏗️ 生成 Landing Page（PAID ~$3-8）
+⑧ 🏗️ 生成 Landing Page（PAID ~$53-67）
    把前面 7 步的策略，變成一個專業的銷售頁面
    → 這時才需要帳號和點數
 
-⑨ 📤 發布 + 投放（PAID ~$0.2-3）
+⑨ 📤 發布 + 投放（PAID — social copy ~$3, ads 依素材）
    發到 IG/FB/TikTok、投放廣告
    → 把做好的內容推出去
 

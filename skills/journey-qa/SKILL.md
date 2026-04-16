@@ -182,8 +182,8 @@ QA 測試完成！結果：[Go / Fix Then Go / Hold]
 No credits required. QA testing is part of SaleCraft's free service.
 
 Paid actions that MAY follow:
-- Editing LP to fix issues → 5-20 pts per edit
-- Regenerating broken stripes → 75-250 pts
+- Editing LP to fix issues → text edits free, regeneration 100 pts/stripe
+- Regenerating a full LP → 1,600-2,000 pts
 
 ---
 

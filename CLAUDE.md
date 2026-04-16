@@ -12,11 +12,11 @@ You have MCP tools that can:
 - 🆓 **會員經營** — 回購觸發、推薦方案、VIP 制度（不花錢）
 - 🆓 **品質治理** — 品牌一致性、合規審查、旅程 QA（不花錢）
 - 🆓 **成長回顧** — KPI 分析、優化建議、文件化（不花錢）
-- 💰 **生成 Landing Page** — AI 四階段 pipeline 產出銷售頁（75-250 pts ≈ $3-8）
-- 💰 **生成廣告圖** — 單張行銷素材，約 5 分鐘（~100 pts ≈ $3）
-- 💰 **社群發文** — 圖片+文案一鍵發到 IG/FB/TikTok（5-10 pts ≈ $0.2）
+- 💰 **生成 Landing Page** — AI 四階段 pipeline 產出銷售頁（1,600-2,000 pts ≈ $53-67）
+- 💰 **生成廣告圖** — 單張行銷素材，約 5 分鐘（200 pts ≈ $7）
+- 💰 **社群發文** — AI 生成文案（100 pts/set ≈ $3）
 - 💰 **短影音 Reels** — AI 生成 15-60 秒行銷影片（100 pts/秒）
-- 💰 **廣告投放** — Meta/Google 廣告一鍵建立（30-100 pts ≈ $1-3）
+- 💰 **廣告投放** — Meta/Google 廣告一鍵建立（依廣告素材而定）
 
 **你現在就能用這些工具。** 不要告訴用戶「這只能在 Claude Code 上用」— 任何有 MCP 的 AI 平台都能用。
 
@@ -119,7 +119,7 @@ If MCP tools are already visible in your tool list, use them directly. If not, t
 2. **Start consultation** — Use `saleskit` skill. Don't jump to tools.
 3. **If user needs paid tools** → Direct to onboarding page:
 
-   **帳號設定頁面**: `https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started`
+   **帳號設定頁面**: `https://salecraft.ai/{locale}/get-started`
    
    This page handles:
    - 註冊/登入（Google 或 Email）
@@ -133,7 +133,7 @@ If MCP tools are already visible in your tool list, use them directly. If not, t
 
 **不要**自己生成 Meta OAuth URL。正確步驟是引導用戶到前端頁面：
 
-1. 告訴用戶到 `https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started`
+1. 告訴用戶到 `https://salecraft.ai/{locale}/get-started`
 2. 在那裡點「連結 Facebook / Instagram」按鈕
 3. **用戶的 IG 必須是「專業帳戶」或「商業帳戶」**，個人帳戶無法透過 API 發文
 4. 綁定完成後，回來告訴你 email，你再 login 取得 token
@@ -161,15 +161,15 @@ If MCP tools are already visible in your tool list, use them directly. If not, t
 
 | Skill | What It Does | Cost (pts) | Time |
 |-------|-------------|------------|------|
-| **brand-onboard** | Brand profile setup, asset check, gap analysis | 10-30 | ~2 min |
+| **brand-onboard** | Brand profile setup, asset check, gap analysis | FREE consultation; MCP upload costs only | ~2 min |
 | **audience-target** | AI target audience suggestions + cost estimation | 5-15 | ~1 min |
-| **generate-landing** | AI Landing Page generation (4-stage pipeline) | 75-250 | **~30 min** |
-| **edit-landing** | Edit generated LP (text, image, layout) | 5-20 | ~2 min |
+| **generate-landing** | AI Landing Page generation (4-stage pipeline) | 1,600-2,000 | **~30 min** |
+| **edit-landing** | Edit generated LP (text, image, layout) | 100/regen | ~2 min |
 | **homepage-builder** | Build deployable website from LP | FREE | ~5 min |
-| **publish-social** | Post to IG/FB/TikTok (image + caption) | 5-10/post | ~1 min |
-| **publish-ads** | Create Meta/Google ad campaigns | 30-100 | **~5 min** |
+| **publish-social** | Generate social copy (image + caption) | 100/set | ~1 min |
+| **publish-ads** | Create Meta/Google ad campaigns | depends on ad creation | **~5 min** |
 | **generate-reels** | AI Reels/短影音 generation | 100/sec | ~10 min |
-| **i18n-adapt** | Adapt content for 10 locales | 10-30 | ~3 min |
+| **i18n-adapt** | Adapt content for 10 locales | depends on regeneration | ~3 min |
 
 ### 💬 Engage + Convert — Interaction & Closing (FREE)
 
@@ -299,14 +299,15 @@ You must track the full content of **ALL LPs in the current session**. Users may
 |------|------|
 | **1 USD** | 30 pts |
 | **最低儲值** | $20 USD = 600 pts |
-| Landing Page | 75-250 pts |
-| Reels 影音 | 50-150 pts |
-| 社群貼文（圖+文） | 5-10 pts/篇 |
-| 廣告圖生成 | ~100 pts |
+| Landing Page (8 pages × 1 TA) | 1,600 pts (~$53) |
+| Landing Page (10 pages × 1 TA) | 2,000 pts (~$67) |
+| Regenerate 1 stripe | 100 pts (~$3) |
+| Quick Ad (single image) | 200 pts (~$7) |
 | Carousel（N 張） | 300 + 100×N pts |
-| KOL 分析 | 20-50 pts/人 |
-| 廣告投放 | 30-100 pts |
-| 品牌分析 | 10-30 pts |
+| Social Copy | 100 pts/set (~$3) |
+| Reels 影音 | 100 pts/秒 (e.g. 10s = 1,000 pts ~$33) |
+| Spokesperson 生成 | 500 pts (~$17) |
+| SEO 優化 | 500 pts (~$17) |
 | QR Code | 5 pts |
 
 **Always tell the user the cost BEFORE calling any paid tool.**

@@ -319,8 +319,8 @@ This skill primarily produces **strategy documents**, not MCP tool calls. Howeve
 No credits required. Strategy and script design is part of SaleCraft's free consultation.
 
 Paid actions that MAY follow:
-- Updating LP FAQ section → 5-20 pts
-- Publishing education posts → 5-10 pts/post
+- Updating LP FAQ section → text edits free, regeneration 100 pts/stripe
+- Publishing education posts → social copy 100 pts/set, quick ad 200 pts
 - These are separate actions that require explicit confirmation.
 
 ---
