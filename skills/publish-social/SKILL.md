@@ -26,35 +26,49 @@ You manage social media publishing for LP content. You help the user push their 
 
 ## Phase 0: Connect Social Accounts (if not connected)
 
-If user has no connected accounts, guide them through OAuth:
+If user has no connected accounts, **direct them to the SaleCraft frontend** — do NOT generate OAuth URLs yourself.
 
 ### Connect Meta (Facebook + Instagram)
-```
-mcp_tool_call("zereo_social_mcp", "get_meta_auth_url", {
-  "user_token": token,
-  "redirect_uri": "https://landingai.info/auth/callback"
-})
-→ Returns: { "auth_url": "https://www.facebook.com/v20.0/dialog/oauth?..." }
-```
-Give the user the `auth_url` to open in browser. After they authorize, Meta redirects
-with a `code` parameter. Then complete the connection:
-```
-mcp_tool_call("zereo_social_mcp", "connect_meta_account", {
-  "user_token": token,
-  "code": "<code_from_redirect>",
-  "redirect_uri": "https://landingai.info/auth/callback"
-})
-→ Returns: newly connected account details (Facebook page + Instagram business)
-```
+
+**⚠️ IMPORTANT:**
+1. IG 必須是**專業帳戶（Professional/Business）**，個人帳戶無法透過 API 發文
+2. **不要**自己呼叫 `get_meta_auth_url` — OAuth redirect 只設定在前端
+
+**正確步驟**：
+> 「請到這個頁面連結你的 Meta 帳號：
+> https://marketingx-site-876464738390.asia-east1.run.app/{locale}/get-started
+> 
+> 注意：你的 IG 帳號必須是**專業帳戶**或**商業帳戶**，個人帳戶無法透過 API 發文。
+> 如果還不是，到 IG App → 設定 → 帳號 → 切換為專業帳號。」
+
+連結完成後，用 `list_accounts(user_token)` 確認是否已連結。
 
 ### Connect TikTok
+同樣引導用戶到 get-started 頁面操作。
+
+## Social Post Generation (Image + Caption)
+
+**⚠️ 用戶說「發一則貼文」= 需要圖片 + 文案，不是純文字。**
+
+### 快速生成廣告圖（推薦，~5 分鐘）
 ```
-mcp_tool_call("zereo_social_mcp", "get_tiktok_auth_url", {
-  "user_token": token
-})
-→ Returns: { "auth_url": "https://www.tiktok.com/v2/auth/authorize/?..." }
+1. generate_ad(session_id, { platform: "meta", ta_group_id: "ta_1" })
+   → project_id, status: "processing"
+2. 每 30 秒 poll: get_ad_result(session_id, project_id)
+   → status: "completed" → 取得 image_url
+3. social_copy(user_token, { conversation_id, quantity: 1 })
+   → 生成文案
+4. publish_post({ social_account_id, post_type: "ig_post", caption, image_url })
 ```
-TikTok callback is handled server-side — user just needs to open the URL and authorize.
+
+### 從 Landing Page 取圖
+```
+1. download_stripe(campaign_id, stripe_idx) → image URL
+2. social_copy → 文案
+3. publish_post(...)
+```
+
+**時間：廣告圖 ~5 分鐘，LP 取圖 ~1 分鐘。不要跟用戶說要 30 分鐘。**
 
 ### Account Management
 
