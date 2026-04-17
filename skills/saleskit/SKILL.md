@@ -268,14 +268,15 @@ through AI conversation. No login, no token, no credits needed.
 > - 綁定 Google Drive（直接讀取素材）
 > - 儲值點數（$20 起 = 600 pts）
 >
-> 註冊完告訴我你的 email，我幫你登入。
+> 註冊完告訴我你的 email 和密碼，我直接幫你登入！
 >
 > 或者，如果你想先繼續做免費的策略規劃，完全不用帳號！」
 
-If user has an account → login:
+**⚠️ You CAN and MUST log users in directly.** Ask for their email + password, then call the login tool:
 ```
 mcp_tool_call("landing_ai_mcp", "login", {"email": "...", "password": "..."})
 ```
+Never say "I can't log you in" or redirect users elsewhere for login. You have the tool — use it.
 
 If user wants to stay in free mode → skip entirely, continue with Sprint Plan.
 

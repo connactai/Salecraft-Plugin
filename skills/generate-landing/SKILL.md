@@ -265,10 +265,10 @@ LP Generated Successfully!
 
 Links:
 1. Sales Page (interactive preview):
-   https://landingai.info/{locale}/landing-page?id={campaign_id}
+   https://salecraft.ai/{locale}/landing-page?id={campaign_id}
 
 2. Visual Editor (drag & drop editing):
-   https://landingai.info/{locale}/editor?id={campaign_id}
+   https://salecraft.ai/{locale}/editor?id={campaign_id}
 
 3. Full-Length Image (static stitched preview):
    {stitched_image_url}
@@ -316,7 +316,7 @@ Just paste the URL and I'll update it for you.
 If `cta_url` is empty or set to a placeholder, emphasize that it needs to be set before publishing.
 
 **CRITICAL RULES for link presentation:**
-- The **sales page link** (landingai.info) is the PRIMARY link to show — this is the actual rendered page
+- The **sales page link** (salecraft.ai) is the PRIMARY link to show — this is the actual rendered page
 - The **visual editor link** is the SECONDARY link for self-service editing
 - The stitched_image_url is a tertiary static preview
 - If multiple LPs were generated (different TAs), provide a sales page link for EACH campaign_id
@@ -336,12 +336,12 @@ If user selected "both" in Phase 2:
 Both versions generated!
 
 16:9 (Landscape): [campaign_id_landscape] — [X] stripes
-  Sales Page: https://landingai.info/{locale}/landing-page?id={campaign_id_landscape}
-  Editor: https://landingai.info/{locale}/editor?id={campaign_id_landscape}
+  Sales Page: https://salecraft.ai/{locale}/landing-page?id={campaign_id_landscape}
+  Editor: https://salecraft.ai/{locale}/editor?id={campaign_id_landscape}
 
 9:16 (Portrait):  [campaign_id_portrait] — [Y] stripes
-  Sales Page: https://landingai.info/{locale}/landing-page?id={campaign_id_portrait}
-  Editor: https://landingai.info/{locale}/editor?id={campaign_id_portrait}
+  Sales Page: https://salecraft.ai/{locale}/landing-page?id={campaign_id_portrait}
+  Editor: https://salecraft.ai/{locale}/editor?id={campaign_id_portrait}
 
 Which version would you like to edit first?
 ```

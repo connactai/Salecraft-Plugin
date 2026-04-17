@@ -184,7 +184,7 @@ avoids iframe X-Frame-Options issues.
 
 **iframe Embed** (⚠️ USUALLY BLOCKED):
 ```html
-<!-- WARNING: Most sites including landingai.info block iframe embedding via X-Frame-Options/CSP.
+<!-- WARNING: Most sites including salecraft.ai block iframe embedding via X-Frame-Options/CSP.
      Only use this if you KNOW the target allows iframe embedding.
      Default to Image Embed instead. -->
 <div class="lp-embed-container">
@@ -541,7 +541,7 @@ See **Phase 9: For Developers — LP Config JSON Integration** below for the ful
 If the user does not want to host anything at all, the LP is already live on the Landing AI frontend:
 
 ```
-https://landingai.info/{locale}/landing-page?id={campaign_id}
+https://salecraft.ai/{locale}/landing-page?id={campaign_id}
 ```
 
 - No deployment needed — the page is already hosted and served
@@ -704,7 +704,7 @@ The LP config is dynamic — when the user edits the LP in Landing AI (via the e
 
 For public access without auth, the LP is also available via the public API:
 ```
-GET https://landingai.info/api/landing-page/public/{campaign_id}
+GET https://salecraft.ai/api/landing-page/public/{campaign_id}
 → Returns the same JSON structure (no user_token needed)
 ```
 

@@ -6,7 +6,7 @@
 
 SaleCraft turns any AI assistant into a marketing consultant for physical product sellers. It doesn't start by generating assets — it starts by **understanding your product and diagnosing your marketing needs**.
 
-SaleCraft works on **any AI platform** that supports MCP — including Claude Code, Claude App, Claude Cowork, ChatGPT, Gemini, Kimi, GLM, OpenClaw, and more. There is no platform limitation.
+SaleCraft works on **any AI platform** — ChatGPT, Claude, Gemini, Kimi, GLM, OpenClaw, and more. No platform limitation.
 
 ### The Flow
 
@@ -37,28 +37,13 @@ Add SaleCraft to any MCP-compatible AI platform:
 https://github.com/connactai/Salecraft-Plugin
 ```
 
-### MCP Server Setup
+### Setup
 
-SaleCraft requires a Remote MCP connection:
+1. Connect the MCP server to your AI platform (see [salecraft.ai/get-started](https://salecraft.ai/en/get-started) for instructions)
+2. Register an account at **https://salecraft.ai/get-started**
+3. Start chatting — tell the AI what you sell
 
-```json
-{
-  "mcpServers": {
-    "Service System Deep Research": {
-      "type": "sse",
-      "url": "https://service-system-staging-876464738390.asia-east1.run.app/mcp/sse"
-    }
-  }
-}
-```
-
-### Account Setup
-
-First-time users: **https://salecraft.ai/en/get-started**
-
-This handles registration (Google or email), social account binding (FB/IG), Google Drive access, and points top-up.
-
-**You can also log in directly through the AI** — just tell it your email and password.
+**You can log in directly through the AI** — just tell it your email and password. The AI handles everything.
 
 ## Skills (25)
 
@@ -143,7 +128,7 @@ This handles registration (Google or email), social account binding (FB/IG), Goo
 - **Ad campaigns** — Meta + Google Ads creation
 - **Brand audit** — Diagnose what's missing before spending
 - **Transparent pricing** — AI always tells you the cost before acting
-- **Any platform** — Works on Claude Code, Claude App, ChatGPT, Gemini, Kimi, GLM, OpenClaw, and any MCP-compatible environment
+- **Any platform** — Works on ChatGPT, Claude, Gemini, Kimi, GLM, OpenClaw, and any AI platform
 
 ## Architecture
 
