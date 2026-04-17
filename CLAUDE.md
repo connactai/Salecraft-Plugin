@@ -449,20 +449,91 @@ mcp_tool_call("landing_ai_mcp", "register", {"email": "...", "password": "...", 
 - **Ad Campaigns** (11 tools) — Meta/Google ads
 - **QR Code** (3 tools) — Styled QR generation
 
-## File Upload
+## 圖片處理（上傳 + 讀取 + AI 分析）
 
+### 上傳方式：2 種（依平台選擇）
+
+**方式 A：Base64 上傳（推薦 — 適用所有 AI 平台）**
 ```
-# 1. Get signed URL
+# 用戶貼圖 → AI 讀為 base64 → 直接上傳
+mcp_tool_call("landing_ai_mcp", "upload_base64", {
+  "user_token": token, "brand_id": brand_id,
+  "filename": "product.jpg", "base64_data": "<base64_string>",
+  "asset_type": "product", "content_type": "image/jpeg"
+})
+→ { "public_url": "https://storage.googleapis.com/..." }
+```
+
+**方式 B：Signed URL（用戶提供檔案路徑時）**
+```
+# 1. 取得上傳 URL
 mcp_tool_call("landing_ai_mcp", "get_asset_upload_url", {
   "user_token": token, "brand_id": brand_id,
   "filename": "photo.jpg", "asset_type": "product", "content_type": "image/jpeg"
 })
+→ { "upload_url": "https://storage.googleapis.com/...(signed)", "public_url": "https://..." }
 
-# 2. Upload
+# 2. 用 curl 上傳
 curl -X PUT -H "Content-Type: image/jpeg" -T "/path/to/photo.jpg" "{upload_url}"
 
-# 3. Use public_url in target tool
+# 3. 用 public_url 寫入 session
 ```
+
+**方式 C：用戶直接給公開 URL（不需上傳）**
+如果用戶給的是公開可存取的圖片 URL（如社群媒體圖、官網圖），直接寫入 wizard data 即可，不需要先上傳到 GCS。
+
+### AI 圖片分析
+```
+mcp_tool_call("landing_ai_mcp", "analyze_image", {
+  "user_token": token, "image_url": "https://...", "filename": "product.jpg"
+})
+→ Gemini Vision 回傳圖片內容描述（產品、風格、顏色、文字、行銷建議）
+```
+
+### 圖片驗證（生成前品質檢查）
+```
+mcp_tool_call("landing_ai_mcp", "validate_images", {
+  "user_token": token,
+  "image_urls_json": "[\"url1\", \"url2\"]",
+  "industry_category": "cosmetics",
+  "product_name": "面膜"
+})
+```
+
+### ⚠️ 寫入 Session — 必須寫兩邊！
+
+上傳完圖片取得 `public_url` 後，用 `update_session` 寫入 wizard data。
+**`wizard_shared_data`（前端顯示）和 `wizard_shared_files`（AI 讀取）都要寫！**
+
+```
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token, "session_id": sid,
+  "data_json": "{
+    \"wizard_shared_data\": {
+      \"product_images\": [\"https://storage.googleapis.com/.../photo.jpg\"]
+    },
+    \"wizard_shared_files\": {
+      \"product_images\": [\"https://storage.googleapis.com/.../photo.jpg\"]
+    }
+  }"
+})
+```
+
+**欄位對照表（⚠️ 注意 key 名差異）：**
+
+| 圖片類型 | wizard_shared_data key | wizard_shared_files key | 格式 |
+|---------|----------------------|------------------------|------|
+| 產品圖 | `product_images` | `product_images` | `["url"]` array |
+| 證書/證照 | `certification_images` | `evidence_images` ⚠️ | `["url"]` array |
+| Logo | — | `logo_image` | `"url"` string（不是 array） |
+| 代言人 | `spokesperson_faces` | — | `["url"]` array |
+| LP 參考圖 | `landing_page_images` | — | `["url"]` array |
+
+**規則：**
+- Array 是覆蓋不是 append（刪除 = 傳不含該 URL 的完整陣列）
+- asset_type 白名單: `product`, `logo`, `spokesperson`, `certification`
+- content_type 白名單: `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `application/pdf`
+- 檔案大小上限: 10MB
 
 ## Landing Page URLs
 
