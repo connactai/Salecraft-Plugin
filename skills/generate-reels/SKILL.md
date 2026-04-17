@@ -100,6 +100,29 @@ Gather these from the user conversationally (if not already known):
 
 If `brand_id` is available from previous onboarding, mention it — the pipeline will auto-load brand assets for visual consistency.
 
+## Phase 0.5: Asset Collection (Optional)
+
+Before starting generation, ask the user if they have assets to upload:
+
+> 開始製作前，有這些素材會讓影片品質更好：
+> - 📸 代言人照片（清晰正面照，用於影片角色一致性）
+> - 🎤 代言人聲音樣本（30秒以上清晰錄音，用於 AI 語音克隆）
+> - 🖼️ 產品圖片（用於影片開場畫面）
+>
+> 有的話直接拖進來或貼 URL，沒有也可以跳過！
+
+**If user provides files:**
+1. Photo → `upload_spokesperson_media(media_type="photo")` or `upload_base64(asset_type="product")`
+2. Voice → `upload_spokesperson_media(media_type="voice")`
+3. URL → `add_spokesperson_photos` / `add_spokesperson_voice`
+
+**If user skips:** proceed to Phase 1. The pipeline will use AI-generated visuals and AI-selected voice.
+
+**Notes:**
+- Voice samples: 30s-5min recommended for best ElevenLabs clone quality
+- Photos: AI-generated/illustration photos work best (Seedance blocks real human faces)
+- If file > 2MB via base64: guide user to compress or paste a public URL
+
 ---
 
 ## Phase 1: Create Script (Non-blocking)
