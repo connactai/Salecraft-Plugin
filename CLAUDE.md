@@ -67,30 +67,33 @@ You have MCP tools that can:
 
 ---
 
-### ⚠️ 登入功能 — 你有這個能力（最重要）
+### ⚠️ 登入工具 reference（技術細節）
 
-**你可以直接幫用戶登入。** 你手上就有 `login` 工具。不需要安裝任何東西。
+> 使用者面對的登入流程見上方「登入方法優先順序」區塊 — 那才是**你該遵循的決策邏輯**。此處只列工具語法。
 
-**登入流程：**
-1. 問用戶的 email 和密碼
-2. 呼叫 `login` 進行驗證 → 取得 token → 之後所有操作自動帶入
-3. 如果沒有帳號，引導到 `https://salecraft.ai/get-started` 註冊
-
+**AI Token exchange（優先）：**
 ```
-登入工具：mcp_tool_call("landing_ai_mcp", "login", {"email": "...", "password": "..."})
-→ 回傳 access_token，之後所有呼叫帶入 user_token
+mcp_tool_call("landing_ai_mcp", "authenticate_with_token", {"ai_token": "sc_live_..."})
+→ 回傳 { access_token, token_type: "bearer", scope: "ai_agent" }
+→ 之後所有呼叫帶入 user_token=access_token
 ```
 
-### ⚠️ salecraft.ai 官網用途（只有三件事）
+**Email + 密碼（僅當用戶明確要求）：**
+```
+mcp_tool_call("landing_ai_mcp", "login", {"email": "...", "password": "..."})
+→ 回傳 { access_token, token_type: "bearer" }
+→ 此 token 無 scope 限制，可執行所有動作（包含 delete_account 等敏感動作）
+```
 
-官網 `https://salecraft.ai/get-started` 提供以下功能，**用戶只有在需要這些時才需要去官網**：
+### ⚠️ salecraft.ai 官網用途（三件事）
 
-1. **註冊帳號** — 支援 Email 註冊和 **Google 登入**（一鍵 OAuth）
-2. **綁定 Meta 帳號（FB/IG）** — 讓 SaleCraft 能透過 API 幫用戶發佈貼文、限時動態到 Instagram 和 Facebook（**必須是專業帳戶或商業帳戶**，個人帳戶無法透過 API 發文）
-3. **綁定 Google 帳號** — 讓 SaleCraft 能存取用戶 Google Drive 裡的素材（圖片、文件等）
+官網 `https://salecraft.ai/get-started` 提供以下功能。**用戶只在需要這些時才去官網**，免費諮詢不用登入：
 
-**註冊完成後，用戶回來告訴你 email 和密碼，你就能直接用 `login` 工具登入。**
-**Google 登入的用戶同樣可以設定密碼後透過 `login` 工具登入。**
+1. **註冊 + 登入** — 支援 Email 註冊和 **Google 一鍵 OAuth**。登入後 **STEP 2** 會顯示 `sc_live_...` AI Token 給用戶複製貼給 AI
+2. **綁定 Meta 帳號（FB/IG）** — 讓 SaleCraft 能透過 API 發佈貼文、限時動態、Reels（**必須是專業帳戶或商業帳戶**；個人帳戶無法透過 API 發文）
+3. **綁定 Google 帳號** — 讓 SaleCraft 能存取用戶 Google Drive 的素材（圖片、文件等）
+
+**用戶註冊完成後**：優先引導他們複製 STEP 2 的 AI Token 貼給你（`authenticate_with_token`），不要主動要求 email 和密碼。
 
 ### ⚠️ 你有完整的發佈能力
 
