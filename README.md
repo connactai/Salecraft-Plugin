@@ -92,7 +92,7 @@ For Tier 1 native execution (or any MCP-aware client), add the SaleCraft MCP ser
   "mcpServers": {
     "Service System Deep Research": {
       "type": "sse",
-      "url": "https://service-system-staging-876464738390.asia-east1.run.app/mcp/sse"
+      "url": "https://service-system-staging-s6ykq3ylca-de.a.run.app/mcp/sse"
     }
   }
 }
