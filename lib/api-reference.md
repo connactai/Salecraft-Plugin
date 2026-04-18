@@ -164,19 +164,32 @@ Feed `image_url` directly into `create_ad_campaign.creative_image_url`
 
 ## Known platform / transport quirks
 
-### Unicode in `data_json` strings
+### Unicode in `data_json` strings — narrow scope
 
-Some MCP transports (notably Anthropic's SSE wrapper) can double-decode
-CJK bytes (`娘` → `岣`). Backend REST layer is clean — round-trip works
-when called directly.
+Empirically verified (2026-04-18):
 
-**Workarounds**:
-- Prefer composing Chinese content on the backend side (e.g., call
-  `social_copy` to generate the Chinese caption rather than inlining
-  raw CJK in `data_json`).
-- If you must inline CJK, prefer `\uXXXX` escapes over raw characters.
-- Do a round-trip sanity check before a large batch: send one short
-  CJK string, read it back via `get_post_detail`, verify identity.
+- ✅ **Clean round-trip** when called directly against REST endpoints.
+  `session_name`, `update_stripe_texts` headline/subheadline, every
+  `publish_post` caption, every ad `creative_message` — no corruption.
+  Even `\uXXXX`-escaped input reaches the backend and DB identically.
+- ⚠️ **Double-decode only observed on `regenerate_stripe.user_feedback`**
+  (e.g. `娘` → `岣`). The value reaches the DB clean, but the prompt
+  text fed to Gemini for stripe regeneration has been seen mangled —
+  the corruption lives between "stored feedback text" and "prompt
+  assembled for the regeneration agent", not in the MCP transport or
+  REST body parsing. Rewording the feedback in English / ASCII sidesteps
+  the bug.
+
+**What this means for the LLM**:
+- Don't worry about Unicode for the publish / ads / session-update paths
+  — raw CJK in `data_json` is fine.
+- For `regenerate_stripe`: prefer ASCII feedback, or keep CJK feedback
+  short and explicit; if the regenerated stripe comes back with garbled
+  text, retry with an English-worded feedback and translate back in
+  `update_stripe_texts`.
+- If you see `岣 / 嬤 / 娃` or similar home-radical garbled characters
+  in a regenerated stripe result, that's the known double-decode — not
+  a model hallucination.
 
 ### TikTok sandbox mode (pre-App-Review)
 

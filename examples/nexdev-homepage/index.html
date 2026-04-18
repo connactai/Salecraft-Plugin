@@ -118,8 +118,10 @@
         >
       </div>
     </div>
-    <!-- Replace {campaign_id} with your actual LP campaign ID -->
-    <a href="https://salecraft.ai/zh-TW/landing-page?id={campaign_id}" class="btn-primary" target="_blank" rel="noopener">
+    <!-- Replace {campaign_id} with your actual LP campaign ID. Canonical URL:
+         landingai.info/{locale}/lp/<id>. The legacy salecraft.ai ?id= form
+         relies on a 308 redirect and is not the production domain for LP delivery. -->
+    <a href="https://landingai.info/zh-TW/lp/{campaign_id}" class="btn-primary" target="_blank" rel="noopener">
       View Full Page &rarr;
     </a>
   </section>

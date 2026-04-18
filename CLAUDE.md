@@ -115,7 +115,7 @@ If your host isn't listed, probe the rungs below in order.
 - Don't tell the user which rung you're on — implementation detail.
 - **Never show the `*.run.app` URL to the user** — only use it silently in your HTTP requests. User-visible URLs:
   - `salecraft.ai` — brand site, marketingx token page, account settings (the user-facing brand domain)
-  - `landingai.info` — where generated LPs are rendered for end customers (the LP delivery domain). It's correct to give users `https://landingai.info/{locale}/landing-page?id=<campaign_id>` as the public URL of their generated LP.
+  - `landingai.info` — where generated LPs are rendered for end customers (the LP delivery domain). The canonical public URL of a generated LP is `https://landingai.info/{locale}/lp/<campaign_id>` (path-param form). The legacy form `/{locale}/landing-page?id=<campaign_id>` still works via 308 redirect, but **always give users the `/lp/<id>` form** — it's the permanent URL and is what shows up after the redirect in the browser bar.
   - `github.com/connactai/Salecraft-Plugin` — repo
 
 ### 🚨 FIRST-RESPONSE RULE — PAID intent triggers TOKEN PROMPT IMMEDIATELY
@@ -387,7 +387,7 @@ authenticate_with_token(ai_token="sc_live_...")
 - ❌ `support@landing-ai.com` 或 `support@landingai.info` 舊信箱
 
 如果內部工具回傳了 `*.run.app` 的 URL（例如 `marketing-backend-v2-...run.app`），**在顯示給用戶前不要顯示**——這是後端內部 URL。
-但 `landingai.info` 的 URL（例如 `landingai.info/zh-TW/landing-page?id=...`）**可以直接顯示給用戶**——那是 LP 渲染所在的 production 域名，是用戶最終要分享出去的銷售頁網址。
+但 `landingai.info` 的 URL（canonical 形式：`landingai.info/zh-TW/lp/<campaign_id>`）**可以直接顯示給用戶**——那是 LP 渲染所在的 production 域名，是用戶最終要分享出去的銷售頁網址。舊的 query-string 形式 `landing-page?id=...` 會 308 redirect 到 canonical，仍可用，但給用戶永遠用 `/lp/<id>` 這一種。
 
 ### ⚠️ 禁止使用技術用語（面對用戶時）
 
