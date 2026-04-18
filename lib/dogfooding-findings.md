@@ -15,6 +15,39 @@ SaleCraft plugin against the production backend.
 
 ## Findings
 
+### #31 — `marketing-backend-staging` image has startup `NameError` on `config.py:712` 🔴 open (backend, env update blocked)
+Any `gcloud run services update --update-env-vars` on `marketing-backend-staging`
+spawns a new revision that fails STARTUP TCP probe with
+`NameError: name 'settings' is not defined` at `config.py:712`
+(`_seedream_settings = settings.get("seedream_image", {})` — should be
+`_settings.get`). Cloud Run correctly keeps traffic on the last healthy
+revision (`marketing-backend-staging-00403-tzt`) so the service is still
+200-healthy from the outside, but any env change / secret rotation on
+staging is frozen until a fresh image is built without the typo.
+
+Impact: attempted to set `AI_TOKEN_ENABLED=true` on staging (to close
+finding #3's staging-path 404) and could not deploy. Local
+`marketing_backend/config.py` HEAD doesn't contain the bad line, so the
+deployed image is from a partial / stale branch. Owner: marketing_backend
+— rebuild + redeploy staging.
+
+### #30 — `generate_ad` schema rejects `platform` field 🟠 fixed (plugin doc + MCP docstring)
+`/sessions/{id}/generate-ad` (`GenerateAdRequest`) has
+`model_config = ConfigDict(extra="forbid")` and its valid fields are
+`ta_group_id` (required), `aspect_ratio` (9:16/4:5/1:1, default 9:16),
+`ad_goal` (awareness/traffic/conversion, default awareness). Three
+places in the plugin — `skills/publish-ads/SKILL.md` Phase 3,
+`skills/publish-social/SKILL.md` "快速生成廣告圖", and
+`lib/mcp-patterns.md` — told LLMs to pass `{"platform": "meta",
+"ta_group_id": "ta_1"}`. Every LLM following those examples would
+receive `HTTP 422 extra_forbidden on "platform"`.
+
+**Fix**: updated all three plugin locations + `lib/api-reference.md` +
+the MCP docstring in `Service_system/landing_ai_mcp/tools/sessions.py`
+so the tool definition LLMs discover at runtime also lists the correct
+fields. Platform choice happens later (`create_ad_campaign`,
+`publish_post`, `promote_reel`), not here.
+
 ### #1 — Sprint Plan guard not strong enough 🟠 fixed (plugin)
 LLMs default to "be helpful, write the strategy" when user asks for paid
 execution, instead of triggering the AI Token flow first. **Fix**: added

@@ -209,7 +209,9 @@ mcp_tool_call("zereo_social_mcp", "publish_post", {
 
 ### 快速生成廣告圖（推薦，~5 分鐘）
 ```
-1. generate_ad(session_id, { platform: "meta", ta_group_id: "ta_1" })
+1. generate_ad(session_id, { ta_group_id: "ta_1", aspect_ratio: "1:1", ad_goal: "awareness" })
+   // ⚠️ 不要傳 platform —— schema extra=forbid 會 422。
+   //    平台選擇（meta/tiktok/google）在 publish_post / create_ad_campaign 那步才決定。
    → project_id, status: "processing"
 2. 每 30 秒 poll: get_ad_result(session_id, project_id)
    → status: "completed" → 取得 image_url

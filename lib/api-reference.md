@@ -8,6 +8,29 @@ LLMs reading a SKILL.md example that conflicts with this file should
 **follow this file** — SKILL.md examples are illustrative, this reference
 is the contract.
 
+## 3-way sync ownership (for maintainers)
+
+Parameter documentation lives in **three places**. They must stay in sync:
+
+| Layer | Path | Audience |
+|-------|------|----------|
+| 1. Pydantic schema | `Zereo_backend/core/schemas.py` + `marketing_backend/routers/*.py` | Source of truth. Any `extra="forbid"` enforces this at runtime. |
+| 2. MCP tool docstring | `Service_system/{zereo_social_mcp,landing_ai_mcp}/tools/*.py` | LLMs doing MCP tool discovery (Claude.ai, Cursor, Cline, ChatGPT MCP) |
+| 3. Plugin docs | this file + `skills/*/SKILL.md` + `lib/mcp-patterns.md` | LLMs reading the plugin (Claude Code, Claude.ai with plugin, and any LLM grepping the repo) |
+
+**Rule**: when you change layer 1 (schema), you MUST update layers 2 and
+3 in the same PR — otherwise LLMs hit `422 extra_forbidden`, `422 field
+required`, or silently lose the field they intended to pass (when the
+schema doesn't have `extra="forbid"`). Scan all three paths with a grep
+of the old field name before merging.
+
+Changes made in layer 2 (docstring) without layer 3 or vice-versa are
+also a drift — the #25/#26 dogfooding cascade started from exactly this:
+MCP docstring said `account_id`, SKILL said `account_id`, schema said
+`social_account_id`. Every LLM wrote the wrong key; schema didn't
+enforce; default kicked in; Meta rejected the resulting AWARENESS
+campaign with LINK_CLICKS optimization_goal.
+
 ---
 
 ## Golden rules (read before calling any tool)
@@ -131,8 +154,19 @@ Response (`AdCampaignResponse`):
 
 ### `generate_ad`
 
-MCP: `generate_ad(user_token, session_id, data_json)` where `data_json`
-is a JSON string like `{"platform": "meta", "ta_group_id": "ta_1"}`.
+MCP: `generate_ad(user_token, session_id, data_json)` → `GenerateAdRequest`.
+
+Schema has `extra="forbid"` — **wrong keys cause HTTP 422**.
+
+| Field | Required | Type | Default | Allowed values |
+|-------|:--------:|------|---------|----------------|
+| `ta_group_id` | ✓ | string | — | id from `generate_ta_options` |
+| `aspect_ratio` | — | string | `"9:16"` | `"9:16"` / `"4:5"` / `"1:1"` |
+| `ad_goal` | — | string | `"awareness"` | `"awareness"` / `"traffic"` / `"conversion"` |
+
+⚠️ Common mistake: passing `"platform": "meta"`. This endpoint is
+platform-agnostic — it produces the image file only. Platform choice
+happens later in `create_ad_campaign` / `publish_post` / `promote_reel`.
 
 Returns: `{ project_id, status: "processing" }`
 
@@ -201,15 +235,19 @@ Empirically verified (2026-04-18):
 
 Most long-running jobs (LP generation, reels, ad creative) return
 `{ project_id, status: "processing" }` and need polling. Recommended
-cadence:
+cadence (aligned with Cloud Run request timeouts: zereo-backend 300s,
+marketing-backend-v2 3600s; Shotstack reel render internally polls
+120 × 5s = 600s):
 
-| Job | Interval | Max attempts per turn | Typical total |
-|-----|---------:|----------------------:|--------------:|
-| `get_ta_statuses` (LP) | 30s | 60 (30 min) | 5–15 min |
-| `get_ad_result` (quick ad) | 30s | 10 (5 min) | 2–5 min |
-| `get_carousel_result` | 30s | 20 (10 min) | 5–8 min |
-| `get_reel_result` | 30s | 40 (20 min) | 5–15 min |
-| `get_post_detail` (publish) | 5s | 12 (1 min) | 10–30 s |
+| Job | Interval | Max attempts per turn | Typical total | Backend ceiling |
+|-----|---------:|----------------------:|--------------:|----------------:|
+| `get_ta_statuses` (LP full pipeline) | 30s | 60 (30 min) | 5–15 min | mb-v2: 3600s |
+| `get_ad_result` (Quick Ad) | 30s | 10 (5 min) | 2–5 min | mb-v2: 3600s |
+| `get_carousel_result` | 30s | 20 (10 min) | 5–8 min | mb-v2: 3600s |
+| `get_reel_result` | 30s | 40 (20 min) | 5–15 min | Shotstack: 600s |
+| `get_post_detail` (publish) | 5s | 12 (1 min) | 10–30 s | zereo: 300s |
 
 If you exhaust the per-turn budget, **hand control back to the user**
-with a progress summary; do not keep polling silently.
+with a progress summary; do not keep polling silently. The user can
+say "check it" later and you re-read `get_X` once — no need to
+restart a long polling loop.

@@ -98,17 +98,27 @@ mcp_tool_call("zereo_social_mcp", "get_cta_types", {
 → Returns: LEARN_MORE, SHOP_NOW, SIGN_UP, etc.
 ```
 
-### Generate platform-optimized creative
+### Generate a Quick Ad image
 ```
 mcp_tool_call("landing_ai_mcp", "generate_ad", {
   "user_token": token,
   "session_id": session_id,
-  "data_json": "{\"platform\": \"meta\", \"ta_group_id\": \"ta_1\"}"
-  // platform + ta_group_id go INSIDE data_json
-  // ta_group_id = the TA group from generate_session (e.g. "ta_1")
+  "data_json": "{\"ta_group_id\": \"ta_1\", \"aspect_ratio\": \"1:1\", \"ad_goal\": \"awareness\"}"
 })
 → Returns: { "project_id": "...", "status": "processing" }
 ```
+
+**GenerateAdRequest fields (schema has `extra="forbid"` — wrong keys cause 422)**:
+| Field | Required | Type | Default | Allowed values |
+|-------|:--------:|------|---------|----------------|
+| `ta_group_id` | ✓ | string | — | id from `generate_ta_options` (e.g. `"ta_1"`) |
+| `aspect_ratio` | — | string | `"9:16"` | `"9:16"` / `"4:5"` / `"1:1"` |
+| `ad_goal` | — | string | `"awareness"` | `"awareness"` / `"traffic"` / `"conversion"` |
+
+⚠️ Do **NOT** pass `platform` — this endpoint generates the ad image only; platform
+choice (meta / google / tiktok) is decided later when you call
+`create_ad_campaign` / `promote_reel` / `publish_post`. Passing `platform` here
+raises `422 extra_forbidden`.
 
 ### Poll for creative completion
 ```

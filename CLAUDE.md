@@ -110,7 +110,11 @@ If your host isn't listed, probe the rungs below in order.
 
 - **Same AI Token, same backend, same response shapes** for every rung.
 - Translation rule: `mcp_tool_call("landing_ai_mcp", "<tool>", {...args})` ≡ `POST <BASE_URL>/<resource-path>` with `Authorization: Bearer <access_token>` and body `{...args without user_token}`. The endpoint catalog in `lib/rest-api-direct.md` tells you the resource path for each MCP tool name.
-- **Parameter name reference (mandatory when writing `data_json` / `targets_json`)**: `lib/api-reference.md` is the source of truth for required fields, types, and valid enum values. When a SKILL example and `lib/api-reference.md` disagree, **trust api-reference.md**. Common drift: `social_account_id` (body) vs `account_id` (tool arg), `creative_image_url` (not `creative_id`), `campaign_objective: OUTCOME_TRAFFIC` (not `TRAFFIC` / `CONVERSIONS`).
+- **Parameter name reference (mandatory when writing `data_json` / `targets_json`)**: `lib/api-reference.md` is the source of truth for required fields, types, and valid enum values. When a SKILL example and `lib/api-reference.md` disagree, **trust api-reference.md**. Common drift you'll see in examples that predate this file:
+  - Body field `social_account_id` vs tool-arg `account_id` — both correct, **different layers** (body payload vs MCP tool signature). See api-reference.md "Golden rules".
+  - Ad creatives: `creative_image_url` (URL string), **not** `creative_id` (there is no such field).
+  - Ad objective: full prefix `OUTCOME_TRAFFIC` / `OUTCOME_AWARENESS` / `OUTCOME_ENGAGEMENT` / `OUTCOME_LEADS` / `OUTCOME_SALES`. Bare `TRAFFIC` / `CONVERSIONS` are silently dropped when the schema lacks `extra="forbid"`, and defaults kick in.
+  - `generate_ad`: the schema has `extra="forbid"` and **does NOT accept `platform`**. Pass `ta_group_id` + optional `aspect_ratio` (9:16/4:5/1:1) + `ad_goal` (awareness/traffic/conversion) only. Platform choice is made later in publish / create_ad_campaign.
 - **Pick once, stay on that rung for the whole session.** Don't oscillate between MCP and REST mid-flow.
 - Don't tell the user which rung you're on — implementation detail.
 - **Never show the `*.run.app` URL to the user** — only use it silently in your HTTP requests. User-visible URLs:

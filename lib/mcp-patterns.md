@@ -163,11 +163,16 @@ objectives = mcp_tool_call("zereo_social_mcp", "get_ad_objectives", {
   "user_token": token
 })
 
-# 2. Generate ad creative image (returns public image_url, not a creative_id)
+# 2. Generate ad creative image (returns public image_url, not a creative_id).
+#    GenerateAdRequest has extra="forbid". Valid fields: ta_group_id (req),
+#    aspect_ratio ("9:16"/"4:5"/"1:1", default "9:16"), ad_goal
+#    ("awareness"/"traffic"/"conversion", default "awareness"). Do NOT pass
+#    `platform` — this endpoint just makes the image; platform is picked later
+#    when you publish or create an ad campaign.
 task = mcp_tool_call("landing_ai_mcp", "generate_ad", {
   "user_token": token,
   "session_id": session_id,
-  "data_json": json.dumps({"platform": "meta", "ta_group_id": "ta_1"})
+  "data_json": json.dumps({"ta_group_id": "ta_1", "aspect_ratio": "1:1", "ad_goal": "awareness"})
 })
 
 # 3. Poll for creative — response holds the image_url directly
