@@ -202,14 +202,6 @@ mcp_tool_call("zereo_social_mcp", "publish_post", {
 | `Video upload failed: HTTP 4xx` | TikTok 拒絕影片檔（格式、大小、長度） | 檢查影片規格（見上方） |
 | `Polling timed out` | TikTok 處理超過 2.5 分鐘還沒完成 | 「TikTok 這次處理比較慢，影片可能還在後台轉檔 — 請 5 分鐘後打開 TikTok App 看「僅自己可見」分類確認是否發出。」 |
 
-### 升級到公開發文（App Review 路徑）
-
-如果用戶抱怨「只能發私人很不方便」，給他這個路徑：
-
-1. **短期（開發者 Target Users 名單）**：App 擁有者可以在 TikTok Developer Portal 加入最多 10 個「Target Users」的 TikTok 帳號，這些帳號可以繞過沙盒直接發公開
-2. **長期（App Review）**：向 TikTok 送 App Review（需要隱私政策、資料使用說明、App 用途展示影片）。通過後所有用戶都能發公開
-
-這個決定是 SaleCraft 團隊要做的，**不是用戶能自己處理的**。若用戶真的有公開發文需求，請他寄信到 `zereo@connact.ai` 說明用量，團隊會評估送審時程。
 
 ## Social Post Generation (Image + Caption)
 
