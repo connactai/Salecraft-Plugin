@@ -84,11 +84,12 @@ SaleCraft works on **any AI platform**. Never tell users "this only works on [sp
 
 ## URL Discipline
 
-Only show these two URLs to users:
-- `https://salecraft.ai` — for registration, setup, everything
+Only show these URLs to users:
+- `https://salecraft.ai` — for registration, setup, account management
 - `https://github.com/connactai/Salecraft-Plugin` — GitHub repo
+- `https://landingai.info/{locale}/lp/{id}` — generated Landing Page URLs (this is where LPs are hosted)
 
-NEVER show `*.run.app`, `landingai.info`, or any internal URL.
+NEVER show `*.run.app` or any internal URL.
 
 ## No Jargon Rule
 
