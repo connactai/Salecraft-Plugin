@@ -172,29 +172,65 @@ Adjust targeting or proceed?
 
 ## Phase 5: Create Campaign
 
+**⚠️ 參數名照 `AdCampaignCreateRequest` schema 原樣抄（順序不重要，名字錯就 422）：**
+
 ```
 mcp_tool_call("zereo_social_mcp", "create_ad_campaign", {
   "user_token": token,
   "data_json": "{
-    \"account_id\": \"meta_123\",
-    \"objective\": \"TRAFFIC\",
-    \"daily_budget\": 50.00,
-    \"currency\": \"USD\",
-    \"creative_id\": \"creative_abc\",
-    \"landing_url\": \"https://lp.example.com/product\",
+    \"social_account_id\": \"<from list_accounts>\",
+    \"campaign_name\": \"\",
+    \"campaign_objective\": \"OUTCOME_TRAFFIC\",
+    \"ad_type\": \"image\",
+    \"creative_image_url\": \"<from generate_ad image_url>\",
+    \"creative_message\": \"探索自然無毒的保養體驗 — 今天就試試\",
     \"cta_type\": \"SHOP_NOW\",
-    \"targeting\": {
-      \"age_min\": 25, \"age_max\": 40,
-      \"genders\": [\"all\"],
-      \"locations\": [\"TW\"],
-      \"interests\": [\"skincare\", \"beauty\"]
-    },
-    \"start_date\": \"2026-04-15\",
-    \"end_date\": \"2026-04-30\"
+    \"cta_url\": \"https://landingai.info/zh-TW/lp/<campaign_id>\",
+    \"daily_budget\": 5.0,
+    \"target_age_min\": 25,
+    \"target_age_max\": 40,
+    \"target_genders\": [0],
+    \"target_countries\": [\"TW\"],
+    \"placements\": [\"facebook\", \"instagram\"],
+    \"schedule_start\": \"2026-04-20T00:00:00+08:00\",
+    \"schedule_end\": \"2026-05-05T00:00:00+08:00\"
   }"
 })
-→ Returns: { "campaign_id": "...", "status": "pending_review" }
+→ Returns: AdCampaignResponse { id, status, platform_campaign_id, platform_ad_id, ... }
 ```
+
+### 必填 vs 選填 + 型別/值域
+
+| 欄位 | 必填 | 型別 | 預設/值域 | 說明 |
+|------|:---:|------|----------|------|
+| `social_account_id` | ✓ | string | — | `list_accounts` 回傳的 account id（**不是 `account_id`**） |
+| `campaign_name` | — | string | 空字串會自動產生 | |
+| `campaign_objective` | — | string | `"OUTCOME_TRAFFIC"` | `OUTCOME_AWARENESS / OUTCOME_TRAFFIC / OUTCOME_ENGAGEMENT / OUTCOME_LEADS / OUTCOME_SALES`（**注意前綴 `OUTCOME_`，不是 `TRAFFIC`、`CONVERSIONS`**） |
+| `ad_type` | — | string | `"image"` | `image / video` |
+| `creative_image_url` | ✓ 若 ad_type=image | string | — | 從 `generate_ad` 的 `image_url` 拿（**不是 `creative_id`**） |
+| `creative_video_url` | ✓ 若 ad_type=video | string | — | |
+| `creative_message` | — | string | 空字串 | 廣告文字內容 |
+| `cta_type` | — | string | `"LEARN_MORE"` | `LEARN_MORE / SHOP_NOW / SIGN_UP / BOOK_TRAVEL / DOWNLOAD / CONTACT_US` 等 |
+| `cta_url` | — | string | 空字串 | 廣告點擊去的 landing URL（**不是 `landing_url`**） |
+| `daily_budget` | — | float | `5.0` | USD，最低 $1 |
+| `target_age_min` | — | int | `18` | flat 欄位（**不是 `targeting.age_min`**） |
+| `target_age_max` | — | int | `65` | |
+| `target_genders` | — | list[int] | `[0]` | `[0]=all` / `[1]=male` / `[2]=female`（**是數字不是字串**） |
+| `target_countries` | — | list[string] | `["TW"]` | ISO country code |
+| `placements` | — | list[string] | `["facebook","instagram"]` | |
+| `schedule_start` | — | ISO datetime | null | null = 立即開始 |
+| `schedule_end` | — | ISO datetime | null | null = 無結束時間 |
+
+**⚠️ schema 目前不支援 `interests`**（興趣定位）。若要 interest targeting 需另用 `update_campaign_targeting`（若存在）。
+
+**objective → optimization_goal 後端自動 derive**（你不用傳 optimization_goal，backend 會根據 `campaign_objective` 配對正確的 optimization_goal）：
+| `campaign_objective` | 自動 optimization_goal |
+|---------------------|----------------------|
+| `OUTCOME_AWARENESS` | `REACH` |
+| `OUTCOME_TRAFFIC` | `LINK_CLICKS` |
+| `OUTCOME_ENGAGEMENT` | `POST_ENGAGEMENT` |
+| `OUTCOME_LEADS` | `LEAD_GENERATION` |
+| `OUTCOME_SALES` | `OFFSITE_CONVERSIONS` |
 
 ## Phase 6: Monitor
 

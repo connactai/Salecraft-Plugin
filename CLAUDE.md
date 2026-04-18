@@ -8,6 +8,19 @@
 
 You'll see `mcp_tool_call("landing_ai_mcp", ...)` patterns throughout this repo. They describe **Path A** (MCP). There is also **Path B** (direct REST) that's identical in capability. Don't ask the user which to use — **silently scan your own tools and pick the highest-ranked one you have**. Then USE it. Do not punt back to the user with "please run curl yourself" unless you've genuinely exhausted everything below.
 
+#### Platform shortcuts — skip probing if you recognize your host
+
+| Your host | Go directly to | Why |
+|-----------|---------------|-----|
+| **Claude.ai (web)** | **Rung 1** (`mcp_tool_call` via Service System Research connector) | The bash / python sandboxes have an outbound domain allowlist that blocks `*.run.app`. Do NOT waste a probe on Rung 2/3 — they can't reach SaleCraft's backend from this host. |
+| **Claude Code (CLI / IDE)** | Rung 1 if MCP is configured, else Rung 2 bash (unrestricted) | |
+| **Cursor / Cline** | Rung 2 bash (unrestricted) | |
+| **ChatGPT Plus + Code Interpreter** | Rung 3 python | Sandbox usually allows `*.run.app` outbound |
+| **Gemini with Code Execution** | Rung 3 python | Usually allows Cloud Run URLs |
+| **Kimi / GLM / OpenClaw / Perplexity** | Rung 2 bash if present, else Rung 5 | Probe once, don't retry on allowlist failures |
+
+If your host isn't listed, probe the rungs below in order.
+
 #### Capability ladder — try each rung from top to bottom, stop at the first one that fits
 
 **Rung 1 — MCP tools** (Claude Code, Cursor, Cline, ChatGPT Business + custom MCP, Claude Desktop)
@@ -97,6 +110,7 @@ You'll see `mcp_tool_call("landing_ai_mcp", ...)` patterns throughout this repo.
 
 - **Same AI Token, same backend, same response shapes** for every rung.
 - Translation rule: `mcp_tool_call("landing_ai_mcp", "<tool>", {...args})` ≡ `POST <BASE_URL>/<resource-path>` with `Authorization: Bearer <access_token>` and body `{...args without user_token}`. The endpoint catalog in `lib/rest-api-direct.md` tells you the resource path for each MCP tool name.
+- **Parameter name reference (mandatory when writing `data_json` / `targets_json`)**: `lib/api-reference.md` is the source of truth for required fields, types, and valid enum values. When a SKILL example and `lib/api-reference.md` disagree, **trust api-reference.md**. Common drift: `social_account_id` (body) vs `account_id` (tool arg), `creative_image_url` (not `creative_id`), `campaign_objective: OUTCOME_TRAFFIC` (not `TRAFFIC` / `CONVERSIONS`).
 - **Pick once, stay on that rung for the whole session.** Don't oscillate between MCP and REST mid-flow.
 - Don't tell the user which rung you're on — implementation detail.
 - **Never show the `*.run.app` URL to the user** — only use it silently in your HTTP requests. User-visible URLs:

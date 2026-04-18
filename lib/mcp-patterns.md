@@ -144,49 +144,65 @@ mcp_tool_call("zereo_social_mcp", "import_from_session", {
 })
 
 # 3. Publish to multiple platforms
+# ⚠️ Each target follows SocialPublishRequest schema — key is
+#    `social_account_id` (NOT `account_id`), `post_type` required
+#    (ig_post / ig_story / ig_reel / fb_post / fb_story / tt_video / tt_photo)
 mcp_tool_call("zereo_social_mcp", "publish_multi", {
   "user_token": token,
   "targets_json": json.dumps([
-    {"account_id": "meta_123", "caption": "Check out our new product!"},
-    {"account_id": "tiktok_456", "caption": "New drop! Link in bio"}
+    {"social_account_id": "<ig_id>",     "post_type": "ig_post",  "caption": "...", "image_url": "https://..."},
+    {"social_account_id": "<tiktok_id>", "post_type": "tt_video", "caption": "...", "video_url": "https://..."}
   ])
 })
 ```
 
 ### Pattern: Ad Campaign Creation
 ```python
-# 1. Get objectives
+# 1. Get objectives (informational — you still POST campaign_objective value verbatim)
 objectives = mcp_tool_call("zereo_social_mcp", "get_ad_objectives", {
   "user_token": token
 })
 
-# 2. Generate ad creative
+# 2. Generate ad creative image (returns public image_url, not a creative_id)
 task = mcp_tool_call("landing_ai_mcp", "generate_ad", {
   "user_token": token,
   "session_id": session_id,
-  "platform": "meta"  # or "google"
+  "data_json": json.dumps({"platform": "meta", "ta_group_id": "ta_1"})
 })
 
-# 3. Poll for creative
+# 3. Poll for creative — response holds the image_url directly
 result = mcp_tool_call("landing_ai_mcp", "get_ad_result", {
   "user_token": token,
-  "task_id": task.id
+  "session_id": session_id,
+  "project_id": task["project_id"]
 })
+creative_image_url = result["image_url"]  # ← feed this to create_ad_campaign
 
-# 4. Create campaign
+# 4. Create campaign — follow AdCampaignCreateRequest schema EXACTLY
+#    (wrong param names -> 422 "field required"; wrong objective value -> 400)
 mcp_tool_call("zereo_social_mcp", "create_ad_campaign", {
   "user_token": token,
   "data_json": json.dumps({
-    "account_id": "meta_123",
-    "objective": "CONVERSIONS",
-    "daily_budget": 50.00,
-    "creative_id": result.creative_id,
-    "landing_url": "https://...",
-    "start_date": "2026-04-15",
-    "end_date": "2026-04-30"
+    "social_account_id":   "<from list_accounts>",   # not account_id
+    "campaign_objective":  "OUTCOME_TRAFFIC",        # not objective / TRAFFIC / CONVERSIONS
+    "ad_type":             "image",                  # or "video"
+    "creative_image_url":  creative_image_url,       # not creative_id
+    "creative_message":    "Your ad text here",
+    "cta_type":            "SHOP_NOW",
+    "cta_url":             "https://landingai.info/zh-TW/lp/<campaign_id>",
+    "daily_budget":        5.0,                      # USD, min $1
+    "target_age_min":      25,
+    "target_age_max":      40,
+    "target_genders":      [0],                      # [0]=all, [1]=male, [2]=female (int, not str)
+    "target_countries":    ["TW"],
+    "placements":          ["facebook", "instagram"],
+    "schedule_start":      "2026-04-20T00:00:00+08:00",
+    "schedule_end":        "2026-05-05T00:00:00+08:00"
   })
 })
 ```
+
+**Valid `campaign_objective` values**: `OUTCOME_AWARENESS` / `OUTCOME_TRAFFIC` / `OUTCOME_ENGAGEMENT` / `OUTCOME_LEADS` / `OUTCOME_SALES`. Backend auto-derives the matching AdSet `optimization_goal` — do NOT pass optimization_goal yourself.
 
 ## Error Handling
 
