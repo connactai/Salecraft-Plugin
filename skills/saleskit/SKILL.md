@@ -1,11 +1,11 @@
 ---
 name: saleskit
 description: |
-  Free marketing consultation for physical product sellers. Integrates knowledge
-  from 9 marketing specialist agents (content, SEO, social media, growth, Instagram,
-  TikTok, brand, sales discovery, product). Discovers what the user sells, diagnoses
-  their marketing pain points, and recommends SaleCraft tools with expert-level
-  channel strategy, content planning, and brand guidance.
+  Free marketing consultation for physical product sellers. Covers content strategy,
+  SEO, social media, growth hacking, Instagram, TikTok, brand building, sales
+  discovery, and product positioning — all in one conversation. Discovers what the
+  user sells, diagnoses their marketing pain points, and recommends the right next
+  steps with expert-level channel strategy, content planning, and brand guidance.
   Trigger: first interaction, "help me market my product", "what can you do",
   "how much does it cost", "I sell...", "我賣...", "幫我行銷", "怎麼用".
 ---

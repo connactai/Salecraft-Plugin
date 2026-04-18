@@ -1,11 +1,11 @@
 ---
 name: upload-media
 description: |
-  Upload spokesperson photos, voice samples, or product images via LLM chat.
-  Handles base64 from Claude Code/App, or URL input. Links assets to brand
-  spokesperson for use in reel generation pipeline.
+  Upload spokesperson photos, voice samples, or product images through the AI chat.
+  Users can paste images directly, share a URL, or describe what they want to upload.
+  Supports product photos, brand logos, spokesperson headshots, and voice samples.
   Trigger: "upload photo", "upload voice", "add spokesperson image",
-  "upload product image", "add voice sample".
+  "upload product image", "add voice sample", "add my photo".
 allowed-tools:
   - Bash
   - Read
@@ -42,12 +42,12 @@ Ask: "What would you like to upload?"
 
 ### Phase 2: Receive the File
 
-**Method A — Base64 (Claude Code / Claude App drag-and-drop):**
+**Method A — Base64 (drag-and-drop or paste image):**
 
-The user drags a file into the chat. Claude can read it as base64.
+The user pastes or drags a file into the chat. The AI reads it as base64.
 
 ```
-# Claude Code: read file as base64
+# AI reads the file as base64
 base64_data = <read file and encode>
 
 # Call MCP tool

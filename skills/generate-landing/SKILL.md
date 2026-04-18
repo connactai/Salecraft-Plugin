@@ -1,10 +1,11 @@
 ---
 name: generate-landing
 description: |
-  Orchestrates landing page generation through the AI agent pipeline
-  (Strategist → Architect → Factory → Stripe Reflector). Creates a session,
-  triggers generation, polls for completion, and verifies quality.
-  Trigger: Phase 3 of /salecraft-create, or "generate my landing page", "create LP".
+  Generate a professional landing page for the user's product. AI analyzes the brand,
+  designs the layout, creates visuals, and quality-checks the result — all automatically.
+  Takes about 30 minutes to produce a complete multi-page sales page.
+  Trigger: Phase 3 of /salecraft-create, or "generate my landing page", "create LP",
+  "help me make a sales page", "build my product page".
 allowed-tools:
   - Bash
   - Read

@@ -177,7 +177,7 @@ Without this, Claude Code falls back to direct REST (works equally well; pattern
 
 - **Consultation-first** — AI understands your product before building anything
 - **9 specialist agents** — Content strategy, SEO, social media, growth, branding
-- **10 locales** — en, zh-TW, ja, ko, vi, fr, th, es, pt, ar (RTL)
+- **15+ locales** — en, zh-TW, zh-CN, ja, ko, vi, fr, th, es, pt, ar (RTL), de, id, ms, hi
 - **AI Landing Pages** — 30-minute turnaround, 4-stage pipeline
 - **Social publishing** — IG, FB, TikTok one-click posting
 - **Ad campaigns** — Meta + Google Ads creation
@@ -230,6 +230,27 @@ salecraft-plugin/
 | `landing_ai_mcp` | LP generation, editing, brand management |
 | `zereo_social_mcp` | Social publishing, ads, QR codes |
 | 7+ research MCPs | Google Trends, X, Reddit, TikTok, YouTube... |
+
+## Support
+
+Having trouble? Need help getting started?
+
+- **Email**: zereo@connact.ai
+- **GitHub Issues**: [github.com/connactai/Salecraft-Plugin/issues](https://github.com/connactai/Salecraft-Plugin/issues)
+
+## Platform Compatibility
+
+SaleCraft works on **any AI platform** that supports MCP (Model Context Protocol):
+
+- ChatGPT (with MCP plugin support)
+- Claude (Claude Code, Claude.ai, Claude Desktop)
+- Gemini
+- Kimi
+- GLM
+- OpenClaw
+- Any other MCP-compatible AI assistant
+
+**You do NOT need to install any specific AI tool.** Just connect the MCP server to your preferred AI platform and start chatting.
 
 ## License
 

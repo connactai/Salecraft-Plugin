@@ -2,7 +2,7 @@
   "name": "salecraft",
   "description": "End-to-end marketing automation for physical product sellers. Native experience in Claude Code (install via /plugin install, get /salecraft-* slash commands and auto-loaded skills); also usable as a markdown instruction set in Claude.ai, ChatGPT, Gemini, Cursor, Cline, etc. Free consultation (strategy, competitor analysis, funnel, copywriting) runs as pure conversation. Paid execution (Landing Pages, Reels, social posts, Meta/Google ads) runs through the SaleCraft hosted backend, authorized only via AI Token (user copies sc_live_* from salecraft.ai/{locale}/marketingx and pastes it back) — the AI never asks for an email or password.",
   "author": {
-    "name": "Landing AI",
-    "email": "support@landing-ai.com"
+    "name": "Connact AI",
+    "email": "zereo@connact.ai"
   }
 }
