@@ -82,6 +82,33 @@ generate-landing（扣點生成）
    **目前規則是 SKILL-only 軟規範、沒有 backend enforcement**（2026-04-20 與使用者討論後決定暫不 ship backend preflight，避免 frontend wizard / 舊 session 被意外擋下）。LLM 必須**自律**照 6.5 跑、backend `generate_session` 目前還是接受任何合法 request。
 
    未來若要啟用 backend 硬 enforcement，會走 feature-flag 漸進開啟、並同步 frontend + 舊 session 資料遷移。
+
+   #### ❌❌❌ 實戰違規範例（照 NO SILENT DEFAULTS 規則、這些是「靜默預設」、使用者生完才發現不對）
+
+   以下這些反模式都真的發生過、每一個都會導致退費投訴：
+
+   ```
+   ❌ 沒問語言、直接呼叫 generate_session
+   使用者看到 LP 出來是中文但他做的是日本市場 → 退費
+   原因：沒問 wizard_ta_groups[*].language、backend 走預設 "Traditional Chinese (Taiwan)"
+
+   ❌ 2 個 TA 但只問一次色系、兩組都套同一色
+   使用者預期 A 組墨綠 B 組玫瑰金、結果兩組都墨綠 → 退費
+   原因：primary_color 是 per-TA 欄位、應該逐 TA 問或逐 TA 推斷
+
+   ❌ 長寬比沒問、backend 生直版但使用者要投 Google Ads（需要橫版）
+   原因：aspect_ratio 沒問、backend 走 fallback 9:16
+
+   ❌ 使用者上傳 5 張產品圖、Quality Gate 沒跑就扣點生成
+   產品圖實際有 4 張模糊 → LP 出來爛 → 退費
+   原因：validate_images 沒 call、image_censor_results 空、使用者沒被告知圖有問題
+
+   ❌ CTA URL 沒問、LP 出來按鈕連到 "#"（什麼都不導）
+   使用者推出去、客人點按鈕卡在頁面 → 客訴
+   原因：cta_url 沒問、也沒明確寫 cta_skipped=true
+   ```
+
+   **共通點**：LLM 為了「對話節奏好」跳關、或「好像之前聊過了所以我幫他填」結果填錯、或「這不是重點等下再說」然後忘記回來問。**每一個跳過的欄位都有可能在生成後變成退費原因**。寧可對話多一行、不要少一個 confirmation。
    
    **實作範例**：
      - 使用者 saleskit 階段講過「主要在 IG 限時動態推」→ 到 Step 5-1 長寬比時不要再問「橫 / 直 / 兩者」，直接在 batch 題裡寫「① 你前面提過主要走 IG 限時、我幫你預設 9:16 直版；若你同時想推到 Google Ads / 官網也請講、我補橫版」。

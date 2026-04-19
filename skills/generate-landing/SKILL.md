@@ -656,14 +656,66 @@ tas    = session_state["wizard_ta_groups"]
 
 ## Phase 3: Trigger Generation
 
-### Step 0 (NEW): Verify Phase 2.9 Gate passed
+### Step 0 (MANDATORY): Pre-Flight Self-Audit — 呼叫 generate_session **之前**最後一關
 
-**DO NOT call `generate_session` if any of these are true:**
-- 12 gates 沒全問完
-- 使用者沒給明確啟動詞（只回「好」「OK」不算）
-- 成本複誦沒做
+**流程**：呼叫 `get_session` 把當前狀態撈回來、逐項對照 checklist、缺一項就回去補、不准用「差不多就好」精神蒙混。這是 session 扣點前最後一道自己把關的審查、**沒 backend 硬擋、所以你自己必須誠實跑**。
 
-違反這條 = 未經授權扣點 = **嚴重失誤**，使用者可申訴退費。
+```
+session = mcp_tool_call("landing_ai_mcp", "get_session", {
+  "user_token": token, "session_id": session_id
+})
+shared = session["wizard_shared_data"] or {}
+tas    = session["wizard_ta_groups"] or []
+```
+
+#### Self-Audit Checklist — 逐項勾才能往下
+
+**Session 級（Shared fields）**：
+- [ ] `shared["brand_name"]` 非空 — brand-onboard Step 2 有跑
+- [ ] `shared["industry_category"]` 非空、且在合法 enum 裡（不是 Gemini 爬出來的中文字）
+- [ ] `shared["aspect_ratio"]` 有明確值（9:16 / 16:9 / 1:1 / 4:5）
+- [ ] `shared["cta_url"]` 有 URL **或** `shared["cta_skipped"] == true`（使用者明確拒絕填）
+- [ ] `shared["requested_stripe_count"]` 在 8-21 範圍內
+- [ ] `shared["include_qa_section"]` 是 true/false（不是 undefined）
+- [ ] `shared["include_testimonials"]` 是 true/false
+
+**每個被選中的 TA（Per-TA fields）**：
+對 `request.ta_group_ids` 裡每個 `tid`：
+- [ ] `tas` 裡有對應的 entry（`entry.id == tid` 或 `entry.ta_group_id == tid`）
+- [ ] `entry["ta_name"]` 非空
+- [ ] `entry["language"]` 非空（**每個 TA 可以不同、但都要有**、不要讓 backend 走 fallback）
+- [ ] `entry["primary_color"]` **或** `entry["visual_style"]` 至少一個非空
+
+**Quality Gate**：
+- [ ] 若使用者有上傳產品圖（`shared["product_images"]` 或 `session["wizard_shared_files"]["product_images"]` 非空）：
+    - `session["image_censor_results"][-1]["overall_passed"] == true` **或**
+    - `shared["_quality_gate_override"] == true`（使用者明確回「我知道品質會打折還是要跑」）
+
+**NO SILENT DEFAULTS 驗證**（CLAUDE.md #6.5 配對）：
+- [ ] 對照 `shared["_spec_inferred_by_llm"]` list — 裡面列的每個欄位都在最後 Cost 複誦時被使用者看過、且使用者回「都 OK」或對特定項回「改 X」
+- [ ] 使用者親答的欄位、確實是親答的（不是你自己填的）
+
+**使用者啟動詞**：
+- [ ] 使用者最後一句明確是「開始 / go / 執行 / 開跑 / start / do it / 跑吧 / 動手」之一
+- [ ] 不是模糊的「好 / OK / 嗯 / 可以 / alright」（那個要再問一次「確認開始嗎？點數會立刻扣」）
+
+#### 任一項失敗的處理
+
+**不要修復後靜默繼續**——告訴使用者缺什麼、回去對應 step 補、使用者確認才回來：
+
+```
+等一下——我檢查了一下生成前的規格、發現 [具體項目] 還沒設好：
+
+- [具體哪一項] ← 需要 [哪個 Step 的動作]
+
+我回去把這項補好、確認一次再幫你啟動扣點。
+```
+
+然後真的回去補、做完 get_session 再驗一遍、全綠才繼續 Step 1。
+
+#### 違反後果
+
+跳過 Self-Audit 直接 `generate_session` = 未經授權扣點 = **嚴重失誤**、使用者可申訴退費。這條 backend 目前沒硬擋（2026-04-20 之後若有啟用 preflight 再另行通知）、**靠你自律**。
 
 ### Step 1: Set expectations BEFORE triggering
 
