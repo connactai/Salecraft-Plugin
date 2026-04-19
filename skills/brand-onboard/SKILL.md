@@ -78,6 +78,54 @@ logout(user_token) -> end session
 
 ## Phase 2: Smart Asset Collection — URL / Google Drive First (CRITICAL)
 
+### ⚠️ 成本心智模型（LLM 常誤解）
+
+| 動作 | 扣點？ | 什麼時候做 |
+|------|-------|----------|
+| `create_session` | **免費、無限次** | 拿到 access_token 第一件事、placeholder 名稱先建 |
+| `update_session` | **免費、無限次** | 每輪問答結束就寫一次、不要攢 |
+| `analyze_brand_url` / `scrape_landing_page` | **免費** | URL 一給就跑 |
+| `validate_images` / `digitize_product_text` | **免費**（吃 Gemini 配額但使用者無感）| Phase 3.9 Quality Gate |
+| `generate_ta_options` | **免費** | Step 4 TA 選之前 |
+| `generate_ta_spokesperson` | **免費**（吃配額）| 使用者選 AI 生代言人時 |
+| **`generate_session`** | **扣點！** `stripe_cost × 頁數 × TA 組數` | Step 6 Cost 複誦 + 啟動詞之後 |
+
+**LLM 常犯的錯**：以為 create_session 也扣點、所以故意等到最後才建 session「一次性寫入省錢」。**這是錯的**。create + update 全免費、session 要**儘早建**、讓後續 wizard 每步都有地方寫資料。舊版 plugin 誤導 LLM 批次累積答案再一次性寫入、造成對話 context 斷了資料就掉 — 這個 anti-pattern 已廢棄。
+
+### 🔴 Step -1 (BEFORE anything in Phase 2): session 必須已建立
+
+**這是 LLM 最常跳的一關**：拿到 access_token 後直接 call `analyze_brand_url` 或讓使用者上傳圖片、**但 `session_id` 還不存在**。後果：scrape 結果掉在 brand buffer、沒進 session；使用者上傳的圖歸 brand 不歸 session；Step 2 後面要 `update_session` 時 session_id 拿不到、只好再建一個、前面的 context 全斷掉。
+
+**強制順序**：
+```
+Step 0  取 access_token（auth）
+    ↓
+**Step 1 create_session**（用 placeholder 先建）← 在此之前不准動 Phase 2 任何動作
+    ↓
+Step 2  分 Phase 2 填資料（analyze_brand_url / PDF / 手動）
+```
+
+**實作**：進 brand-onboard 第一件事、檢查是否已有 `session_id`（通常呼叫方會傳進來、或 saleskit 過渡時已建）。若沒有、**立刻建**：
+
+```
+# 若 session_id 還沒有、先建一個（placeholder 名、之後 update 進真名）
+if not session_id:
+    res = mcp_tool_call("landing_ai_mcp", "create_session", {
+      "user_token": token,
+      "session_name": "[LP] 新建中",  # placeholder、拿到品牌名再 update
+      "brand_name": "Pending",
+      "product_name": "Pending"
+    })
+    session_id = res["session_id"]
+```
+
+**session_id 確定存在後才進下面 Step 0-3**。Phase 2 任何 `analyze_brand_url` / `scrape_landing_page` / PDF 上傳 / 圖片上傳、scrape 後**一律 `update_session(session_id, wizard_shared_data={...})` 寫進 session**、不要留在 brand buffer。
+
+**❌ 絕對不可**：
+- 拿到 token 就直接 `analyze_brand_url`、沒有 session_id
+- 爬完品牌資料說「現在開始問素材跟規格」但沒 call create_session
+- 期待 backend 幫你自動建 session（沒這回事、MCP 沒 implicit session）
+
 **Goal**: Collect as much brand material as possible with MINIMUM effort from the user. The fastest path is always URL or Google Drive import — explain this upfront.
 
 **🧠 Psychology Design Principles for This Phase:**
