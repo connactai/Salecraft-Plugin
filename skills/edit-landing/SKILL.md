@@ -681,15 +681,85 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-Stripe regeneration costs **100 pts** per regeneration (regeneration_credit_cost). Text-only edits (`update_stripe_texts`, `update_stripe_text_styling`) are free.
+Stripe regeneration has a **free allowance** before credits start being deducted:
+- Every LP ships with `free_limit` free regenerations (equal to the page count — e.g. a 10-page LP has 10 free regens)
+- Only after `free_remaining` hits 0 does each regeneration cost 100 pts
+- Text-only edits (`update_stripe_texts`, `update_stripe_text_styling`) are always free
+
+**DO NOT estimate cost from memory.** Always check the real `regen_quota` first.
+
+### Regen cost — 2-step flow (MANDATORY before quoting any regen price)
+
+**Step 1: Read current quota from `get_landing_page`**
+
+Before quoting any regen price, fetch the LP config and read `regen_quota`:
+
+```
+mcp_tool_call("landing_ai_mcp", "get_landing_page", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+→ config.regen_quota = {
+    "free_limit": 10,           # total free regens for this LP
+    "used_count": 2,            # regens consumed so far
+    "free_remaining": 8,        # remaining free regens
+    "credit_cost_per_regen": 100,  # cost once free is exhausted
+    "is_paid_phase": false      # true once free_remaining == 0
+}
+```
+
+**Step 2: Quote the user using `regen_quota`, not guesswork**
+
+- If `free_remaining > 0`: "This regen is **free** (you have {free_remaining} free regens left)"
+- If `is_paid_phase == true`: "This regen costs **{credit_cost_per_regen} pts**. Proceed?"
+
+#### Consecutive regens — roll quota from each API response
+
+If the user asks to regenerate multiple stripes in one turn (e.g. "redo stripe 3 and stripe 5"), **do NOT** use the Step 1 initial quota for both estimates. Each `regenerate_stripe` response returns fresh `free_remaining` / `credits_deducted` — use those to update your local snapshot before quoting the next stripe:
+
+```
+# MCP response can be str (JSON text) or dict (structured content).
+# Parse defensively; do NOT write json.loads(r) unconditionally.
+def _parse(resp):
+    if isinstance(resp, dict):
+        return resp
+    if isinstance(resp, str):
+        try:
+            return json.loads(resp)
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+# initial snapshot: free_remaining = 2 (from get_landing_page)
+# user asked to regen stripe 3, stripe 5
+
+# stripe 3
+r1 = mcp_tool_call("landing_ai_mcp", "regenerate_stripe", {...stripe_idx: 3})
+p1 = _parse(r1)
+deducted_1 = p1.get("credits_deducted", 0)
+free_remaining = p1.get("free_remaining", max(0, free_remaining - 1))
+
+# stripe 5 — use updated free_remaining from r1, not the stale initial value
+r2 = mcp_tool_call("landing_ai_mcp", "regenerate_stripe", {...stripe_idx: 5})
+p2 = _parse(r2)
+deducted_2 = p2.get("credits_deducted", 0)
+free_remaining = p2.get("free_remaining", max(0, free_remaining - 1))
+
+# Report actual deducted pts per stripe (source of truth = backend response)
+告知：「stripe 3 實扣 {deducted_1} pts，stripe 5 實扣 {deducted_2} pts；
+目前免費剩 {free_remaining} 次。」
+```
+
+**Key rule**: per-stripe actual cost = that stripe's API response `credits_deducted`. Never predict or announce a price without the response in hand — under race conditions the backend is the source of truth.
 
 **Top-up URL**: https://salecraft.ai/{locale}/marketingx
 
 Before ANY paid action:
-1. Tell the user the estimated cost in pts
+1. Read `regen_quota` via `get_landing_page` (don't guess from memory)
 2. Check their balance: `get_me(user_token)` → `credits`
-3. If insufficient, guide them to top-up URL
-4. Get explicit confirmation before proceeding
+3. Tell the user the real cost based on current quota
+4. If insufficient, guide them to top-up URL
+5. Get explicit confirmation before proceeding
 
 ### Free Consultation Available
 If the user seems unsure or is exploring, suggest the free consultation first:
