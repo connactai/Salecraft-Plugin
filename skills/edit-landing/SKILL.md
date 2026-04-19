@@ -203,16 +203,26 @@ mcp_tool_call("landing_ai_mcp", "update_stripe_text_styling", {
 | "Bring back the hidden stripe" | `restore_stripe` |
 | "Completely redo stripe 2" | `regenerate_stripe` |
 
-### Page-Level Edits (Logo, Branding, SEO — NOT inside stripes)
+### Page-Level Edits (Logo, CTA button, Branding, SEO — NOT inside stripes)
 
-| User says | Tool | Key params |
-|-----------|------|-----------|
-| "換 logo" / "swap the logo" / "左上那個 logo 換一下" | `patch_landing_config` | `config_json`: `{"logo_url": "<public_url>"}` |
+**優先用 dedicated tool**，typed 參數比 `patch_landing_config` 的 JSON 字串穩——LLM 不用自己組 JSON、backend 也不會因為 key 名拼錯 silent-skip（之前 `upload_logo` 就踩過 `header_logo_url` vs `logo_url` 的 key 不匹配 bug）。
+
+| User says | 推薦 tool（dedicated）| Key params |
+|-----------|---------------------|-----------|
+| "換 logo" / "swap the logo" / "左上那個 logo 換一下" | **`upload_logo`** | `logo_url: str` 公開 URL（先走 `upload_base64` 取得）|
+| "CTA 按鈕連到 [網址]" / "點 CTA 要去 [哪]" | **`update_cta_link`** | `url: str`（必填）、`text: str`（可選，不帶就不改按鈕文字）|
+| "CTA 按鈕改成紅色 / 圓角 / 字大一點" | **`update_cta_style`** | `background_color` / `text_color` / `border_radius` / `font_size`（全部選填，可只給要改的那幾個）|
+| "改 SEO title / 描述 / 關鍵字 / OG 圖" | **`update_seo`** | `title` / `description` / `keywords` / `og_image`（全部選填）|
+
+**Generic 退回方案**（當上面沒對應 tool 時才用）：
+
+| User says | Fallback tool | Notes |
+|-----------|--------------|-------|
 | "換主色" / "change primary color" | `patch_landing_config` | `config_json`: `{"primary_color": "#HEX"}` |
-| "改 SEO title / 描述 / 關鍵字" | `update_seo` | `title` / `description` / `keywords` / `og_image` |
 | "改 footer 文案 / 連結" | `patch_landing_config` | `config_json`: `{"footer": {...}}` |
+| "改 header 導航列" | `patch_landing_config` | `config_json`: `{"header_nav": [...]}` |
 
-These are **page shell** edits — they change the rendered page frame without touching per-stripe AI-generated images. No credits are deducted.
+這些都是 **page shell** 編輯——改的是頁面外框、不碰 stripe 內 AI 生成圖片。**不扣點**。
 
 #### Logo Swap Flow (header logo at top-left of sales page)
 
@@ -229,10 +239,10 @@ When the user says "換 logo" / "swap the logo" / "左上那個 logo 換一下",
 **Step 2 — Apply to the LP**
 
 ```
-mcp_tool_call("landing_ai_mcp", "patch_landing_config", {
+mcp_tool_call("landing_ai_mcp", "upload_logo", {
   "user_token": token,
   "campaign_id": campaign_id,
-  "config_json": "{\"logo_url\": \"<public_url>\"}"
+  "logo_url": "<public_url>"
 })
 ```
 
@@ -244,7 +254,7 @@ mcp_tool_call("landing_ai_mcp", "patch_landing_config", {
 
 | Where | How to change |
 |-------|--------------|
-| **Header top-left** (page shell) | `patch_landing_config({"logo_url": ...})` ← usually what the user means. No credits. |
+| **Header top-left** (page shell) | `upload_logo(logo_url=...)` ← usually what the user means. No credits. |
 | **Inside a stripe image** (Factory-baked hero art, background branding) | `regenerate_stripe` per affected stripe, 100 pts each. Only do this if the user explicitly says "LP 圖片裡面的 logo 也要換" or similar. |
 
 If unclear, **ask**: 「你是想換頁面最上面那個 logo，還是 LP 圖片內部的品牌標示也要換？後者要重 generate 受影響的 stripe，每張 100 pts。」
