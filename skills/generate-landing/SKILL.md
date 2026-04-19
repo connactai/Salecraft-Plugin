@@ -324,9 +324,69 @@ if "include_testimonials" not in shared:   needs.append("testimonials")
 # requested_stripe_count 永遠最後問（不管其他欄位狀態）
 ```
 
-### Step 5 — 自然問缺的 spec（**不包含頁數**）
+### Step 5 — **infer 能推的、剩下才問**（**不包含頁數**）
 
-`needs` 裡除了 `page_count` 以外的項目，**2-4 題一組問**、用人話、給選項。**絕對不要照 gate 編號 1-12 念給使用者聽**——那是內部 audit list。
+**核心 meta-rule**（CLAUDE.md #6.5 NO SILENT DEFAULTS）：`needs` 清單裡每一項都得被「碰到」——要嘛使用者親答、要嘛 LLM 推斷 + 在對話裡宣告讓使用者有機會反對。**絕對禁止**把欄位留空讓 backend 吃預設。
+
+#### Step 5a — 先跑一次 infer pass、推能推的
+
+進 Step 5 批量問之前，**先在心裡過一遍 `needs`**，檢查下列 signal 能不能推出該欄位的合理值：
+
+| 欄位 | 可從這些 signal 推 | 推斷範例 |
+|------|-------------------|---------|
+| `aspect_ratio` | saleskit / brand-onboard 對話提到渠道（IG 限時 / TikTok / 桌機官網 / Google Ads） | 提過「IG 限時」→ `9:16`；提過「官網 hero」→ `16:9`；沒提或兩邊都要 → 預設兩邊 |
+| `language` | 使用者對話主要語言 + brand scrape language + TA ta_description 語言 | 使用者講繁中、brand 官網繁中 → `zh-TW`；若 TA 中某組 ta_description 是英文 → 該 TA 推 `en`、其他推 zh-TW |
+| `primary_color` | `analyze_brand_url` 抓的 primary_color / logo 主色 | 抓到 `#2fa067` → 直接用；沒抓到 → 才問 |
+| `font_style` | `industry_category` 的通用字體偏好 | cosmetics / jewelry / luxury → `serif`；software / electronics / SaaS → `sans-serif`；handmade / artisan → `handwritten` |
+| `cta_url` | brand-onboard 抓的 CTA / 官網 URL / 社群連結 | 使用者有官網 → 預設官網；有 LINE 官方帳號 → LINE；都沒有 → 才問 |
+| `include_qa_section` | 產業類別 + 價位 | 高單價 / 服務業 / 保健食品 → `true`（猶豫型客人多）；快銷 / 低單價 → `false` |
+| `include_testimonials` | brand 有沒有抓到評價 / 社群提過 | brand 抓到評論 → `true`；沒素材 → `false` 預留位 |
+
+**推斷後寫進 session**（update_session）並把 **`_spec_inferred_by_llm` 加進 session**（flag 起來、Cost 複誦時會標記）：
+
+```
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token, "session_id": session_id,
+  "data_json": '{"wizard_shared_data": {
+    "aspect_ratio": "9:16",
+    "language": "zh-TW",
+    "primary_color": "#2fa067",
+    "font_style": "serif",
+    "cta_url": "https://example.com",
+    "cta_text": "了解更多",
+    "include_qa_section": true,
+    "include_testimonials": false,
+    "_spec_inferred_by_llm": ["aspect_ratio", "font_style", "include_qa_section", "include_testimonials"]
+  }}'
+})
+```
+
+#### Step 5b — 只問剩下真的推不出來的
+
+Infer pass 跑完、`needs` 通常從 7-8 題縮到 0-3 題。**剩下的才問使用者**、仍然 2-4 題一組。
+
+#### Step 5c — 宣告推斷值、等使用者反對
+
+Step 5a/5b 跑完、進 Step 6 頁數之前，把**所有推斷的欄位一次宣告**給使用者、給反對機會：
+
+```
+依你前面講的，我幫你把幾個設定預填了，看看要不要改：
+
+- 長寬比：**9:16 直版**（因為你提過 IG 限時動態）
+- 色系：**墨綠 #2fa067**（官網抓到的品牌主色）
+- 字體：**襯線**（你做保健食品、襯線比較合調性）
+- CTA 連結：**你的官網**（你提過的那個）
+- Q&A 區塊：**加**（保健食品猶豫型客人多、Q&A 轉換有幫助）
+- 客戶見證區塊：**不加**（你沒有實際評價、加了會是空的）
+
+都 OK 就進最後一題（頁數），有要改直接講哪項。
+```
+
+使用者說「都 OK」或「改 X」→ 該反對的就 update_session 改、其他保留、然後進 Step 6。
+
+### Step 5 原則：**讓使用者只需要點頭或否決、不要從空白答每題**
+
+問法：**用人話、給選項、不要一次丟太多**。**絕對不要照 gate 編號 1-12 念給使用者聽**——那是內部 audit list。
 
 問的範例（使用者只缺 aspect / language / cta）：
 
@@ -461,20 +521,28 @@ tas    = session_state["wizard_ta_groups"]
 **只複誦使用者輸入的規格、不要編 stripe 結構**：
 
 ```
-好，幫你整理一下（以下都是你告訴我的、我寫進系統的）：
+好，幫你整理一下（LLM 推斷的欄位後面加「（我幫你配）」、使用者親答的不加、讓他知道哪些要 double-check）：
+
 - 受眾：[tas 裡每個 ta_name 列出]
 - 頁數：[shared.requested_stripe_count] 頁 × [len(tas)] 組 = [total_stripes] 頁
-- 長寬比：[shared.aspect_ratio]
-- 語言：[shared.language]
-- 色系：[shared.primary_color 或 shared.color_mood_keyword]
-- 字體：[shared.font_style]
-- CTA：[shared.cta_text] → [shared.cta_url]
-- 附加：[shared.include_qa_section ✓/✗，shared.include_testimonials ✓/✗]
+- 長寬比：[shared.aspect_ratio]{若 "aspect_ratio" in shared._spec_inferred_by_llm 加「（我幫你配，因為你提過 X）」}
+- 語言：[shared.language]{同上標記}
+- 色系：[shared.primary_color]{同上}
+- 字體：[shared.font_style]{同上}
+- CTA：[shared.cta_text] → [shared.cta_url]{同上}
+- Q&A：[✓/✗]{同上}
+- 客戶見證：[✓/✗]{同上}
 - 預計扣點：[stripe_cost × stripe_count × num_tas] pts（約 $[USD]）
 
-你目前餘額 [X] pts。確認要開始嗎？
-回「開始」我就跑；回「改 XX」就調整；回「取消」就先不動。
+你目前餘額 [X] pts。**有標「（我幫你配）」的欄位特別看一下、要改現在講**；都對就回「開始」我就跑；回「取消」就先不動。
 ```
+
+### 為什麼要標推斷欄位
+
+根據 CLAUDE.md #6.5 **NO SILENT DEFAULTS**，使用者親口答 vs LLM 推斷是**不同信心度**——使用者親答的錯了是使用者責任、LLM 推斷的錯了是 LLM 責任。把推斷欄位在複誦時標出來：
+1. 使用者看到就會多看一眼、發現推錯當場改
+2. 不會生完 LP 才發現「我沒講過要 9:16 啊怎麼出直版」→ 退費投訴
+3. 使用者親答的欄位（例：頁數）不標、不干擾閱讀
 
 ### 🔴 絕對禁止 — 複誦時不要列每頁內容
 
