@@ -857,7 +857,7 @@ For Landing Page optimization — apply these when generating or editing LPs:
 - [ ] Product schema (JSON-LD) with price + reviews
 - [ ] Mobile-first design (Google indexes mobile version)
 - [ ] Page load under 3 seconds
-- [ ] Hreflang tags if using i18n-adapt for multiple locales
+- [ ] Hreflang tags if LP has multiple language versions (each language = one independent LP generation)
 - [ ] Open Graph tags for social sharing preview
 
 ## Key Rules

@@ -296,25 +296,137 @@ else:
 
 **問法**：分 3 批（素材組 1-4 / 規格組 5-8 / 風格組 9-13），每批 3-4 題，維持對話節奏。**不要一次把 13 題全丟出來**。
 
-### 最後 Cost 複誦 + 啟動確認（強制範本）
+### 🔴 MANDATORY: 每批答完就 `update_session` 寫進 backend（不要只在對話裡記）
 
-12 題問完後，**停下來複誦總規格 + 總扣點，等明確啟動詞**：
+**痛點**：LLM 問完 gates 只在對話 context 記答案、沒寫回 session。若對話太長 context 被裁掉、使用者換 AI、session 被另一個 AI 接手 → 答案全失。使用者以為「已登記」結果 backend session 還是空的。**這會在 Phase 3 cost 複誦時露餡，或更糟是 generate_session 用預設值導致使用者預期跟實際 LP 不符**。
+
+**強制規則**：使用者答完一批（3-4 題）後，**立刻**呼叫 `update_session` 把那批答案寫進 `wizard_shared_data`（共用）或對應的 TA 條目（`wizard_ta_groups`），再進下一批。
+
+#### 批 1（素材組 1-4）寫入範例
+
+素材組很多答案是在 `brand-onboard` 早就寫進去了（logo / 產品圖 / 代言人 / 認證圖桶）。這批的 update 通常只是補 Gate 4 代言人選擇結果：
 
 ```
-好，幫你整理一下：
-- 受眾：[X 組 TA 名稱列出]
-- 頁數：[N] 頁 × [M] 組 = [total_stripes] 頁
-- 長寬比：[橫版 / 直版 / 兩者]
-- 語言：[zh-TW / en / ...]
-- 色系：[描述]
-- 字體：[描述]
-- CTA：[destination 描述]
-- 附加：[Q&A ✓/✗，見證 ✓/✗]
-- 預計扣點：[total] pts（約 $[USD]）
+# 使用者選了「AI 生成代言人」+ 9 題參數
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session_id,
+  "data_json": "{\"wizard_shared_data\": {\"spokesperson_choice\": \"ai_generated\", \"spokesperson_params\": {...9 params...}}}"
+})
+# 若選「不使用人物」則寫 "spokesperson_choice": "none"
+# 若選「上傳自己照片」則 create_spokesperson 已處理、不需再 update_session
+```
+
+#### 批 2（規格組 5-8）寫入範例
+
+```
+# 答完 TA / 長寬比 / 頁數 / 語言
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session_id,
+  "data_json": "{
+    \"wizard_shared_data\": {
+      \"aspect_ratio\": \"9:16\",
+      \"requested_stripe_count\": 10,
+      \"language\": \"zh-TW\"
+    },
+    \"wizard_ta_groups\": [<被選中的 TA objects — 同 Phase 2.5 格式>]
+  }"
+})
+# 說明：頁數 = page_count = requested_stripe_count（之後 generate_session 會吃這個）；
+#       aspect_ratio 允許值 9:16 / 16:9 / 1:1 / 4:5；
+#       language 用 ISO code（en / zh-TW / ja / ...），backend 會透過 _normalize_language 轉 prompt-literal。
+```
+
+#### 批 3（風格組 9-13）寫入範例
+
+```
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token,
+  "session_id": session_id,
+  "data_json": "{\"wizard_shared_data\": {
+    \"primary_color\": \"#2fa067\",                   # 或 \"warm_green_healing\" 情緒詞、或 \"auto\" 交給 AI
+    \"font_style\": \"handwritten|serif|sans_serif|auto\",
+    \"cta_url\": \"https://line.me/R/...\",
+    \"cta_text\": \"立即預約\",
+    \"include_qa_section\": true,
+    \"include_testimonials\": false
+  }}"
+})
+```
+
+#### 批寫入完成後驗證
+
+每批 update 完、**一定要 `get_session` 讀一次**，檢查剛才寫的欄位真的有進 session：
+
+```
+session_state = mcp_tool_call("landing_ai_mcp", "get_session", {
+  "user_token": token, "session_id": session_id
+})
+# 確認 wizard_shared_data 裡有 aspect_ratio / language / primary_color / ... 該有的欄位
+# 若缺任何一項 → 那批 update 實際沒 persist、要重新寫
+```
+
+這個讀回驗證步驟不可省。使用者「已登記」的感覺必須是 backend 真的有寫。
+
+### 最後 Cost 複誦 + 啟動確認（強制範本）
+
+13 題問完、每批 `update_session` 寫進去、也每批 `get_session` 讀回驗證過之後，**再做一次 `get_session` 把所有欄位撈出來當複誦基準**——**不准用你對話記憶裡的版本**。
+
+```
+# 複誦前最後一次讀 session
+session_state = mcp_tool_call("landing_ai_mcp", "get_session", {
+  "user_token": token, "session_id": session_id
+})
+# 所有下列欄位全部從 session_state 取，不要自己編
+shared = session_state["wizard_shared_data"]
+tas    = session_state["wizard_ta_groups"]
+```
+
+**只複誦使用者輸入的規格、不要編 stripe 結構**：
+
+```
+好，幫你整理一下（以下都是你告訴我的、我寫進系統的）：
+- 受眾：[tas 裡每個 ta_name 列出]
+- 頁數：[shared.requested_stripe_count] 頁 × [len(tas)] 組 = [total_stripes] 頁
+- 長寬比：[shared.aspect_ratio]
+- 語言：[shared.language]
+- 色系：[shared.primary_color 或 shared.color_mood_keyword]
+- 字體：[shared.font_style]
+- CTA：[shared.cta_text] → [shared.cta_url]
+- 附加：[shared.include_qa_section ✓/✗，shared.include_testimonials ✓/✗]
+- 預計扣點：[stripe_cost × stripe_count × num_tas] pts（約 $[USD]）
 
 你目前餘額 [X] pts。確認要開始嗎？
 回「開始」我就跑；回「改 XX」就調整；回「取消」就先不動。
 ```
+
+### 🔴 絕對禁止 — 複誦時不要列每頁內容
+
+**反模式**（使用者回饋實測踩到）：
+
+```
+❌ — 結構 —
+❌ Page 1: Hero — A love letter from Taiwan to the world
+❌ Page 2: The Positioning — world-class technique × Taiwanese terroir
+❌ Page 3: The Culinary Philosophy — 和食 × 歐陸 × 著時食材
+❌ ...（編 8 頁）
+```
+
+每頁的標題、副標、body、視覺、brightness、bg 描述，全部是 **Architect agent 在 generate_session 之後才決定的**。你**現在還沒呼叫 generate_session**，你根本沒有這些資料。你列出來的那 8 頁是你自己編的小說、**不是 LP 真正會長的樣子**。
+
+這等同於 `CLAUDE.md` 最上面 **EXECUTION DISCIPLINE** 段警告的「impersonate backend agents」失誤——你用策略文取代 API call、害使用者看到假的預期、實際 LP 生出來不一樣就退費投訴。
+
+**複誦只能包含**：使用者**明確回答過的規格**（TA / 頁數 / 長寬比 / 語言 / 色系 / 字體 / CTA / Q&A / 見證）+ **該規格對應的費用**。
+
+**不准包含**：
+- ❌ Page 1 / Page 2 / Page N 具體標題
+- ❌ 每頁的內容主軸、副標題、body 文案
+- ❌ 視覺 / 色調 / brightness 變化
+- ❌ 素材如何被用（「所有菜品、空間、人物視覺:AI 生成」這種 stripe-level 決策）
+- ❌ 「文字敘事:從官網中文內容翻譯改寫成英文 editorial 語氣」這種 Architect 決策
+
+若使用者追問「那實際每頁長怎樣？」→ 老實回「那是 AI 生成階段才會決定的、我現在沒有這個資料、生完才能看到。你要先看草稿再生嗎？我們目前沒有『只產結構不扣點』的預覽模式，只能整份生。」
 
 ### 啟動詞白名單
 

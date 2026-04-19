@@ -373,7 +373,7 @@ Notes:
 - ko (한국어): 해요체, high visual polish expected
 - ar (العربية): RTL layout will be applied automatically
 
-You can also generate multiple language versions later via the i18n-adapt skill.
+Each language is a fully independent LP generation — no cheap "translation" path exists. If the user wants two languages, they pay for two full LP generations.
 ```
 
 ### 4F. Copywriting & Tone

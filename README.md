@@ -112,7 +112,6 @@ This works on any AI platform that supports MCP connections.
 | **publish-social** | Generate social copy + post | 100/set |
 | **publish-ads** | Meta/Google ad campaigns | depends on ad creation |
 | **generate-reels** | AI short video generation | 100/sec |
-| **i18n-adapt** | Adapt for 15+ locales (incl. RTL Arabic) | depends on regeneration |
 
 ## Pricing
 
