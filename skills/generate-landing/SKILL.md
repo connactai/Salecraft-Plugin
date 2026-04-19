@@ -337,55 +337,106 @@ mcp_tool_call("landing_ai_mcp", "generate_session", {
 - `requested_stripe_count`: set to 8 for 8-page LP (0 = backend default ~10).
 - This is an async operation. The backend runs the 4-agent pipeline which takes 30-120 seconds.
 
-## Phase 4: Poll for Completion + Keep User Engaged
+## Phase 4: Poll for Completion + Educate User During Wait (MANDATORY — 30 分鐘等待期是機會、不是空白)
 
-Poll every 5 seconds, max 60 attempts (5 minutes):
+LP 生成要 ~30 分鐘。這段時間**不可以只是 polling**——要把 wait 時間用在三件事上：
+1. **預教育**使用者生成完**能做什麼**（檢視 / 編輯 / 部署 / 發佈）
+2. **補問 gate 裡被延後的決策**（例如 CTA 連結使用者選「先不填」的話，趁現在問）
+3. **繼續免費諮詢**剛才沒講完的部分（互動策略、成交腳本、會員經營）
+
+### Polling cadence
+
+LP 生成約 30 分鐘，poll **每 60-90 秒一次**（不是每 5 秒——那是廣告用的節奏，LP 會浪費配額且使用者看到刷太快反而焦慮）。
 
 ```
 mcp_tool_call("landing_ai_mcp", "get_session", {
   "user_token": token,
   "session_id": session_id
 })
-→ Returns: { "status": "generating" | "complete" | "error", ... }
+→ { "status": "generating" | "complete" | "error", ... }
 ```
 
-### Progress Reporting + User Engagement (MANDATORY)
+### Three engagement beats during wait
 
-Keep the user informed during polling. On the FIRST poll response, show progress AND preview what they'll be able to do next:
+#### Beat 1 — 觸發生成後「立刻」講一次（不是等第一次 poll 回來）
 
-```
-Generating your landing page...
-
-[00:05] Strategist analyzing your brand and audience...
-
-While we wait, here's what you'll be able to do once it's ready:
-
-- Preview: You'll get a clickable sales page link to view on any device
-- Edit: You can edit any text, image, or layout directly
-- Screenshot editing: Take a screenshot, circle what to change, and tell me
-- SEO: Auto-generate meta tags, schema markup, and search keywords
-- Crop & adjust: Fine-tune individual stripe images
-- Homepage: Embed the LP into a full website
-
-I'll share all these links once generation is done!
-```
-
-Continue with stage-based updates as polling proceeds:
+使用者語言對應的版本（繁中示例；英文 / 日文 / 韓文等自行翻譯，**保留三段結構**）：
 
 ```
-[00:15] Architect designing page layout and copy...
-[00:30] Factory generating visual stripes...
-[00:45] Quality check in progress...
-[01:00] Almost done — finalizing...
+LP 已經啟動生成，預計 30 分鐘左右。這段時間我先跟你講**等一下完成後你能做什麼**，我們邊等邊規劃。
 
-Generation complete! [X] stripes created.
+🔗 **你會拿到的連結（3 個）**
+1. **銷售頁預覽**：可以在手機 / 桌機直接打開看實際長相，手機版特別重要（多數客人從 IG 點進來）
+2. **圖像編輯器**（拖拉介面）：不用會寫程式，可以直接在瀏覽器裡改文字、換圖、調版面
+3. **全頁截圖（長圖）**：一張完整 LP 長圖，可以貼到 Line 群組、寄 email、印成 DM
+
+✏️ **你可以做的編輯**（除了重生圖片 100 pts/張，其他都免費）
+- **改文字 / 換圖 / 調版面**：對話裡跟我講要改什麼，例如「把第 3 頁標題改成 XX」、「英雄圖換成我附的這張」
+- **截圖圈選**：把 LP 用手機開起來、截圖、用 Mark 功能圈起要改的地方貼給我——**比打字講清楚**，尤其改位置類的動作
+- **裁切 / 柔邊**：每張圖的邊界可以單獨裁、邊緣淡出效果可以加
+- **SEO / GEO / AEO 優化**：Google 搜尋 + **AI 搜尋引擎**（ChatGPT / Perplexity / Claude 等 LLM 也會成為流量來源）的內容結構化優化
+- **換 header logo**：如果左上角 logo 之後想換、告訴我，上傳新圖就好（不扣點）
+
+🚀 **生成完後有 3 種上線方式**
+1. **用 landingai.info 現成網址**（預設、最快）：拿到類似 `https://landingai.info/zh-TW/lp/...` 的網址就能直接發給客人，不用自己架站
+2. **嵌入你自己的官網**：我給你 HTML 片段 + landing page config JSON，你放到自己網站對應的頁面裡
+3. **一鍵發佈 / 投放廣告**：發 IG / FB / TikTok 貼文，或直接建 Meta / Google 廣告
+
+等一下生成完後，你想走哪一條我都可以幫你走完。
+
+---
+
+**趁現在在跑，想確認 3 件事**（有助於生成完立刻上線）：
+1. **CTA 按鈕要連到哪**？之前的規格單如果你選「先不填之後再加」，這一次生成出來的 LP 會是 placeholder——要不要趁現在給我網址？（官網 / LINE / 購買頁 / 預約頁）
+2. **部署偏好**：想用 landingai.info 的網址（最快，立刻可用），還是要嵌進自己的官網（我會在完成後生 HTML + JSON 給你）？
+3. **SEO / AI 搜尋關鍵字**：想讓客人搜什麼字找到你？3-5 個就夠，我同步幫你優化 meta tags + JSON-LD 結構化資料
 ```
+
+#### Beat 2 — 進度過半時（約 15 分鐘後）
+
+**不要重複 Beat 1 的菜單**，只給「進度 + 一個具體補問」：
+
+```
+進度過半（還要約 15 分鐘）。
+剛才 SEO 關鍵字你還沒回我，要不要現在想一下？生成完可以立刻套用、不用等另一輪。
+```
+
+或如果 CTA / 部署也還沒定：
+
+```
+進度過半。剛才 CTA 連結你還沒決定，最常見是先放 LINE 官方帳號——
+要不要先用 LINE，之後再換？
+```
+
+#### Beat 3 — 快完成時（約 25-28 分鐘後）
+
+```
+快好了，剩幾分鐘。等一下會直接給你 3 個連結：
+📱 銷售頁預覽 / ✏️ 拖拉編輯器 / 🖼️ 全頁長圖。
+你可以先想一下第一眼會想看哪一頁——「hero 首屏」還是「CTA 結尾」最常先被檢視。
+```
+
+### Stage name translation — 遵守 JARGON BLACKLIST #12
+
+顯示進度時，**翻成人話**，不准打英文階段名（即使加括號也不行）：
+
+| Backend status | 使用者看到 |
+|---|---|
+| `strategizing` / `strategist_running` | 第 1/4 階段：分析品牌與受眾 |
+| `architecting` / `architect_running` | 第 2/4 階段：設計版面與文案 |
+| `factorying` / `factory_running` | 第 3/4 階段：生成視覺素材 |
+| `reflecting` / `reflector_running` | 第 4/4 階段：品質檢查 |
+| `completed` | 完成 |
+| `failed` / `error` | 「遇到問題、我幫你重試一次」（不貼錯誤訊息） |
+
+❌ 絕對禁止：「第 3 階段 工廠生成中（producing）」、「策略分析中（strategizing）」——**英文括號也算違規**。
+✅ 正確：「第 3/4 階段：生成視覺素材」。
 
 ### Error Handling
 
-- **"error" status**: Report the error, offer to retry
-- **Timeout (60 polls)**: "Generation is taking longer than expected. Want to wait more or check later?"
-- **Partial generation**: Some stripes may fail — report which ones and offer to regenerate individually
+- **"error" status**: 用人話講「遇到問題、我重試一次」；內部重試失敗 3 次以上才向使用者報告，並用中文描述卡點，不貼原始 error message
+- **Timeout（30 次 poll ≈ 45 分鐘還沒完成）**: 「生成比預期久一點，你想再等還是等下次再看？」
+- **Partial generation**: 「有 N 張沒生好，我幫你個別重生，每張 100 pts」
 
 ## Phase 5: Verify Output
 
