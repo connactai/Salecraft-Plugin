@@ -203,6 +203,52 @@ mcp_tool_call("landing_ai_mcp", "update_stripe_text_styling", {
 | "Bring back the hidden stripe" | `restore_stripe` |
 | "Completely redo stripe 2" | `regenerate_stripe` |
 
+### Page-Level Edits (Logo, Branding, SEO — NOT inside stripes)
+
+| User says | Tool | Key params |
+|-----------|------|-----------|
+| "換 logo" / "swap the logo" / "左上那個 logo 換一下" | `patch_landing_config` | `config_json`: `{"logo_url": "<public_url>"}` |
+| "換主色" / "change primary color" | `patch_landing_config` | `config_json`: `{"primary_color": "#HEX"}` |
+| "改 SEO title / 描述 / 關鍵字" | `update_seo` | `title` / `description` / `keywords` / `og_image` |
+| "改 footer 文案 / 連結" | `patch_landing_config` | `config_json`: `{"footer": {...}}` |
+
+These are **page shell** edits — they change the rendered page frame without touching per-stripe AI-generated images. No credits are deducted.
+
+#### Logo Swap Flow (header logo at top-left of sales page)
+
+When the user says "換 logo" / "swap the logo" / "左上那個 logo 換一下", they almost always mean the **header logo at the top-left of the rendered sales page** — NOT a brand element that the Factory agent baked inside a stripe image. The header logo is a simple `config.logo_url` field; swapping it is 3 steps and free.
+
+**Step 1 — Get the logo image as a public URL**
+
+| How user gives you the image | What you do |
+|------|------|
+| Pastes image inline (base64-decodable attachment) | `upload_base64(user_token, brand_id, filename, base64_data, asset_type="logo", content_type="image/png")` → `{public_url}` |
+| Gives a local file path | `get_asset_upload_url(...)` → signed URL → user curls PUT → use returned `public_url` |
+| Gives an already-public URL | Use it directly, no upload needed |
+
+**Step 2 — Apply to the LP**
+
+```
+mcp_tool_call("landing_ai_mcp", "patch_landing_config", {
+  "user_token": token,
+  "campaign_id": campaign_id,
+  "config_json": "{\"logo_url\": \"<public_url>\"}"
+})
+```
+
+**Step 3 — Tell the user**
+
+> 「已更新，重新整理 sales page 就會看到新 logo 在左上角。」
+
+#### ⚠️ Common confusion — two kinds of logo
+
+| Where | How to change |
+|-------|--------------|
+| **Header top-left** (page shell) | `patch_landing_config({"logo_url": ...})` ← usually what the user means. No credits. |
+| **Inside a stripe image** (Factory-baked hero art, background branding) | `regenerate_stripe` per affected stripe, 100 pts each. Only do this if the user explicitly says "LP 圖片裡面的 logo 也要換" or similar. |
+
+If unclear, **ask**: 「你是想換頁面最上面那個 logo，還是 LP 圖片內部的品牌標示也要換？後者要重 generate 受影響的 stripe，每張 100 pts。」
+
 ### Undo / Redo
 
 | User says | Tool |
