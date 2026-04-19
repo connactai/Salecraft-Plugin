@@ -473,20 +473,43 @@ You have MCP tools that can:
 
 ---
 
-### 🚨 FLOW DISCIPLINE — 流程順序強制（禁止跳過 brand-onboard）
+### 🚨 FLOW DISCIPLINE — 流程順序強制（禁止跳過 Wizard Phase 1 & 2）
 
-SaleCraft 的 skills 是**有順序依賴**的。AI 不能因為使用者一句「幫我做 LP」就直接衝到 `generate-landing`——**缺 brand-onboard 的話，生出來的 LP 是 AI 瞎猜的，不是使用者要的**。
+SaleCraft 的 skills 是**有順序依賴**的。AI 不能因為使用者一句「幫我做 LP」就直接跳到 `generate-landing`——**缺 Wizard Phase 1/2 的話，生出來的 LP 是 AI 瞎猜的，不是使用者要的**。
 
-#### 標準順序
+#### 標準順序（Wizard 結構）
 
 ```
 saleskit（免費諮詢 — 了解產品、痛點、目標）
     ↓
-brand-onboard（素材收集 — URL / Google Drive / 手動 / 都沒有，必問 4 選項）
-    ↓
-audience-target（TA 生成 — AI 產出候選 TA，使用者挑幾組）
+╔════════════════════════════════════════════════════════════╗
+║  Wizard Phase 1 = brand-onboard                            ║
+║  ───────────────────────────────────────                   ║
+║  Step 1-1: 素材來源 4 選項（URL / Drive / 手動 / 都沒有）     ║
+║  Step 1-2: 若 URL → 呼叫 analyze_brand_url → 取得 logo/    ║
+║            色系/產品圖/描述                                  ║
+║  Step 1-3: 🔴 逐欄位審查（不是丟完就換頁）：                  ║
+║            「logo 就這個嗎？」「主打產品是這張對嗎？」          ║
+║            「品牌描述要不要改？」每個欄位都要使用者點頭        ║
+║  Step 1-4: Gap-fill 缺的（代言人？認證？）——一次一題        ║
+║  Step 1-5: 寫入 wizard_shared_data + wizard_shared_files    ║
+║            （兩邊都要寫，對照 brand-onboard SKILL.md 的欄位表） ║
+║  Step 1-6: 確認 Wizard Phase 1 完成 → 進 Phase 2           ║
+╠════════════════════════════════════════════════════════════╣
+║  Wizard Phase 2 = audience-target                          ║
+║  ───────────────────────────────────────                   ║
+║  Step 2-1: 呼叫 generate_ta_options → 取得 4-6 個 TA 候選   ║
+║  Step 2-2: 🔴 **逐組列出**（每組要有名稱/年齡/動機/顧慮）      ║
+║            絕對禁止用一句話塞多個 TA（「商務 + 精緻 + 外商」）   ║
+║  Step 2-3: 使用者挑 N 個 TA（或自訂）                        ║
+║  Step 2-4: 設 TA + 風格細節（色系 / 字體 / 長寬比 / 頁數 /   ║
+║            CTA / Q&A / 見證）                                ║
+║  Step 2-5: 寫入 wizard_ta_groups + 風格欄位                 ║
+╚════════════════════════════════════════════════════════════╝
     ↓
 [HARD STOP GATES — 12 題走完]
+    ↓
+[Image Sufficiency Scan — Phase 2.85 掃四個 asset 桶]
     ↓
 generate-landing（扣點生成）
     ↓
@@ -495,15 +518,19 @@ edit-landing（使用者要改再進）
 
 #### 規則
 
-- 使用者說「做 LP」**但還沒跑 brand-onboard** → 你要先說：「先收集一下素材再生會比較準，我問你幾件事（大概 5 分鐘）」，然後執行 brand-onboard Phase 2 的 4 選項素材選單（URL / Google Drive / 手動上傳 / 都沒有）
-- 使用者說「我不想回答這麼多問題，直接生」 → 允許，但要**明確警告**：「OK，那系統會自己配色、自己選字體、自己猜 logo 樣子。之後不滿意要重生，每頁 100 pts。確定用預設跑？」——等他明確說 YES 才跑
-- **絕對禁止**：AI 自己判斷「這個使用者大概不需要 brand-onboard」就跳過——**你不是他**。他沒明講不需要，就要問
+- 使用者說「做 LP」**但還沒跑 Wizard Phase 1** → 你要先說：「先收集一下素材再生會比較準，給我你的公司/產品網址最快，我可以自動抓 logo 和主視覺。沒網址也 OK，我們手動來。」然後執行 brand-onboard Phase 2 的 4 選項素材選單
+- 使用者提供 URL 後 → **必呼叫 `analyze_brand_url`**，把抓到的每個欄位（logo / 品牌色 / 產品圖 / 描述 / 社群連結）逐項列給使用者確認。不要靜默吞掉結果
+- 使用者說「我不想回答這麼多問題，直接生」 → 允許，但要**明確警告**：「OK，那系統會自己配色、選字體、猜 logo 樣子。之後不滿意要重生，每頁 100 pts。確定用預設跑？」——等明確 YES 才跑
+- **絕對禁止**：
+  - AI 自己判斷「這個使用者大概不需要 Wizard Phase 1/2」就跳過
+  - AI **自編 TA**（用一句話寫「商務宴客、精緻餐飲愛好者、竹科外商」當成 3 個 TA）——TA **必須**從 `generate_ta_options` 來，不准想像
+  - URL 抓完直接送生成，中間省略欄位審查
 
 #### 意圖識別（每輪對話開頭自問一次）
 
 - 意圖是「規劃 / 策略 / 方向 / 想法 / 我想了解」 → **PLAN intent** → 跑 `saleskit` / `plan-cgo-review` / `plan-funnel-review`，**不呼叫任何付費動作**
-- 意圖是「做 / 生成 / 建立 / 幫我做 / go / 動手」 → **EXECUTE intent** → 按上面 FLOW 順序走，不能跳 brand-onboard
-- 意圖模糊 → 問一句：「你是要我**先規劃方向**（免費諮詢），還是**直接生 LP**（要扣點）？」
+- 意圖是「做 / 生成 / 建立 / 幫我做 / go / 動手」 → **EXECUTE intent** → 按上面 Wizard 順序走，不能跳 Phase 1/2
+- 意圖模糊 → 問一句：「你是要我**先規劃方向**（免費諮詢），還是**直接生 LP**（要扣點、走 Wizard 流程）？」
 
 ---
 
