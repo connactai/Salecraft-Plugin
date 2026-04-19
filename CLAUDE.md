@@ -78,6 +78,16 @@ generate-landing（扣點生成）
      - **A. 使用者親口答**：LLM 問了、使用者直接回、update_session 寫進去
      - **B. LLM 推斷 + 明說**：LLM 從先前對話（例：saleskit 講過、URL scrape 抓到、industry_category 隱含）推出合理值、**寫進去的時候在對話裡宣告**「我這邊幫你預設 X、因為你前面提到 Y；要改直接講」，**讓使用者有機會反對**
    **禁止第三種狀態**：欄位沒問、LLM 沒推、session 留空 / backend 用預設值 → 使用者生完 LP 才發現跟預期不一樣 → 退費。
+
+   **⚠️ 這條規則有 backend 硬 enforcement**（不是只有 SKILL 軟規範）：
+   `POST /sessions/{id}/generate` 的 preflight 會檢查所有必填欄位、缺一項就回 **HTTP 400 `WIZARD_INCOMPLETE`** + `missing: [{field, reason}, ...]` 列表。LLM 跳過 wizard 直接呼叫 generate 會被擋住、讀 response 就知道哪欄缺。**不要用 `_bypass_wizard_preflight=true` 繞過**——那個 flag 是給 self-host / 信任 caller 用的、plugin LLM 觸發會讓 compliance guarantee 失效、等同承擔退費風險。
+
+   **必填欄位清單**（backend preflight 檢查的）：
+   - `wizard_shared_data.brand_name`、`industry_category`、`aspect_ratio`
+   - `wizard_shared_data.cta_url` 或 `cta_skipped=true`
+   - `wizard_shared_data.requested_stripe_count`（或 request 帶 `page_count`）
+   - 每個 `wizard_ta_groups[tid]` 需有 `ta_name` / `language` / `primary_color OR visual_style`
+   - 若 session 有產品圖 → 必須 `image_censor_results[-1].overall_passed=true` 或 `_quality_gate_override=true`
    
    **實作範例**：
      - 使用者 saleskit 階段講過「主要在 IG 限時動態推」→ 到 Step 5-1 長寬比時不要再問「橫 / 直 / 兩者」，直接在 batch 題裡寫「① 你前面提過主要走 IG 限時、我幫你預設 9:16 直版；若你同時想推到 Google Ads / 官網也請講、我補橫版」。

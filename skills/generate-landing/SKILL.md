@@ -328,6 +328,46 @@ if "include_testimonials" not in shared:   needs.append("testimonials")
 
 **核心 meta-rule**（CLAUDE.md #6.5 NO SILENT DEFAULTS）：`needs` 清單裡每一項都得被「碰到」——要嘛使用者親答、要嘛 LLM 推斷 + 在對話裡宣告讓使用者有機會反對。**絕對禁止**把欄位留空讓 backend 吃預設。
 
+#### 🔴 Per-TA vs Shared — 多 TA 時不同 TA 會有不同設定（這是故意的）
+
+Backend 把 Phase 2 spec 分成兩類儲存：
+
+| 欄位 | 儲存位置 | 多 TA 時 |
+|------|----------|---------|
+| `visual_style`（風格）| `wizard_ta_groups[i].visual_style` | **每 TA 各自設**，可以 A 走優雅 / B 走俏皮 |
+| `theme` | `wizard_ta_groups[i].theme` | **每 TA 各自設** |
+| `primary_color`（色系）| `wizard_ta_groups[i].primary_color` | **每 TA 各自設**，可以 A 墨綠 / B 玫瑰金 |
+| `language` | `wizard_ta_groups[i].language` | **每 TA 各自設**，可以 A=zh-TW / B=en |
+| `aspect_ratio`（長寬比）| `wizard_shared_data.aspect_ratio` | shared（所有 TA 同一份）|
+| `cta_url` / `cta_text` | `wizard_shared_data.cta_text/url` | shared |
+| `include_qa_section` | `wizard_shared_data.include_qa_section` | shared |
+| `include_testimonials` | `wizard_shared_data.include_testimonials` | shared |
+| `requested_stripe_count`（頁數）| `wizard_shared_data.requested_stripe_count` | shared |
+
+**實作**：`num_tas = len(wizard_ta_groups)`，
+- 若 `num_tas == 1`：per-TA 欄位可以跟 shared 合併問（1 個 TA 沒差異）
+- 若 `num_tas >= 2`：**per-TA 欄位必須逐 TA 問或逐 TA 推斷**，不要把 TA-A 的 primary_color 套到 TA-B
+
+**範例（num_tas=2、兩個 TA 分別是「商務宴客 B2B」和「家庭聚餐 B2C」）**：
+
+```
+你選了兩組受眾，每組可以有自己的風格：
+
+**🎯 TA-A 商務宴客 B2B**
+- 語言：英文（你前面講過這組主打海外 B2B）← 我幫你配
+- 色系：深咖啡 + 金（商務高端）← 我幫你配
+- 字體：襯線（editorial 調性）← 我幫你配
+
+**🎯 TA-B 家庭聚餐 B2C**
+- 語言：繁中 ← 我幫你配
+- 色系：暖綠 + 乳白（親切溫暖）← 我幫你配
+- 字體：手寫（溫暖情感）← 我幫你配
+
+（兩組共用的設定：9:16 直版、CTA 連 LINE、含 Q&A 區塊、不含見證）
+
+兩組的風格都 OK 嗎？有要改哪組的哪項直接講。
+```
+
 #### Step 5a — 先跑一次 infer pass、推能推的
 
 進 Step 5 批量問之前，**先在心裡過一遍 `needs`**，檢查下列 signal 能不能推出該欄位的合理值：
@@ -342,22 +382,49 @@ if "include_testimonials" not in shared:   needs.append("testimonials")
 | `include_qa_section` | 產業類別 + 價位 | 高單價 / 服務業 / 保健食品 → `true`（猶豫型客人多）；快銷 / 低單價 → `false` |
 | `include_testimonials` | brand 有沒有抓到評價 / 社群提過 | brand 抓到評論 → `true`；沒素材 → `false` 預留位 |
 
-**推斷後寫進 session**（update_session）並把 **`_spec_inferred_by_llm` 加進 session**（flag 起來、Cost 複誦時會標記）：
+**推斷後寫進 session**（update_session）並把 **`_spec_inferred_by_llm` 加進 session**（flag 起來、Cost 複誦時會標記）。**注意 per-TA 欄位要寫進對應的 `wizard_ta_groups[i]` 條目、不要寫進 `wizard_shared_data`**：
 
 ```
+# 寫 shared 欄位（所有 TA 共用）
 mcp_tool_call("landing_ai_mcp", "update_session", {
   "user_token": token, "session_id": session_id,
   "data_json": '{"wizard_shared_data": {
     "aspect_ratio": "9:16",
-    "language": "zh-TW",
-    "primary_color": "#2fa067",
-    "font_style": "serif",
     "cta_url": "https://example.com",
     "cta_text": "了解更多",
     "include_qa_section": true,
     "include_testimonials": false,
-    "_spec_inferred_by_llm": ["aspect_ratio", "font_style", "include_qa_section", "include_testimonials"]
+    "_spec_inferred_by_llm": ["aspect_ratio", "include_qa_section", "include_testimonials"]
   }}'
+})
+
+# 寫 per-TA 欄位（每個 TA 各自寫）
+# TA 的完整 wizard_ta_groups 條目必須完整包含所有原欄位（id / ta_name / ta_description / ...），
+# 加入 language / primary_color / visual_style 等 per-TA spec
+mcp_tool_call("landing_ai_mcp", "update_session", {
+  "user_token": token, "session_id": session_id,
+  "data_json": json.dumps({"wizard_ta_groups": [
+    {  # TA-A：商務 B2B 英文優雅
+      "id": "ta_1", "ta_group_id": "ta_1",
+      "ta_name": "Business Entertainment Hosts",
+      "ta_description": "...",
+      "language": "en",
+      "primary_color": "#3b2a1f",
+      "visual_style": "serif_editorial",
+      "theme": "luxe",
+      "_spec_inferred_fields": ["language", "primary_color", "visual_style"]
+    },
+    {  # TA-B：家庭 B2C 繁中溫暖
+      "id": "ta_2", "ta_group_id": "ta_2",
+      "ta_name": "Family Gathering Hosts",
+      "ta_description": "...",
+      "language": "zh-TW",
+      "primary_color": "#a3b18a",
+      "visual_style": "handwritten_warm",
+      "theme": "warm",
+      "_spec_inferred_fields": ["language", "primary_color", "visual_style"]
+    }
+  ]})
 })
 ```
 
