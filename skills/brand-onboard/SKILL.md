@@ -134,21 +134,57 @@ mcp_tool_call("landing_ai_mcp", "analyze_brand_url", { "user_token": token, "url
 ```
 This extracts: logo, brand colors, product images, descriptions, social links, and more.
 
-**After scraping, ALWAYS review what was collected and tell the user:**
+### 🔴 MANDATORY Phase 1 確認關 — 爬完官網不准直接衝 TA 生成
+
+**這是 LLM 最常踩的失誤**：爬完官網 → `update_session` 把規格寫進去 → **馬上** `generate_ta_options` 產 TA。使用者完全沒看過爬到什麼、也沒確認品牌描述 / 產業類別 / 語言是否正確，就看到 TA 候選跳出來。這違反 CLAUDE.md Wizard 流程 Step 1-3「逐欄位審查（不是丟完就換頁）」。
+
+**正確順序**：
+```
+1. analyze_brand_url  → 拿到結果
+2. update_session     → 寫進 session（靜默、不報告）
+3. 🛑 停下來、把抓到的每個欄位列給使用者看、等他逐項點頭
+4. Phase 3.5 代言人
+5. Phase 3.9 Quality Gate
+6. Phase 4 re-confirmation checklist
+7. 才開始 Phase 2（audience-target / generate_ta_options）
+```
+
+**Step 3 停下來的明確話術**（不要只列、要明講「你看看對不對、要不要改」）：
 
 ```
-從您的網站自動擷取到以下素材：
-- Logo: ✅ 已取得
-- 品牌主色: #2fa067
-- 產品圖片: 3 張
-- 品牌描述: ✅ 已取得
-- 社群連結: Facebook, Instagram
+我從您的網站抓到這些，先確認每一項都對、再往下：
 
-還缺少：
-- 代言人照片（可用 AI 生成或上傳您的照片）
-- 認證/證書圖片
+🏢 基本
+- 品牌名：[scraped brand_name] ← 對嗎？有沒有其他常用叫法？
+- 產品名：[scraped product_name] ← 這是主打產品對嗎？還是有其他？
+- 產業類別：[industry_category 轉人話 — 例如「餐飲 / 保健食品 / 電子產品」] ← 對嗎？
+- 品牌描述：[base_description 前 80 字] ← 要不要改、或補什麼？
+- 語言：[偵測到的 language 轉人話 — 例如「繁中」「英文」] ← LP 要用這個語言嗎？
 
-要補充這些嗎？
+📸 素材
+- Logo：[✅ 1 張 / ❌ 沒抓到]
+- 產品圖：[N 張 / ❌ 沒抓到]
+- 品牌主色：[hex 轉人話 — 例如「墨綠色」]
+
+🔗 社群：[FB / IG / LINE / ...]
+
+以上每一項點頭我才往下做。有要改的直接講、或說「都對，繼續」。
+```
+
+**絕對禁止**：
+- ❌ 爬完就走 `generate_ta_options`、「下一步我讓系統產出候選受眾」— 這是 phase 跳關
+- ❌ 用「先幫你抓進來了」這種 throwaway 一行帶過就直接換頁 — 使用者沒機會糾正
+- ❌ 使用者回「OK」就當全部點頭 — OK 只是聽到、不代表逐項確認。若使用者回模糊的 OK，再問一次「意思是五項都對嗎？還是哪項要修？」
+
+**為什麼這關不能省**：LLM 自認為爬下來的資料「看起來合理」但使用者眼裡可能某欄位完全錯（例如品牌名爬錯、產業類別分錯、主打產品挑錯）。這個錯誤若帶進 Strategist → 整份 LP 策略方向都歪掉 → 重生一次 = 使用者付全額。Step 3 停下 30 秒可以避免 100% 的退費申訴。
+
+**✅ 正確做法後的範例訊息**（做對時該說的）：
+
+```
+我從您的網站抓到這些，先確認每一項都對、再往下：
+...（列上面那 10 幾項）
+
+以上每一項點頭我才往下做。有要改的直接講、或說「都對，繼續」。
 ```
 
 **🧠 Auto-record to memory (silent):** After URL scrape, record each extracted asset:
