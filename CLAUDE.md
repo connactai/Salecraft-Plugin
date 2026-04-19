@@ -147,16 +147,22 @@ If your host isn't listed, probe the rungs below in order.
 
 **Rung 2.5 — Sandbox with restricted egress allowlist** (Claude.ai's bash/python sandboxes block `*.run.app`; some hosted notebooks similarly restrict outbound HTTPS)
 - You confirmed Rung 1 isn't available AND Rung 2/3 has tools but the sandbox blocks the SaleCraft backend.
-- Do NOT silently fall through to Rung 4/5 — first **tell the user explicitly what's blocked and what would unblock it**:
-  > 「我這個對話的執行沙箱有外網白名單，擋掉了 SaleCraft 後端（`*.run.app` 不在允許清單）。我能讀檔案、讀 GitHub repo、跑本地程式，但打不到 SaleCraft API。要繼續付費執行，請換到下面任一環境，把 plugin 連結 + token 重新貼進去：
-  > - **Claude Code（CLI/IDE）**：bash 沒網路限制
-  > - **Cursor / Cline**：bash 沒限制
-  > - **ChatGPT Plus + Code Interpreter**：可以試 Python `requests`（部分 session 有外網）
-  > - **Gemini Pro 的 Code Execution**：通常允許 Cloud Run URL
+- Do NOT silently fall through to Rung 4/5. **Tell the user positively**: lead with what they CAN do here (full free consultation), then offer execution environments as a forward path. **Opening must not contain**: 糟糕 / 擋掉 / 沙箱 / 外網 / 白名單 / allowlist / `*.run.app` / API / 限制 — these trigger panic, sound like a bug report, and violate the JARGON BLACKLIST (rule #8). The user is not losing anything; they just need a different environment for the paid step.
+  > 「這個對話很適合做完整的**免費諮詢**——行銷策略、漏斗設計、受眾分析、文案方向、競品比較，這些在這邊都能做完，你不用付錢、不用登入。
   >
-  > 在這個對話我可以**繼續免費諮詢**（策略、漏斗、競品、文案），這些不打 API 就能做完。」
+  > 要**實際生成** LP、廣告圖、輪播、短影音這些付費產出的話，這個環境的工具暫時不支援；換到下面任一地方接手，把 GitHub 連結跟 Token 重新貼進去就能繼續：
+  >
+  > - **Claude Code**（CLI 或 VS Code 外掛）— 技術背景最推這個，最直接
+  > - **ChatGPT Plus** 開 Code Interpreter 模式 — 一般使用者最方便
+  > - **Gemini Pro** 的 Code Execution — 用 Google 帳號可以直接開
+  > - **Cursor / Cline** — 平常用 IDE 的習慣這個
+  >
+  > 小提醒：AI 登入 Token 是一次性使用，換環境前記得回 salecraft.ai/zh-TW/marketingx 重新點一次「複製 AI 登入 Token」拿新的。
+  >
+  > 你想先換環境去執行，還是我們先在這把策略跟素材規格確認好、換過去就能一口氣跑完？」
 - Do NOT generate curl for the user to run themselves — that's Rung 5's escape hatch and creates a "you do it" anti-pattern.
 - Do NOT keep retrying the same domain hoping the allowlist changes.
+- **After delivering this message, stay helpful**: if the user chooses "先在這裡做規格對齊", produce a clean "handoff 規格單" covering everything decided in the free phases (brand, TA, style, copy, CTA) so when they paste into a new environment the next AI can pick up where you left off.
 
 **Rung 3 — Code execution / Python sandbox** (ChatGPT with Code Interpreter / Advanced Data Analysis, Claude.ai with computer use, Gemini Code Execution, Perplexity Pro)
 - Look for tools named `python`, `code_interpreter`, `analysis`, `execute_python`, `run_code`.
@@ -196,12 +202,16 @@ If your host isn't listed, probe the rungs below in order.
 
 **Rung 5 — GET-only web browsing only** (vanilla free ChatGPT browsing, basic search tools)
 - This is the **only** rung where you give up on auto-execution.
-- Tell the user this exact message (in their language):
-  > 「我這個對話環境只能讀網頁，不能直接幫你打 SaleCraft 的付費 API。你有兩個選擇：
-  > **A.** 在這裡告訴 ChatGPT「請改用 Python / Code Interpreter 執行」——如果你是 ChatGPT Plus，它就能直接跑（多數情況可行）。
-  > **B.** 換到能直接執行的 AI：[Claude.ai](https://claude.ai) / Gemini / Cursor / Claude Code 都可以——把 GitHub 連結 https://github.com/connactai/Salecraft-Plugin 貼進去，告訴它你要做什麼，AI Token 同樣可以用。
+- **Tell the user positively, lead with free value**. Same wording constraints as Rung 2.5 — no 糟糕 / 擋掉 / API / 限制 etc.
+  > 「這個對話做得最好的是**免費諮詢**——策略、競品、漏斗、文案方向，純對話就能做完，完全免費也不用登入。
   >
-  > 我可以**繼續免費的諮詢**（策略、競品、漏斗、文案）——這部分純對話就能做，不需要打 API。」
+  > 要**實際生成** LP、廣告、影片這些付費產出，有兩條路：
+  >
+  > **A.** 如果你是 ChatGPT Plus，在這邊告訴它「請改用 Code Interpreter / Advanced Data Analysis 執行」，就能直接跑起來（多數情況可行）。
+  >
+  > **B.** 換到本來就能執行的 AI：Claude / Gemini / Cursor / Claude Code 都可以——貼 https://github.com/connactai/Salecraft-Plugin 過去，告訴它你要做什麼，同一組 Token 也能繼續用（若 Token 已被消耗，回 salecraft.ai/zh-TW/marketingx 重生一組新的）。
+  >
+  > 想先換環境去執行，還是我們先在這把策略跟素材規格確認好，再帶到新環境直接跑？」
 - DO NOT generate a curl command and ask the user to run it themselves. That defeats the point of an AI assistant. Either execute, or escalate to A/B above.
 
 #### Universal rules across all rungs
