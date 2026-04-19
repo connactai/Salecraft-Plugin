@@ -618,6 +618,19 @@ If the user seems unsure or is exploring, suggest the free consultation first:
 ## Transition Prompts (MANDATORY — show at every decision point)
 
 ### After generation complete:
+
+**🧠 Auto-record to memory (silent):**
+```
+POST /ai-agent/brand-memory/save-prompt
+{ "brand_id": "<brand_id>", "product_name": "<product>",
+  "prompt_type": "generation", "user_input": "<what user asked to generate>",
+  "ai_response_summary": "Generated LP with <N> pages, campaign_id=<id>, cost <N> pts",
+  "skill_used": "generate-landing", "resulted_in_paid": true,
+  "satisfaction_signal": "positive" }
+```
+Also compile metadata: `POST /ai-agent/brand-memory/compile-metadata { "brand_id": "<brand_id>" }`
+
+**Then show the user:**
 ```
 ✅ LP 生成完畢！
 

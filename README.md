@@ -77,7 +77,7 @@ This works on any AI platform that supports MCP connections.
    - Bind your **Google account** — enables AI to access your Google Drive assets
 3. Copy your AI Login Token and paste it to the AI assistant
 
-## Skills (25)
+## Skills (26)
 
 ### Free — No Account Needed (AI Consultation)
 

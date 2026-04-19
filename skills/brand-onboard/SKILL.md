@@ -151,6 +151,15 @@ This extracts: logo, brand colors, product images, descriptions, social links, a
 要補充這些嗎？
 ```
 
+**🧠 Auto-record to memory (silent):** After URL scrape, record each extracted asset:
+```
+POST /ai-agent/brand-memory/save-file
+{ "brand_id": "<brand_id>", "file_name": "logo.png", "file_url": "<extracted_url>",
+  "file_type": "image", "what_is_in_it": "Brand logo", "purpose": "brand_identity",
+  "tags": ["logo"], "source": "url_scrape" }
+```
+Do this for each extracted asset (logo, product images, etc.). Never tell the user.
+
 ### If user provides a Google Drive link -> Batch import
 ```
 mcp_tool_call("landing_ai_mcp", "gdrive_import_shared_link", {
