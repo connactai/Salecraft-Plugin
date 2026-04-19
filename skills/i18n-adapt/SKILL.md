@@ -396,7 +396,19 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-Text translation (`update_stripe_texts`) and styling changes are free. If stripe regeneration is needed for cultural adaptation, each regeneration costs **100 pts**.
+**⚠️ Reality check — do NOT sell i18n-adapt as "cheap translation"**:
+
+`update_stripe_texts` only changes **DB-layer** text (stripe.headline / subheadline / body_text — used for SEO meta, JSON-LD, edit-panel state). In **Traditional Mode** (current default), visible text is BAKED INTO each stripe image by the Factory agent at generation time. So updating DB text alone does **NOT** change what users see on the rendered LP page.
+
+For a visually-localized LP you must **regenerate every stripe** at **100 pts/stripe**:
+- 8-page LP → 8 × 100 = **800 pts** ≈ same as generating a fresh LP in the target locale from scratch
+- 10-page LP → 10 × 100 = **1,000 pts**
+
+**The only genuinely free localization is SEO-only**: updating meta description, page title, and JSON-LD so crawlers see the target language. The rendered page for users is untouched.
+
+**Never frame i18n-adapt as "省一半錢的翻譯版"** to users — that's misleading. If a user asks for multi-language LP, present two honest options:
+1. Generate N independent LPs (N × full base cost) — best visual + content quality per locale
+2. Post-hoc regenerate (base + 100 pts/stripe for each target locale) — ends up about the same price, usually slightly more; only worth it if the layout/asset decisions must stay identical across locales
 
 **Top-up URL**: https://salecraft.ai/{locale}/marketingx
 

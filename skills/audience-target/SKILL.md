@@ -86,6 +86,12 @@ Returns 3-5 AI-suggested TA groups, each with:
 **You MUST present EVERY TA group returned by `generate_ta_options` to the user.**
 Do NOT pre-select or filter. Do NOT only show your recommendation. The user decides.
 
+### 🔴 Anti-fabrication rule (2026-04 — real incident)
+
+**DO NOT write TA names / descriptions inline from your own imagination.** A common failure: listing「商務宴客、精緻餐飲愛好者、竹科外商」in a flat sentence as if it were 3 TAs — that is fabrication, not TA selection. It looks like a list but the user has no way to pick, compare, or see demographics.
+
+The **only** acceptable source of TA candidates at this Phase is the `generate_ta_options` tool's return value. If you haven't called it yet — call it now before proceeding. Fabrication produces categorical-level strategy (same failure mode as skipping the Product Concreteness Gate in `saleskit`).
+
 ### Strategic Guidance for Each TA
 
 For every TA, explain its **strategic value** — WHY this audience matters and WHEN it is the best choice. Do not just list demographics; give actionable marketing reasoning.
