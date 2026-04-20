@@ -199,7 +199,7 @@ Never mention MCP / tokens / session_id / data_json / industry enum values / str
 ## Absolute prohibitions (LLM tends to fall into these)
 
 - ❌ Ask TA before 素材/代言人 (Step 4 comes AFTER Step 2-3)
-- ❌ Bundle TA + aspect + page + language in one batch (OLD 12-gate structure)
+- ❌ Bundle TA + aspect + page + language in one batch (each Step is its own batch — do not merge across Steps)
 - ❌ Treat "直接生" as permission to skip `generate_ta_options` / `validate_images` / Cost recital
 - ❌ Default page count to 10 without asking
 - ❌ Wait to build session — build EARLY, write progressively via `update_session`
