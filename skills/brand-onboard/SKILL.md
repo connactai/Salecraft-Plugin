@@ -216,32 +216,66 @@ This extracts: logo, brand colors (真實、非 fallback), product images, descr
 7. 才開始 Phase 2（audience-target / generate_ta_options）
 ```
 
-**Step 3 停下來的明確話術**（不要只列、要明講「你看看對不對、要不要改」）：
+**Step 3 停下來的明確話術**——**分批 ask-back**，**不是一次攤完再 OK**：
 
+`analyze_brand_url` + `scrape_landing_page` 會回 **25+ 個欄位**、全部會 update_session 寫進去、全部都算「對使用者的決定」。**分 4 批攤開、每批 3-5 欄位、每批獨立 ask-back**。使用者回 OK 才下一批、不要一口氣列完等 global OK。
+
+#### 批 1 — 品牌基本（5 欄位）
 ```
-我從您的網站抓到這些，先確認每一項都對、再往下：
+我從 {url} 抓到你的品牌基本資料、先確認這 5 項對不對：
 
-🏢 基本
 - 品牌名：[scraped brand_name] ← 對嗎？有沒有其他常用叫法？
-- 產品名：[scraped product_name] ← 這是主打產品對嗎？還是有其他？
-- 產業類別：[industry_category 轉人話 — 例如「餐飲 / 保健食品 / 電子產品」] ← 對嗎？
-- 品牌描述：[base_description 前 80 字] ← 要不要改、或補什麼？
-- 語言：[偵測到的 language 轉人話 — 例如「繁中」「英文」] ← LP 要用這個語言嗎？
+- 產品名：[scraped product_name] ← 這是主打產品對嗎？
+- 產業類別：[industry_category 轉人話——例如「餐飲 / 保健食品」] ← 對嗎？
+- 語言：[language 轉人話] ← LP 要用這個語言嗎？
+- 品牌主色：[hex + 中文色名——例如「墨綠 #2fa067」] ← 對嗎？
 
-📸 素材
-- Logo：[✅ 1 張 / ❌ 沒抓到]
-- 產品圖：[N 張 / ❌ 沒抓到]
-- 品牌主色：[hex 轉人話 — 例如「墨綠色」]
-
-🔗 社群：[FB / IG / LINE / ...]
-
-以上每一項點頭我才往下做。有要改的直接講、或說「都對，繼續」。
+這 5 項有要改的直接講、都對就回「批 1 OK」我繼續下一批。
 ```
+
+#### 批 2 — 品牌內容（3-5 欄位，取 scrape 實際回傳）
+```
+批 2：這批是品牌內容敘事，LLM 之後寫文案會用這些：
+
+- 品牌描述（base_description）：[前 100 字] ← 要改哪段嗎？
+- 品牌故事（brand_story）：[前 100 字] ← 要改嗎？或補充什麼？
+- 核心價值主張（value_proposition）：[前 80 字] ← 這是你想主打的點嗎？
+- 關鍵賣點（key_features）：[列 3-5 條] ← 有要加、刪、改嗎？
+- Slogan（如果抓到）：[scraped slogan] ← 要用這句嗎？
+
+批 2 有要改的講、都對回「批 2 OK」。
+```
+
+#### 批 3 — 素材（logo / 圖 / 社群）
+```
+批 3：視覺素材——
+
+- Logo：[✅ 抓到 1 張 / ❌ 沒抓到] [顯示 logo 縮圖]
+- 產品圖：[N 張] [顯示前 3 張縮圖 + 「...其餘 N-3 張」]
+- 社群連結：[FB / IG / LINE / YT / ...]
+- Trust 認證（如果有）：[trust_certifications 列出——SGS / FDA / ISO / 專利…]
+
+批 3 有要補的（例如 logo 沒抓到要上傳）直接說、都 OK 回「批 3 OK」。
+```
+
+#### 批 4 — 受眾與定位初判（**只是 scrape 猜的、真正 TA 選擇在 Step 4**）
+```
+批 4：網站上看起來目標客群像是這樣、先給你 double-check：
+
+- target_audience（網站讀到的）：[scraped 描述、80 字] ← 大方向對嗎？
+  （這只是 scrape 的初判，**不是最終 TA**。正式 TA 候選在後面 Step 4 才會從 `generate_ta_options` 出）
+
+批 4 OK 就進 Phase 3.5 代言人選擇、NG 就講要怎麼調。
+```
+
+---
 
 **絕對禁止**：
 - ❌ 爬完就走 `generate_ta_options`、「下一步我讓系統產出候選受眾」— 這是 phase 跳關
-- ❌ 用「先幫你抓進來了」這種 throwaway 一行帶過就直接換頁 — 使用者沒機會糾正
-- ❌ 使用者回「OK」就當全部點頭 — OK 只是聽到、不代表逐項確認。若使用者回模糊的 OK，再問一次「意思是五項都對嗎？還是哪項要修？」
+- ❌ 用「先幫你抓進來了」「全進去了」「資料寫入成功」這種 throwaway 一行帶過就直接換頁 — 使用者沒機會糾正
+- ❌ **LLM 自己列一個 5-6 項的 ✅ icon 清單、使用者回「OK / 全部都留」** → 當成對 25+ 個寫入欄位的 global approval。`value_proposition / key_features / brand_story / target_audience / trust_certifications / base_description` 這些沒上清單的欄位**一樣被你寫進 session、一樣影響後面 Architect 文案走向**——不展示給使用者 = 未經授權寫入。
+- ❌ 使用者回「OK」就當全部點頭 — OK 只是聽到、不代表逐項確認。若使用者回模糊的 OK、再問一次「意思是這批 5 項都對嗎？還是哪項要修？」
+- ❌ 把 4 批合併成 1 批一次列 20 欄位——**節奏會爛、使用者 overload 就會回「都留」含糊帶過**，結果 19/20 欄位沒被真的檢視。
 
 **為什麼這關不能省**：LLM 自認為爬下來的資料「看起來合理」但使用者眼裡可能某欄位完全錯（例如品牌名爬錯、產業類別分錯、主打產品挑錯）。這個錯誤若帶進 Strategist → 整份 LP 策略方向都歪掉 → 重生一次 = 使用者付全額。Step 3 停下 30 秒可以避免 100% 的退費申訴。
 
