@@ -220,10 +220,9 @@ for _ in range(20):
 
 ```python
 # ⚠️ The field is `num_images` — NOT `stripe_count`, `count`, `slide_count` etc.
-# As of dogfooding 2026-04-18, the backend's GenerateCarouselRequest does not
-# enforce extra="forbid", so wrong field names are silently ignored and the
-# default num_images=5 is used. Backend issue tracked; meanwhile, always pass
-# the exact field name `num_images`.
+# Backend's GenerateCarouselRequest does not enforce extra="forbid", so wrong
+# field names are silently ignored and the default num_images=5 is used.
+# Always pass the exact field name `num_images`.
 r = httpx.post(f"https://marketing-backend-v2-s6ykq3ylca-de.a.run.app/sessions/{session_id}/generate-carousel",
                headers=H, json={
     "ta_group_id": "ta_1",

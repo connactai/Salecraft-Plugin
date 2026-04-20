@@ -25,11 +25,12 @@ schema doesn't have `extra="forbid"`). Scan all three paths with a grep
 of the old field name before merging.
 
 Changes made in layer 2 (docstring) without layer 3 or vice-versa are
-also a drift — the #25/#26 dogfooding cascade started from exactly this:
-MCP docstring said `account_id`, SKILL said `account_id`, schema said
-`social_account_id`. Every LLM wrote the wrong key; schema didn't
-enforce; default kicked in; Meta rejected the resulting AWARENESS
-campaign with LINK_CLICKS optimization_goal.
+also a drift. Concrete failure mode: MCP docstring says `account_id`,
+SKILL says `account_id`, schema says `social_account_id`. Every LLM
+writes the wrong key; schema doesn't enforce; default kicks in;
+downstream platform (e.g. Meta) rejects the request with a
+mismatched objective/optimization combo. See
+`lib/dogfooding-findings.md` for tracked incidents.
 
 ---
 
@@ -200,7 +201,7 @@ Feed `image_url` directly into `create_ad_campaign.creative_image_url`
 
 ### Unicode in `data_json` strings — narrow scope
 
-Empirically verified (2026-04-18):
+Verified behavior:
 
 - ✅ **Clean round-trip** when called directly against REST endpoints.
   `session_name`, `update_stripe_texts` headline/subheadline, every

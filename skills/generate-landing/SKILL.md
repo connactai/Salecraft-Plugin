@@ -61,7 +61,7 @@ You orchestrate the 4-agent AI pipeline that generates professional landing page
 - Read `CLAUDE.md` for tool signatures + the **Execution Discipline** section at the top
 - Read `lib/mcp-patterns.md` for the create-and-poll pattern (or `lib/rest-api-direct.md` if you're on Rung 2-4)
 
-### ⚠️ Pre-flight gotchas (verified against backend during dogfooding)
+### ⚠️ Pre-flight gotchas
 
 1. **`brand_id` MUST be created first via `POST /brands/`** before `create_session`. If you only pass `brand_name`/`product_name` to `create_session` without `brand_id`, the resulting session's `brand_name` field stays `None` and downstream agents lose brand context. Order: `analyze_brand_url` (free, optional) → `POST /brands/` (free, returns `brand_id`) → `create_session` with `brand_id` → `update_session` with TA groups → `generate_session`.
 
@@ -671,7 +671,7 @@ tas    = session_state["wizard_ta_groups"]
 
 ### 🔴 絕對禁止 — 複誦時不要列每頁內容
 
-**反模式**（使用者回饋實測踩到）：
+**反模式**：
 
 ```
 ❌ — 結構 —
@@ -707,7 +707,7 @@ tas    = session_state["wizard_ta_groups"]
 
 使用者說「直接生 / 直接跑 / 不要問那麼多 / 用預設就好」時，**不是**「跳過所有 wizard、LLM 自己猜一套 spec 去扣點」。正確解讀是「**我接受 LLM 推斷的值、不用每題問我、但工具該 call 還是要 call**」。
 
-#### ❌ 錯誤解讀（使用者 dogfooding 實際踩到）
+#### ❌ 錯誤解讀
 
 ```
 使用者：「直接生就好、不要問太多」

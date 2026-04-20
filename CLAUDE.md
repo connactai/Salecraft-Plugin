@@ -146,7 +146,7 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
 
    **分類口訣**：**文字** → `wizard_shared_data`、**檔案 URL** → `wizard_shared_files`、**per-TA** → `wizard_ta_groups[i]` 或 `wizard_ta_group_files[i]`。
 
-   **❌ 被 silently drop 的常見誤寫**（實測踩過、全部以為有進實際沒有）：
+   **❌ 被 silently drop 的常見誤寫**：
    ```
    # 全部錯 — 這些 key backend 不認識、會靜默丟掉
    update_session(data_json={
@@ -245,9 +245,9 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
 
    **不准**只講「扣 X pts」不說預扣機制、也不准說「實際會扣 X」（實際是動態的）。使用者看到 transaction log 的 `-2000` 時才知道是預扣、會認為被多扣 → 投訴。
 
-   #### ❌❌❌ 實戰違規範例（照 NO SILENT DEFAULTS 規則、這些是「靜默預設」、使用者生完才發現不對）
+   #### ❌❌❌ 違規範例（這些「靜默預設」會讓使用者生完才發現不對）
 
-   以下這些反模式都真的發生過、每一個都會導致退費投訴：
+   以下反模式每一個都會導致退費投訴：
 
    ```
    ❌ 沒問語言、直接呼叫 generate_session
@@ -384,9 +384,9 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    - 工具踩錯時**安靜地重試**或換方式。除非同樣卡關 3 次以上，才向使用者報告「遇到障礙」+ 用**人話**講哪裡卡（「系統那邊 TA 還沒存好，我重新來一次」，不是「`ta_group_id` is required」）。
    - 每次要發訊息前，**自問**：這句話是我的心路歷程，還是使用者真的需要看？前者刪掉。
 
-   #### ❌❌❌ 實戰違規範例（使用者實際 dogfooding 截圖裡逐句踩到）
+   #### ❌❌❌ 違規範例：心路歷程外洩給使用者
 
-   以下這串是一個 LLM 在 salecraft.ai 做 LP 時 **每句都該刪** 的心路歷程範例，**使用者視角看到的每一句都讓信任感下降**：
+   以下每一句都該刪——**使用者視角看到的每一句都讓信任感下降**：
 
    ```
    ❌ 「收到 token,我先交換登入憑證。讓我檢查一下我這邊的執行能力。」
