@@ -599,25 +599,39 @@ reset_crop(...)
 
 #### 視覺驗證選項（要真正看到裁切結果時）
 
-`crop_config.cropped_height` 只能驗證「backend 收到正確 px 值」、不能驗證「我看的位置對不對」。要真的看裁切後的視覺、有兩條路：
+`crop_config.cropped_height` 只能驗證「backend 收到正確 px 值」、不能驗證「我看的位置對不對」。要真的看裁切後的視覺、按能力由低到高有 3 條路：
 
-**A. `download_stripe` + auth fetch + 看 binary**（需要 Bash sandbox + auth fetch + vision）
+**A. LP 公開頁（多數 LLM 自己能看、最推薦）**
+
+LP 頁 `https://landingai.info/{locale}/lp/{campaign_id}` 是 **public**、無需 auth。frontend 用 `_compute_crop_inline_css` 生 CSS clip-path 渲染、**會顯示裁切後的視覺**。
+
+LLM 自己能不能看這頁、取決於環境：
+- **能直接渲染 HTML 頁的環境**（ChatGPT browse / Claude computer use / chrome-devtools-mcp / Gemini Live）：自己 fetch + 截圖 + vision 看、不用打擾使用者
+- **只能看 image URL 的環境**（多數純 multimodal API）：HTML 頁無法直接 vision、跳到 B 或 C
+- **能 fetch HTML 但不能截圖**（純 web fetch）：只拿到 HTML 文字、看不到視覺、跳到 B 或 C
+
+**B. `download_stripe` + auth fetch + vision 看 binary**
+
+需要 (a) Bash / Python sandbox、(b) auth-fetch、(c) vision。比 A 麻煩、但拿到的是 backend PIL 真正裁切的 binary、確保 100% 準。
+
 ```python
 ref = mcp_tool_call("landing_ai_mcp", "download_stripe", {
   "user_token": token, "campaign_id": campaign_id, "stripe_idx": idx
 })
 # ref = {download_url, auth_header, content_type}
-# Bash 或 Python httpx 帶 auth header fetch、save 成本地檔、vision 看
-# 這條路會看到真正的 PIL-cropped 結果
+# Bash 或 Python httpx 帶 auth header fetch、存本地、vision 看
 ```
 
-**B. 給使用者公開 LP URL 確認**（最簡單、所有環境都能用）
+**C. 給使用者公開 LP URL、請他確認**（保底、所有環境都能用）
+
 ```
-裁完後一句話給使用者：
+裁完一句話：
 「這頁我幫你裁了——保留到你說的大拇指那條線。
- 你直接看 LP（https://landingai.info/{locale}/lp/{campaign_id}）的這頁、
- 不對的話告訴我『多保留一點』/『再砍一點』，我調。」
+ 你看一下 LP（https://landingai.info/{locale}/lp/{campaign_id}）的這頁、
+ 不對的話告訴我『多保留一點』/『再砍一點』、我調。」
 ```
+
+**選擇順序**：A 能跑就 A、不行退 B、最後才 C（C 把驗證工作丟給使用者、應該是最後一招）
 
 #### 對使用者溝通（Silent Execution）
 
