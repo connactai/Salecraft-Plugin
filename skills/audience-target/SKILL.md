@@ -42,6 +42,38 @@ If the user says "looks good" or "ok" to an intermediate step (like TA selection
 - Read `CLAUDE.md` for tool signatures
 - Read `lib/credit-calculator.md` for cost estimation
 
+### 🔴 MANDATORY Entry Check — Quality Gate 必須已跑完、否則回頭
+
+**進 Phase 1 `generate_ta_options` 之前、先 `get_session` 驗證 Step 3 Quality Gate 跑過了**：
+
+```python
+session = get_session(session_id)
+shared = session["wizard_shared_data"] or {}
+files  = session["wizard_shared_files"] or {}
+
+# 有產品圖的情況：Quality Gate 必須已跑
+has_product_images = bool(files.get("product_images") or shared.get("product_images"))
+if has_product_images:
+    if not session.get("image_censor_results"):
+        # Quality Gate 沒跑 → 不准 call generate_ta_options
+        # 回頭跑 brand-onboard Phase 3.9：
+        #   validate_images + analyze_image + digitize_product_text
+        raise SkipGuard("Quality Gate 沒跑、回 brand-onboard Phase 3.9")
+
+    latest = session["image_censor_results"][-1]
+    if not latest.get("overall_passed") and not shared.get("_quality_gate_override"):
+        # 品質不過、又沒使用者明確 override → 不准往下
+        raise SkipGuard("Quality Gate overall_passed=false、且使用者沒 override、回 brand-onboard 給使用者看 issue")
+
+# 無產品圖：必須有 _quality_gate_skipped_no_images flag
+else:
+    if not shared.get("_quality_gate_skipped_no_images"):
+        # 沒明確標記 = 不確定是否該跳過、回頭補寫 flag 或補傳圖
+        raise SkipGuard("無 image_censor_results 也無 skip flag、回 brand-onboard 確認")
+```
+
+**違反後果**：TA 用「沒被理解過的圖」的 brand 資料產生、Architect 瞎猜圖片內容、LP 出來招牌菜放錯段落 / 內裝照放產品介紹 → 使用者退費。
+
 ---
 
 ## Phase 1: AI-Suggested Target Audiences

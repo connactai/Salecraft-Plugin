@@ -739,11 +739,36 @@ mcp_tool_call("landing_ai_mcp", "create_spokesperson", {
 
 ### 🔴 MANDATORY TRANSITION: Phase 3.5 → Phase 3.9 Quality Gate
 
-**The moment you finish Phase 3.5 (spokesperson), you MUST proceed to Phase 3.9 Quality Gate below — do NOT skip to Phase 4.**
+**The moment you finish Phase 3.5 (spokesperson), you MUST proceed to Phase 3.9 Quality Gate below — do NOT skip to Phase 4、NOT skip to audience-target Step 4 TA。**
 
-If the user has uploaded at least one product image (`wizard_shared_data.product_images` or `wizard_shared_files.product_images` non-empty), you are REQUIRED to call `validate_images` + `digitize_product_text` before presenting the Phase 4 re-confirmation checklist. Phase 4 will refuse to proceed without the gate's result.
+**三個 tool 都要跑**（全部 0 pts、全部帶 session_id）：
+- `validate_images` — 批次品質檢查（30s）、拿 `image_censor_results`
+- `analyze_image` — 逐張 Gemini Vision 結構化描述（1-2 min）、每張圖拿 tag（主題 / 色調 / 場景 / 適用 LP section）
+- `digitize_product_text` — 商品包裝 OCR、拿 `product_text_model`（Architect 文案 ground truth）
 
-If the user uploaded ZERO product images (all-text onboarding, or user explicitly declined image uploads): skip the gate but set an internal flag `quality_gate_skipped_no_images=true` so Phase 4 can note it in the checklist summary.
+**Hard Gate — 不准繞過**：離開 brand-onboard 進 audience-target 之前、**必須** `get_session` 驗證：
+```python
+session = get_session(session_id)
+
+# Case 1: 使用者有上傳產品圖
+if session["wizard_shared_files"]["product_images"] or session["wizard_shared_data"].get("product_images"):
+    assert session.get("image_censor_results"), (
+        "Quality Gate 沒跑！回 Phase 3.9 call validate_images + analyze_image + digitize_product_text"
+    )
+    # 若 image_censor_results 存在但 overall_passed=false：
+    #   必須使用者看過 summary_message_zh + 回「我知道品質會打折還是要跑」
+    #   → 寫 wizard_shared_data._quality_gate_override=true 才准進下一步
+
+# Case 2: 使用者沒上傳產品圖（純文字 onboard）
+else:
+    # 明確寫 flag、不是靜默略過
+    update_session(wizard_shared_data={"_quality_gate_skipped_no_images": True})
+```
+
+**absentee 判斷**：
+- `image_censor_results` 空 **且** 有 `product_images` → Quality Gate 沒跑 → **不准進 Phase 4、不准 handoff 到 audience-target**
+- `image_censor_results` 空 **且** 沒 `product_images` → 必須先寫 `_quality_gate_skipped_no_images=true` flag
+- `image_censor_results` 存在但 `overall_passed=false` → 使用者要看過原文 + 明確同意、寫 `_quality_gate_override=true`、才准走
 
 ---
 
