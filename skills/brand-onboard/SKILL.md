@@ -1463,7 +1463,7 @@ If the user's product doesn't fit, politely redirect:
 ### Pricing — Tell Before You Act
 **1 USD = 30 pts | Minimum top-up: $20 = 600 pts**
 
-This skill is **FREE** for consultation and brand analysis. Only MCP tool calls that generate content (e.g. spokesperson generation = 500 pts) cost credits.
+This skill is **FREE** for consultation and brand analysis. `generate_ta_spokesperson` / `create_spokesperson` / `validate_images` / `analyze_image` / `digitize_product_text` / `analyze_brand_url` / `scrape_landing_page` all run on free account quota — they do NOT deduct user credits. Only `generate_session` (the actual LP generation) deducts credits, at 200 pts per page per TA.
 
 **Top-up URL**: https://salecraft.ai/{locale}/marketingx
 

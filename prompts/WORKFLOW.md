@@ -172,8 +172,8 @@ Phase 10: Growth Retrospective [growth-retro]
 | "Add a dark overlay" | `set_stripe_overlay` |
 | "Add a gradient edge" | `set_stripe_soft_edge` |
 | "Crop this stripe" | `crop_stripe` |
-| "Redo this stripe completely" | `regenerate_stripe` |
-| "Undo that change" | `undo_stripe` |
+| "Redo this stripe completely" / 「這頁整個重生」| `regenerate_stripe`（100 pts/頁、舊版自動留著） |
+| 「退回之前那版」/「看歷史版本」/ Undo / Redo | `get_stripe_history` → user picks → switch. **Do NOT call `undo_stripe` alone — always show version list first** (see edit-landing SKILL 歷史版本瀏覽 section) |
 | "Move this stripe up/down" | `reorder_stripes` |
 | "Hide this stripe" | `hide_stripe` |
 | "Optimize SEO" / "改 SEO" / "幫我做 SEO" | `run_seo_optimize` (one-click AI, 500 pts / beta free) |
