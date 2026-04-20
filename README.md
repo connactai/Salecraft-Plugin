@@ -122,8 +122,7 @@ This works on any AI platform that supports MCP connections.
 
 | Action | Cost |
 |--------|------|
-| Landing Page (8 pages) | 1,600 pts (~$53) |
-| Landing Page (10 pages) | 2,000 pts (~$67) |
+| Landing Page (per page × per TA) | **200 pts / page, linear**. Page count: any integer **8-21** (`requested_stripe_count`) — not limited to 8 or 10. Examples: 8 pages × 1 TA = 1,600 pts; 10 × 1 = 2,000 pts; 12 × 2 = 4,800 pts; 15 × 1 = 3,000 pts |
 | Regenerate 1 page | 100 pts (~$3) |
 | Quick Ad (single image) | 200 pts (~$7) |
 | Carousel (N images) | 300 + 100xN pts |
