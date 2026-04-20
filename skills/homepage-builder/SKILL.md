@@ -880,7 +880,7 @@ If the user seems unsure or is exploring, suggest the free consultation first:
 3. ✏️ 修改首頁內容（標題、CTA、版面）
 4. 📤 社群發佈 LP 內容
 5. 📊 投放廣告
-6. 🌐 建立多語言版本
+6. 🌐 其他語言版本（開新 session 重生一份 LP、plugin 沒有翻譯既有內容的路徑）
 ```
 
 ### CTA destination prompt:

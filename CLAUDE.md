@@ -205,6 +205,10 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    → `generate_session` 不吃 language 參數、backend 從 session 讀、讀不到就用 `wizard_shared_data.default_language`（通常 zh-TW）→ TA 2 生繁中版 → 退費
    原因：**規格（language / visual_style / primary_color / stripe_count...）必須在 `generate_session` 之前先 `update_session` 寫進 session**、不是當 call 參數傳。`generate_session` 只收 3 個參數：`session_id / ta_group_ids_json / requested_stripe_count`、其他全部從 session state 讀
 
+   ❌ LLM 在 post-gen menu 或其他對話裡列出「翻譯成其他語言 / i18n-adapt / 一鍵多語」這類選項、暗示 plugin 有便宜翻譯路徑
+   → 使用者以為繁中版可以 200 pts 翻成英文、接著問「那幫我翻」→ LLM 發現沒這 tool、只能重生全份 → 使用者已規劃好預算 → 實扣 $2-3x 超預期
+   原因：**plugin 沒有「翻譯既有 LP」的工具**（`audience-target/SKILL.md` L609 明寫 "no cheap translation path exists"）、`i18n-adapt` 這個 skill **不存在**。要其他語言 = **重新跑一次完整生成**（新 session、扣新的 pts）。post-gen menu 和其他地方提到「另一個語言」時、**必須明標「= 重生一份、不是翻譯」**、不要講成有廉價翻譯路徑
+
    ❌ `generate_session` 跑完、LLM 只回「好了、連結是 XXX、你要 publish 還是 reels 還是 edit？」三選一簡答
    → 使用者不知道還能做柔邊 / overlay / 單頁重生 / SEO 一鍵 / CTA 按鈕連結 / 裁切 / 翻譯等細部功能 → 有能力沒 surface = 等於沒有
    原因：`generate-landing` SKILL 的 post-gen template 列了 3 類共 15+ 項後續動作（細修 / 結構重生 / 上線分享）、**必須整份展開給使用者看**、不准 LLM 自己挑 3 項講。使用者看到完整選單才知道要問什麼、或直接指名「幫我加柔邊」「改 CTA 連結」
