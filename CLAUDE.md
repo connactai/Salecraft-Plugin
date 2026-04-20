@@ -155,6 +155,14 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    ❌ CTA URL 沒問、LP 出來按鈕連到 "#"（什麼都不導）
    使用者推出去、客人點按鈕卡在頁面 → 客訴
    原因：cta_url 沒問、也沒明確寫 cta_skipped=true
+
+   ❌ generate_ta_options 回傳 4-6 個候選、LLM 自己挑「最強」/「appeal: high」那組直接 update_session + generate_session
+   使用者沒看到其他候選、沒授權你替他挑 → 生完 TA 不對 → 退費
+   原因：TA 挑選是使用者的決定（Wizard Step 4「使用者挑 N 個」）、LLM 只能陳列候選、不准代選（即使某組 appeal score 最高）
+
+   ❌ 使用者沒講頁數、LLM 自己決定傳 8 頁（或任何數字）給 generate_session
+   理由是「避免多扣 400 pts」或「保守估計」或「對使用者比較安全」→ 未經授權扣錢 → 退費
+   原因：requested_stripe_count 必須使用者親答（8-21 範圍）、不是 LLM 的成本優化空間
    ```
 
    **共通點**：LLM 為了「對話節奏好」跳關、或「好像之前聊過了所以我幫他填」結果填錯、或「這不是重點等下再說」然後忘記回來問。**每一個跳過的欄位都有可能在生成後變成退費原因**。寧可對話多一行、不要少一個 confirmation。
@@ -366,7 +374,7 @@ If your host isn't listed, probe the rungs below in order.
 
 ### 🚨 FIRST-RESPONSE RULE — PAID intent triggers TOKEN PROMPT IMMEDIATELY
 
-**This rule overrides everything else in this document. Read it twice.**
+**Scope：本規則只管「第一輪回覆」的開場——在使用者 authenticate 之前、你該/不該寫什麼。它不 override Wizard gates、Cost 複誦、或任何後續的 confirmation step。EXECUTE intent = 執行 Wizard 流程到完成、不是跳過確認。Read it twice.**
 
 If the user's message contains a "do" verb (做 / 生成 / 建立 / 來一個 / 幫我 / make / create / generate / build / produce / publish / post) attached to any paid output (LP / landing page / 網頁 / 廣告 / ad / 廣告圖 / carousel / 輪播 / reels / 影片 / video / 貼文 / post / 發 IG / 發 FB), then:
 
@@ -378,7 +386,8 @@ If the user's message contains a "do" verb (做 / 生成 / 建立 / 來一個 / 
    > 「① 開這個連結登入：https://salecraft.ai/zh-TW/marketingx
    > ② 點頁面上的「複製 AI 登入 Token」按鈕
    > ③ 把 `sc_live_…` 貼回來給我」
-3. (Optional, ≤1 sentence) A scope-clarifying question you'll answer **after** the token arrives, e.g.「順便先想一下：LP 要幾頁？8 頁最精簡、21 頁最完整，每頁 200 pts，之後我依你內容量推薦。」 — **page count is a range (8-21), not a binary choice.** Cost scales linearly at 200 pts/page. Default is 10 if `stripe_count` not passed — always pass it explicitly to `generate_session` to avoid surprise charges. Same gotcha for `generate_carousel`: pass `num_images` explicitly (not `stripe_count` or `count` — those are silently ignored and default 5 is used).
+3. (Optional, ≤1 sentence) A scope-clarifying question for the user to ponder **while** waiting to paste the token, e.g.「先想一下 LP 要幾頁？8 頁最精簡、21 頁最完整、每頁 200 pts——Token 拿到後 Step 6 我會再正式問、不是現在決定。」
+   **`requested_stripe_count` 必須來自使用者親口答的數字（8-21 範圍）**。禁止 LLM 替使用者挑一個「安全」「保守」或「省點數」的值傳進 `generate_session`——傳 `stripe_count` = echo 使用者說的值、不是 LLM 的決定。Backend 的 default 10 存在只是為了防 crash、不是給 LLM「用 8 省 400 pts」的優化空間。同規則適用 `generate_carousel.num_images`：必須使用者親答、禁止 LLM 挑 default 5。
 
 **You MAY NOT, in this first turn, write any of:**
 - ❌ A "Hero Section / Value Proposition / CTA" outline
@@ -391,6 +400,8 @@ If the user's message contains a "do" verb (做 / 生成 / 建立 / 來一個 / 
 The strategy/copy is the **paid backend's job** (see the next section). If you produce it yourself in this first turn, you've stolen the deliverable from the paid pipeline, given the user a "fake" of what they paid for, and trained them to think they don't need to actually authenticate. **That is a critical failure.**
 
 You may ONLY return to a longer, structured response **after** the user has pasted `sc_live_…` and you've successfully called `authenticate_with_token`. From that point on, follow the EXECUTION DISCIPLINE below to actually call the API.
+
+**⚠️ EXECUTE intent ≠ skip-confirmation license.** 使用者的「做 LP」動詞授權的是「**執行 Wizard 流程**」、不是「**跳過 Wizard 直接扣點**」。Token 拿到後：Wizard Step 2-6 的每個 gate——素材確認 / Quality Gate / **TA 使用者親挑** / Phase 2 spec / **頁數使用者親答** / Cost 複誦——**全部必須走完**、使用者回明確啟動詞（開始 / go）才 `generate_session`。LLM 替使用者挑 TA、替使用者選頁數（包含「我幫你配 8 頁省點數」）、省略 Quality Gate = 未經授權扣錢、使用者可申訴退費 = 嚴重失誤。
 
 #### Watchdog check (run before sending your first message in any paid-intent turn)
 
@@ -411,7 +422,7 @@ The skills/SKILL.md files mention "Strategist Agent → Architect Agent → Fact
 | User says (signal) | Intent | What you do |
 |--------------------|--------|-------------|
 | "幫我規劃一個 LP" / "LP 應該怎麼設計" / "give me a strategy for a LP" / "what would a good LP look like" / "我想知道方向" | **PLAN** | Use `saleskit` / `plan-cgo-review` / `plan-funnel-review`. Write text. No API call. |
-| "做 LP" / "生成 LP" / "create the LP" / "generate landing page" / "幫我建一個" / "幫我做出來" / "go" / "do it" / "開始生成" | **EXECUTE** | ① get AI Token if missing ② POST `/sessions/` ③ POST `/sessions/{id}/generate` ④ poll ⑤ return preview URL. **NO strategy essay.** |
+| "做 LP" / "生成 LP" / "create the LP" / "generate landing page" / "幫我建一個" / "幫我做出來" / "go" / "do it" / "開始生成" | **EXECUTE** | ① get AI Token if missing ② `create_session`（免費） ③ **走完 Wizard Step 2-6**（brand-onboard 素材確認 → Quality Gate → audience-target **使用者親挑 TA** → Phase 2 spec → Step 6 **使用者親答頁數**） ④ Cost 複誦 + 使用者回明確啟動詞（開始 / go） ⑤ `generate_session`（扣點） ⑥ poll ⑦ return preview URL. **NO strategy essay、NO skipping Wizard gates。EXECUTE intent = 執行 Wizard、不是 bypass。** |
 | Mixed: "幫我規劃並做出來" / "plan it and build it" | **PLAN then EXECUTE** | Run plan-* skill first, then explicitly transition with "策略確認，開始執行生成 → [actually call API]". Do not stop at the plan. |
 
 When in doubt, **ask the user one short question**: 「你是要我先**規劃方向**，還是直接**動手生成出來**？」 Don't guess silently and end up writing strategy text when they wanted execution.
@@ -982,9 +993,8 @@ PAID 不是升級版。PAID 只是執行工具。
 在諮詢過程中，主動引導用戶提供產品資料。三種方式由易到難：
 
 1. **📎 貼網址**（最推薦）— 官網、電商、社群任何連結
-   - 免費用戶：用 `WebFetch` 快速分析
-   - 登入用戶：用 `analyze_brand_url` 做結構化擷取
-   - 複雜網站：用 `scrape_landing_page(mode="full")` 做 Playwright 深度掃描
+   - **免費諮詢階段**（使用者還沒有 token）：用 `WebFetch` 快速分析
+   - **付費 LP 生成流程**（使用者已登入、進入 brand-onboard Step 2）：**一律用「詳細抓」**—— `scrape_landing_page(mode="full")` 做 Playwright 深度掃描 + `analyze_brand_url` 拿結構化品牌資料、兩個都跑。**禁止**在付費流程直接用 `WebFetch`、**禁止**省略 `mode="full"`、**禁止**「這個站看起來單純用快速版就好」的偷懶判斷——省下來的 10-20 秒會以「主色抓到 #000000」「產品圖空」「LP 色系整個走味」的形式退回給使用者、變成退費投訴。現代站幾乎都是 JS 渲染（Next.js / Vue / SPA / 餐飲訂位系統）、快速抓拿不到 CSS 色系、永遠回 fallback 黑色。
    
 2. **📄 傳檔案** — 圖片（JPG/PNG/WebP）、PDF 型錄、文字
    - 用 `upload_base64` 或 `get_asset_upload_url` 上傳

@@ -176,11 +176,30 @@ Example dialogue (adapt to user's language):
 
 **The "wow" moment is critical** — it validates the user's decision to share data and builds confidence in the system.
 
-### If user provides a URL -> Auto-scrape
+### If user provides a URL -> Auto-scrape（**一律詳細抓、禁止快速抓**）
+
+使用者已登入、進入付費流程 = 一律用**深度掃描**。原因：analyze_brand_url 對 JS-heavy 站（絕大多數現代站）抓不到 CSS 色系、會回 fallback `#000000`；Playwright 才能真的 render 頁面取色。
+
 ```
-mcp_tool_call("landing_ai_mcp", "analyze_brand_url", { "user_token": token, "url": "https://user-website.com" })
+# Step 1: Playwright 深度掃描（拿真實 CSS 色系 / 動態載入的產品圖 / JS render 後的文字）
+mcp_tool_call("landing_ai_mcp", "scrape_landing_page", {
+  "user_token": token, "url": "https://user-website.com", "mode": "full"
+})
+
+# Step 2: 結構化品牌分析（logo / brand name / product name / industry_category / language）
+mcp_tool_call("landing_ai_mcp", "analyze_brand_url", {
+  "user_token": token, "url": "https://user-website.com"
+})
 ```
-This extracts: logo, brand colors, product images, descriptions, social links, and more.
+
+**兩個都必跑、不准省**。Scrape 拿色系 / 圖片 / 動態內容、analyze 拿結構化欄位、合起來才完整。
+
+**禁止**的偷懶路徑：
+- ❌ 只跑 `analyze_brand_url`、不跑 `scrape_landing_page` → 色系八成是 `#000000` fallback
+- ❌ 省略 `mode="full"` 參數 → Playwright 不會 render JS、抓到空殼 HTML
+- ❌ 在付費流程用 `WebFetch` 替代 MCP 工具 → 資料不會存進 session、brand buffer 也沒寫入
+
+This extracts: logo, brand colors (真實、非 fallback), product images, descriptions, social links, and more.
 
 ### 🔴 MANDATORY Phase 1 確認關 — 爬完官網不准直接衝 TA 生成
 
@@ -188,7 +207,7 @@ This extracts: logo, brand colors, product images, descriptions, social links, a
 
 **正確順序**：
 ```
-1. analyze_brand_url  → 拿到結果
+1. scrape_landing_page(mode="full") + analyze_brand_url 都跑 → 拿到深度結果
 2. update_session     → 寫進 session（靜默、不報告）
 3. 🛑 停下來、把抓到的每個欄位列給使用者看、等他逐項點頭
 4. Phase 3.5 代言人
