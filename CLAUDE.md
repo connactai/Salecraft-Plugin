@@ -205,6 +205,10 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    → `generate_session` 不吃 language 參數、backend 從 session 讀、讀不到就用 `wizard_shared_data.default_language`（通常 zh-TW）→ TA 2 生繁中版 → 退費
    原因：**規格（language / visual_style / primary_color / stripe_count...）必須在 `generate_session` 之前先 `update_session` 寫進 session**、不是當 call 參數傳。`generate_session` 只收 3 個參數：`session_id / ta_group_ids_json / requested_stripe_count`、其他全部從 session state 讀
 
+   ❌ `generate_session` 跑完、LLM 只回「好了、連結是 XXX、你要 publish 還是 reels 還是 edit？」三選一簡答
+   → 使用者不知道還能做柔邊 / overlay / 單頁重生 / SEO 一鍵 / CTA 按鈕連結 / 裁切 / 翻譯等細部功能 → 有能力沒 surface = 等於沒有
+   原因：`generate-landing` SKILL 的 post-gen template 列了 3 類共 15+ 項後續動作（細修 / 結構重生 / 上線分享）、**必須整份展開給使用者看**、不准 LLM 自己挑 3 項講。使用者看到完整選單才知道要問什麼、或直接指名「幫我加柔邊」「改 CTA 連結」
+
    ❌ Cost 複誦只講「扣 4,800 pts」、沒講 backend 的 pre-deduct + stripe_adjustment 機制
    → 使用者看 transaction log `-2000 / -2000` 以為被多扣或分段扣、投訴
    原因：backend 實際是**先預扣 requested × 200 per TA、生完根據 actual 調整**（少生退差、多生不加）。Cost 複誦必須揭露「預扣 X、生完實際幾頁就算幾頁、多生免費、少生退差」、使用者才看得懂 transaction log

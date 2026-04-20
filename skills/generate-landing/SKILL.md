@@ -1197,27 +1197,50 @@ POST /ai-agent/brand-memory/save-prompt
 ```
 Also compile metadata: `POST /ai-agent/brand-memory/compile-metadata { "brand_id": "<brand_id>" }`
 
-**Then show the user:**
+**Then show the user — 這個 menu 是 MANDATORY、不准省略不准只講 3 項**：
+
+LLM 常犯：生完只回「好了、你看看要不要發佈 / 做 reels」三選一、使用者不知道還能做柔邊 / overlay / 單頁重生 / SEO 一鍵 / 調 CTA 等細部設定。**必須主動把下面這整份選單展開給使用者看**、讓他知道選項全貌。
+
 ```
 ✅ LP 生成完畢！
 
-🔗 你的連結：
+🔗 你的連結
 1. 📱 銷售頁預覽：[sales_page_url]
-2. ✏️ 圖像編輯器：[editor_url]
+2. ✏️ 圖像編輯器：[editor_url]（網頁視覺編輯、拖拉改文字 / 換圖）
 
-接下來你可以：
-1. 👀 先去看看成品（點上面連結）
-2. ✏️ 編輯修改 — 文字、圖片、版面都能改
-3. 📸 截圖標註 — 圈出要改的地方，我直接修
-4. 🔍 SEO 優化 — 搜尋引擎和社群分享優化
-5. 🏠 建立首頁 — 把 LP 嵌入完整網站
-6. 📤 社群發佈 — 發到 IG / FB / TikTok
-7. 📊 投放廣告 — Meta / Google Ads 一條龍
-8. 🌐 多語言版本 — 翻譯成其他語言
-9. 🎯 生成另一個版本（不同受眾/比例）
+---
+
+📋 接下來可以做的事（分三類）
+
+**🎨 細修（不用扣點的視覺 / 文字微調）**
+- ✏️ **改文字** — 某一頁文案、標題、副標、CTA 按鈕字（`update_stripe_text / update_stripe_texts`）
+- 🔗 **CTA 按鈕設定** — 按鈕連到哪（官網 / LINE / 購買頁 / 預約 / App 下載 / 滑到某區塊、`update_cta / update_cta_link`）
+- 🎨 **改 CTA 按鈕樣式** — 顏色 / 圓角 / 陰影（`update_cta_style`）
+- 🌊 **加柔邊** — 頁與頁之間漸層融合、整體看起來更順（`set_stripe_soft_edge`）
+- 🎭 **加深淺 overlay** — 文字壓不住背景時加半透明層增可讀性（`set_stripe_overlay`）
+- ✂️ **裁切某頁** — 局部放大 / 改構圖（`crop_stripe` / `reset_crop`）
+- 🖼️ **改背景** — 換色 / 換圖（`update_stripe_background`）
+- 📸 **截圖標註** — 你圈紅框標哪裡要改、我直接動
+
+**🔧 結構 / 重生（扣點）**
+- 🔁 **單頁重生** — 某頁不滿意、用新 prompt 重跑（100 pts / 頁、`regenerate_stripe`）
+- ↩️ **Undo / Redo** — 後悔的話可以退回前一版（`undo_stripe` / `redo_stripe`）
+- 🙈 **隱藏 / 顯示某頁** — 暫時藏起來不刪掉（`hide_stripe` / `restore_stripe`）
+
+**🚀 上線 / 分享（大部分免費）**
+- 🔍 **SEO 一鍵優化** — AI 全自動生 meta / Open Graph / JSON-LD / FAQ schema / llms.txt / GEO summary（500 pts、beta 期免費、`run_seo_optimize`）
+- 🏠 **建立首頁** — 把這個 LP 嵌進完整首頁（`homepage-builder`）
+- 📤 **發到社群** — IG / FB / TikTok / Threads 一鍵發（`publish-social`）
+- 📊 **投廣告** — Meta / Google / LinkedIn 建廣告活動（`publish-ads`）
+- 🎬 **做短影音** — 把 LP 內容轉 15-60 秒 Reels（100 pts / 秒、`generate-reels`）
+- 🌐 **翻譯成其他語言** — 整份翻譯、保留版面（`i18n-adapt`）
+- 🔁 **生另一個版本** — 同 brand 換 TA / aspect_ratio / 風格再跑一次（新 session）
+
+告訴我你想先做哪個、或直接講「我要改 XX」、「幫我 SEO」、「發到 IG」，我就接手。也可以先點上面連結看成品、想到要改什麼再說。
 ```
 
-### CTA button reminder:
+### CTA button reminder (若 cta_url 使用者沒明確填過)
+
 ```
 💡 提醒：你的 CTA 按鈕目前寫著「[cta_text]」
 按鈕要連到哪裡？
