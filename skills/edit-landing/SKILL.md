@@ -523,71 +523,95 @@ crop_stripe(
 3. **px 值在 CropEditor 400×600 座標系**（不是實際圖片像素）：backend 把這個座標空間 scale 到實際圖、傳 `image_width` / `image_height` 給更精準的 scaling
 4. **行為是累加**：每次 call 從 current 狀態（不是原圖）再裁、所以連續 call 會越切越小、`reset_crop` 才能回到原始
 
-#### 5 步流程
+#### 主流程 — Vision Feedback Loop（LLM 自己 fetch 圖、看結果、iterate）
 
-**Step 1 — 釐清使用者要保留什麼**
+LLM 自己跑 **看圖 → 試裁 → 再看 → 不對就 reset + 重試** 的 loop、不要把翻譯位置的工作丟給使用者。
 
-LLM **看不到實際圖片**——使用者講「切到大拇指那邊」/「只剩人頭」這種視覺參照時、**LLM 沒辦法自己定位**。必須反問使用者把它**翻成百分比**：
-- 「保留**上方多少 %**？（例：保留上半 = 50%、保留上 2/3 = 66%）」
-- 或：「**上 / 中 / 下** 哪一塊保留？」
-- 若使用者只能用視覺描述（「我要保留到那個拇指那條線」）→ **請他打開 LP 的視覺編輯器**：`https://salecraft.ai/{locale}/editor?id={campaign_id}`、那邊有滑桿可以視覺操作、不用換算
+**前提**：LLM 環境支援 (a) authenticated HTTP fetch（Bash / Python sandbox / fetch with custom headers）、(b) vision（看 image 內容）。Claude Code / Claude.ai / ChatGPT-Plus / Gemini 多數都行。沒有這兩個能力時走下方 Fallback。
 
-**Step 2 — 拿 snapshot**
+**Step 1 — Fetch 原圖、看圖、定位使用者要的元素**
 
+```python
+ref = mcp_tool_call("landing_ai_mcp", "download_stripe", {
+  "user_token": token, "campaign_id": campaign_id,
+  "stripe_idx": idx, "version": 0
+})
+# ref = {download_url, auth_header, content_type}
+
+# 用 Bash / Python sandbox / fetch with header 拉圖：
+#   curl -H "Authorization: <auth_header>" "<download_url>" -o /tmp/stripe.png
+#   或 httpx.get(url, headers={"Authorization": auth_header})
+
+# 用 vision 看 /tmp/stripe.png：
+#   使用者說「保留到大拇指那條線」→ LLM 看圖、定位拇指輪廓在距頂端約 720 / 800 px 處
+#   → 要砍掉的真實 px = 800 - 720 = 80
 ```
-get_stripe_detail(campaign_id, stripe_idx)
-→ 記下 original_height、original_width
-   （傳給 image_width/image_height、也當復原參考）
+
+**Step 2 — 拿 stripe 真實尺寸 + 換算 CropEditor 600 座標**
+
+```python
+detail = mcp_tool_call("landing_ai_mcp", "get_stripe_detail", {
+  "user_token": token, "campaign_id": campaign_id, "stripe_idx": idx
+})
+real_h = detail["original_height"]   # 800
+real_w = detail["original_width"]
+
+# 真實 80 px → CropEditor 600 空間：80 / 800 × 600 = 60
+crop_bottom_px = int(real_bottom_to_cut / real_h * 600)
 ```
 
-**Step 3 — 把「保留比例」換算成 CropEditor 600 座標**
+**Step 3 — 呼叫 crop_stripe**
 
-CropEditor 高度是 600。使用者要保留 X% → 砍掉 `(1 - X) × 600` px：
+```python
+mcp_tool_call("landing_ai_mcp", "crop_stripe", {
+  "user_token": token, "campaign_id": campaign_id, "stripe_idx": idx,
+  "top_px": 0,
+  "bottom_px": crop_bottom_px,
+  "image_width": real_w,
+  "image_height": real_h
+})
+```
+
+**Step 4 — 再 fetch 一次裁完的圖、用 vision 驗結果**
+
+```python
+# 重新 download_stripe → fetch → vision check
+# 自問：使用者要的視覺元素（大拇指）有完整保留嗎？切太多嗎？切太少嗎？
+```
+
+**Step 5 — 不對就 iterate（reset + 重算 + 再裁）**
+
+不要直接再 call `crop_stripe`（累加破壞、會越切越爛）。先 reset、再算、再裁：
+
+```python
+mcp_tool_call("landing_ai_mcp", "reset_crop", {...})   # 還原到原圖
+# get_stripe_detail 確認回到原始 height
+# 重新看原圖、調整 bottom_px、再 crop_stripe 一次
+# 再 fetch + vision check
+```
+
+整個 loop 通常 **2-3 輪**收斂。LLM 自己跑、不打擾使用者。
+
+**對使用者溝通**（Silent Execution）：
+- 跑 loop 時別 narrate（不要講「我先 fetch 看看 / 我覺得砍 240 / 結果不對 / 我 reset」）
+- 完成後一句話：「這頁裁好了、保留到你說的大拇指那條線、看看 OK 嗎？」
+- 失敗到第 3 輪還收斂不了 → 停、告訴使用者「我裁出來都不太準、你直接看 LP、講大概保留上方多少 %」
+
+#### Fallback — LLM 沒有 vision / 沒有 auth fetch 能力時
+
+只有這時候才把翻譯工作交給使用者、要求他講百分比。Step 3-5 同上、只有 Step 1-2 改成：
+
+**Step 1（Fallback）**：問使用者「保留上方多少 %？」
+**Step 2（Fallback）**：用下表查 `bottom_px`、CropEditor 600 空間：
 
 | 使用者要保留 | top_px | bottom_px |
 |---|---|---|
-| 上方 60% | `0` | `int(600 × 0.40) = 240` |
-| 上方 80% | `0` | `int(600 × 0.20) = 120` |
-| 上方 50%（上半）| `0` | `int(600 × 0.50) = 300` |
-| 下方 40% | `int(600 × 0.60) = 360` | `0` |
-| 中間（上下各砍 20%）| `int(600 × 0.20) = 120` | `int(600 × 0.20) = 120` |
+| 上方 60% | `0` | `240` |
+| 上方 80% | `0` | `120` |
+| 上方 50%（上半）| `0` | `300` |
+| 下方 40% | `360` | `0` |
+| 中間（上下各砍 20%）| `120` | `120` |
 | 不裁 | `0` | `0` |
-
-**Step 4 — 呼叫 + 立刻驗證**
-
-```python
-crop_stripe(
-  user_token, campaign_id, stripe_idx,
-  top_px=0,
-  bottom_px=240,
-  image_width=detail["original_width"],
-  image_height=detail["original_height"]
-)
-# 立刻
-after = get_stripe_detail(campaign_id, stripe_idx)
-# 比對 after["cropped_height"] / after["original_height"] 接近預期保留比例（容差 ±5%）
-```
-
-**Step 5 — 結果不符時停手、走回收**
-
-**不要換參數再 call**——累加破壞、每次都更壞。直接走回收：
-1. `reset_crop(campaign_id, stripe_idx)` — 還原（免費）
-2. `get_stripe_detail` 驗證 height 是否回到原始
-3. 仍救不回 → 告訴使用者「這頁裁切沒成功、要不要 (a) 先接受現狀、(b) 重生這頁（100 pts、會是新 AI 圖、構圖不一定一樣）」
-
-#### 對使用者溝通
-
-- ❌ 「我傳 `top_px=0, bottom_px=240` 給 crop_stripe」
-- ✅ 「這頁我幫你**保留上方 60%**、底下 40% 砍掉」
-- 完成後：「裁好了、你看看這頁、不對的話可以還原或我重裁」
-
-#### LLM 看不到圖怎麼辦？
-
-這是 plugin 的本質限制：MCP 環境的 LLM 通常拿不到 stripe 圖片。三個解法：
-
-1. **轉成百分比語言**：「保留上方 60%」是**位置中立的描述**、LLM 不用看圖就能執行
-2. **請使用者用視覺編輯器**：`https://salecraft.ai/{locale}/editor?id={campaign_id}` 有滑桿介面、使用者拖到滿意按 save 就好、LLM 完全不用碰 crop 工具
-3. **請使用者自己量參考點**：「往上拉滑桿、看那條線到大拇指上面、告訴我這時剩多少 %」
 
 ### Reset crop to original
 ```
