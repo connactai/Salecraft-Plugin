@@ -134,14 +134,17 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
 
    ### 🔴 `update_session` 白名單：只有 4 個頂層 key 會進 session、其他 silently drop
 
-   Backend `update_session` 的 `data_json` **只接受 4 個頂層 key**、**其他所有 key 被 silently dropped**（backend 仍回 200 OK、`updated_at` bumped、但 session 實際沒存）：
+   Backend `update_session` 的 `data_json` **只接受 6 個頂層 key**、**其他所有 key 被 silently dropped**（backend 仍回 200 OK、`updated_at` bumped、但 session 實際沒存）：
 
-   **✅ Whitelist（頂層允許的 key）**：
-   - `product_name` — string
-   - `wizard_shared_data` — object（所有 brand 基本欄位 / spec / flags 都 nest 在這裡）
-   - `wizard_shared_files` — object（logo_image / product_images / evidence_images 等共用檔案）
-   - `wizard_ta_groups` — array（per-TA entries、spokesperson_prompt / language / primary_color / visual_style / fabt_* 等）
+   **✅ Whitelist（頂層允許的 key、只有這 6 個）**：
+   - `session_name` — string（session 顯示名稱）
+   - `product_name` — string（產品名、顯示在 frontend 的 header）
+   - `wizard_shared_data` — object（**所有文字類** brand 欄位 / spec / flags 都 nest 在這裡）
+   - `wizard_shared_files` — object（**所有檔案 URL**：logo_image / product_images / evidence_images / certification_images）
+   - `wizard_ta_groups` — array（per-TA 文字 entries：spokesperson_prompt / language / primary_color / visual_style / fabt_* 等）
    - `wizard_ta_group_files` — array（per-TA 檔案、legacy）
+
+   **分類口訣**：**文字** → `wizard_shared_data`、**檔案 URL** → `wizard_shared_files`、**per-TA** → `wizard_ta_groups[i]` 或 `wizard_ta_group_files[i]`。
 
    **❌ 被 silently drop 的常見誤寫**（實測踩過、全部以為有進實際沒有）：
    ```

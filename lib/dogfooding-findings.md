@@ -15,6 +15,25 @@ SaleCraft plugin against the production backend.
 
 ## Findings
 
+### #41 — `update_session` silently drops unknown top-level keys 🔴 critical / **open (backend fix recommended)**
+
+**LLM behavior observed** (Claude.ai + MCP, dogfooding 2026-04):
+LLM wrote brand text fields (`base_description` / `brand_description` / `value_proposition` / `brand_story` / `tagline` / `primary_color` / `key_features` / `cuisine_type` / `signature_dishes` / `operating_hours` / `pricing_info` / `target_audience` / `trust_certifications`) at the **top level** of `update_session.data` across 5 batches. Per-batch response was `isError: false` + `updated_at` bumped, so LLM reported "✅ written" each time. User spent ~20 minutes reviewing/editing the scraped content per batch (all 4 rounds of per-field ask-back).
+
+After all 5 batches + user-approved TA selection + spokesperson generation + cost recital + user "開始", `generate_session` fired. Total charge: 4,200 pts across 2 TAs. LP generation completed. User opened frontend dashboard → saw 核心產品描述 / 產品規格 / 參考圖片 / 注意事項 all EMPTY. Backend session after inspection: only `product_name` + `wizard_shared_data.{images}` + `wizard_ta_groups[...]` had persisted. All 13 text fields the user approved were dropped at write time.
+
+**Root cause**: `update_session` endpoint accepts only 6 whitelisted top-level keys (`session_name` / `product_name` / `wizard_shared_data` / `wizard_shared_files` / `wizard_ta_groups` / `wizard_ta_group_files`). Unknown top-level keys are silently dropped — no warning, no 400, no `extra_forbidden` error. The request succeeds (200 OK), `updated_at` advances (because the request itself is processed), but the content the LLM intended to write doesn't persist.
+
+**Why LLM didn't catch it**: standard success signals (no exception, `success: true`, `updated_at` changed) are all TRUE even on silent drop. The only way to detect it is to `get_session` after every write and assert that the specific keys landed — which plugin docs did not previously require.
+
+**Fix (plugin)**: new `update_session` whitelist documentation + MANDATORY per-key verify-after-write in CLAUDE.md rule 6.5, brand-onboard Phase 1, generate-landing batch-write verification. New 6.5 violation example with concrete failure narrative.
+
+**Fix (backend, STRONGLY RECOMMENDED)**: add `extra="forbid"` to the `update_session` request schema. This converts silent drops into loud 422s, which LLMs cannot ignore. Matches the fix applied to ad-campaign schemas (#36 cascade) that eliminated an identical class of bug. Plugin-level "self-audit" defense is brittle — any new LLM or any distraction causes the same failure.
+
+**User-reported (2026-04)**: "我 70% / 後端 30%。silently 丟棄未知欄位是典型反模式、應該 return warning 或 400 error 說『unknown field: base_description』。這會讓 AI 在第一次就發現錯誤、不會連錯 5 批。"
+
+---
+
 ### #40 — `landing_ai_mcp` full docstring audit ⚪ clean (0 real drift)
 Ran automated `scripts/audit_mcp_docstrings.py` against all 85
 @mcp.tool() functions in `Service_system/landing_ai_mcp/tools/`
