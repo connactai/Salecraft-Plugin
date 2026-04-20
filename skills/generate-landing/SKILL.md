@@ -344,7 +344,7 @@ Backend 把 Phase 2 spec 分成兩類儲存：
 | `cta_url` / `cta_text` | `wizard_shared_data.cta_text/url` | shared |
 | `include_qa_section` | `wizard_shared_data.include_qa_section` | shared |
 | `include_testimonials` | `wizard_shared_data.include_testimonials` | shared |
-| `requested_stripe_count`（頁數）| `wizard_shared_data.requested_stripe_count` | shared |
+| `requested_stripe_count`（頁數）| `wizard_shared_data.requested_stripe_count` | **shared（這個 session 內所有 TA 同樣頁數）**。若使用者要不同 TA 不同頁數（例：TA1 8 頁、TA2 12 頁）、**單一 session 做不到**——必須跟使用者講清楚「在同一次生成裡每組頁數要相同、想要不同頁數要分兩次 session」、不要假裝支援、也不要偷偷挑一個數字 |
 
 **實作**：`num_tas = len(wizard_ta_groups)`，
 - 若 `num_tas == 1`：per-TA 欄位可以跟 shared 合併問（1 個 TA 沒差異）
@@ -632,6 +632,11 @@ tas    = session_state["wizard_ta_groups"]
     - …（每組都列、不准合併成一句 shared）
 - 預計扣點：[stripe_cost × stripe_count × num_tas] pts（約 $[USD]）
   （代言人：0 pts——`generate_ta_spokesperson` 走帳號免費配額、已在 Phase 2.5 消耗、不重複扣；代言人在 LP 實際出現的成本包在 stripe_cost 裡）
+  **扣點機制（backend 實際行為，要講清楚）**：
+    先預扣 [stripe_cost × requested_pages × num_tas] pts（per TA 各自預扣 requested × 200）、
+    生完看實際頁數：多生不加收、少生會退差額（`stripe_adjustment`）。
+    例：預扣 2,400 pts（12 頁 × 200）、實際生 11 頁 → 退 200、net 2,200 pts。
+    你看 transaction log 的 `-2000` 那種數字是**預扣**、不是 net。
 
 你目前餘額 [X] pts。**有標「（我幫你配）」的欄位特別看一下、要改現在講**；都對就回「開始」我就跑；回「取消」就先不動。
 ```

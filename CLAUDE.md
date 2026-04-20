@@ -132,6 +132,39 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
 
    **目前規則是 SKILL-only 軟規範、沒有 backend enforcement**。LLM 必須**自律**照 6.5 跑、backend `generate_session` 仍會接受任何合法 request——自律沒跑等於未經授權扣錢。
 
+   ### 🔴 規格必須先 `update_session`、**不是** `generate_session` 的參數
+
+   `generate_session` **只讀 session state**（`wizard_shared_data` + `wizard_ta_groups[]`），**不接受 language / visual_style / primary_color / stripe_count 等 spec 當 call parameter**。所有規格**必須在 `generate_session` 之前先 `update_session` 寫進 session**、不是「啟動時即時塞」。
+
+   **正確順序**（每個 spec 都走這條）：
+   ```
+   使用者答了規格 X
+     ↓
+   update_session(data_json={"wizard_shared_data": {X: value}})  或
+   update_session(data_json={"wizard_ta_groups": [{id, ..., X_per_ta: value}, ...]})
+     ↓
+   （所有 gate 過完、Cost 複誦、使用者回「開始」之後）
+     ↓
+   generate_session(session_id, ta_group_ids_json, requested_stripe_count)
+     ← **只傳這三個參數**、其他 spec backend 已經從 session 讀到
+   ```
+
+   **違反後果**：使用者講了「TA 2 要英文版」但 LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="en"`、直接 `generate_session` → backend 從 session 讀不到、fallback 到 `wizard_shared_data.default_language`（通常 `zh-TW`）→ TA 2 生出繁中版 → 未經授權扣錢 → 退費。
+
+   ### 🔴 Pre-deduct 機制 — Cost 複誦必須揭露
+
+   Backend 的扣點機制是**先預扣、後調整**（非即扣實際費用）：
+   - Generate 一啟動：`deducted_amount = requested_stripe_count × 200 pts` 先扣（**per TA**）
+   - 生完後根據 `actual_stripe_count`：
+     - `actual >= requested` → 不加收（免費超送）
+     - `actual < requested` → `stripe_adjustment` 退差額
+   - **net cost** = `actual_stripe_count × 200`
+
+   Cost 複誦時**必須跟使用者講清楚**：
+   > 「預扣 {200 × requested × num_tas} pts，生完實際幾頁就算幾頁——多生免費、少生退差額」
+
+   **不准**只講「扣 X pts」不說預扣機制、也不准說「實際會扣 X」（實際是動態的）。使用者看到 transaction log 的 `-2000` 時才知道是預扣、會認為被多扣 → 投訴。
+
    #### ❌❌❌ 實戰違規範例（照 NO SILENT DEFAULTS 規則、這些是「靜默預設」、使用者生完才發現不對）
 
    以下這些反模式都真的發生過、每一個都會導致退費投訴：
@@ -167,6 +200,14 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    ❌ 使用者還沒回頁數、LLM 就秀 Cost 複誦 + 總 pts（「合計 3,200 pts」）、問「確認啟動嗎？」
    → 使用者看到 pts 數字、誤以為這就是最終費用、回「開始」→ LLM 拿「8」當 default 傳進 generate_session 扣錢
    原因：**Cost 複誦必須 AFTER Step 6 頁數使用者親答、NOT BEFORE**。頁數是唯一決定 pts 總額的欄位、使用者沒答你算不出總額、就是沒資格複誦。Step 5 結束 → Step 6 問頁數 → 使用者答 → 立刻算 total_pts → 然後才 Cost 複誦
+
+   ❌ 使用者講「TA 2 要英文版」、LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="en"`、以為 `generate_session(language="en")` 能傳參數
+   → `generate_session` 不吃 language 參數、backend 從 session 讀、讀不到就用 `wizard_shared_data.default_language`（通常 zh-TW）→ TA 2 生繁中版 → 退費
+   原因：**規格（language / visual_style / primary_color / stripe_count...）必須在 `generate_session` 之前先 `update_session` 寫進 session**、不是當 call 參數傳。`generate_session` 只收 3 個參數：`session_id / ta_group_ids_json / requested_stripe_count`、其他全部從 session state 讀
+
+   ❌ Cost 複誦只講「扣 4,800 pts」、沒講 backend 的 pre-deduct + stripe_adjustment 機制
+   → 使用者看 transaction log `-2000 / -2000` 以為被多扣或分段扣、投訴
+   原因：backend 實際是**先預扣 requested × 200 per TA、生完根據 actual 調整**（少生退差、多生不加）。Cost 複誦必須揭露「預扣 X、生完實際幾頁就算幾頁、多生免費、少生退差」、使用者才看得懂 transaction log
 
    ❌ LLM 把 pricing 表的「8 pages 1,600 pts / 10 pages 2,000 pts」當成 enum、只給使用者「8 或 10」二選一、或跟使用者說「12 頁後端可能不支援」
    → 使用者被限縮選項、12/15/18 頁都合法的 range 被誤判為不合法
