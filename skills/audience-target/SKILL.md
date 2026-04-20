@@ -228,6 +228,41 @@ User can:
 
 ## Phase 2.5: Per-TA Spokesperson Image Preview (MANDATORY if any TA has spokesperson)
 
+### 🔴 Free quota, NOT 500 pts — 不准誤導使用者扣款
+
+`generate_ta_spokesperson` **不扣使用者點數**——它走**帳號級免費配額**（一般每期有幾次）、用 `get_spokesperson_generation_status` 查剩餘。**絕對禁止**對使用者說「要生代言人要扣 500 pts / 個」這種話——那是**錯的**、會讓使用者放棄代言人或以為被多扣。pricing table 上的 "500 pts" 若出現、以 tool 實際行為為準（`get_spokesperson_generation_status` 回傳的 quota-based 結構）。
+
+### 🔴 進 Phase 2.5 第一件事：查配額、告訴使用者剩幾次
+
+```python
+status = mcp_tool_call("landing_ai_mcp", "get_spokesperson_generation_status", {
+  "user_token": token
+})
+# 回傳 {used: 2, limit: 5, remaining: 3}
+```
+
+**必須**把 `remaining` 用人話告訴使用者、再開始 preview 流程：
+
+```
+你選的兩組 TA 都要代言人——AI 代言人生成是免費的（帳號額度、不扣點數）、
+你這期還剩 {remaining} 次。我接下來幫每組生一版預覽給你看：
+  - 不滿意可以「重生」（再用一次配額）或「調整 XXX」（改 prompt 再跑）
+  - 也可以「換成候選 B」或「改用上傳照片」或「都不用」
+
+先從 TA 2「質感美學獵尋者」開始（你挑的候選 A 品味策展人）……
+```
+
+**額度不足時的 fallback**（`remaining < 使用者選的 TA 數量`）：
+```
+提醒一下、你這期帳號剩 {remaining} 次 AI 代言人生成配額、但你挑了 {N} 組 TA。
+可以怎麼辦：
+  1. 先生 {remaining} 組（挑你最在乎的 TA）、其他組改上傳自己照片或不用人物
+  2. 全部都改上傳照片（我可以教你怎麼傳）
+  3. 全部都不用、代言人空缺、LP 用料理 / 場景圖當主視覺（省時也不一定差）
+
+你想走哪條？
+```
+
 ### 🔴 文字描述 ≠ 可批准的代言人
 
 使用者從 `spokesperson_prompts` 挑了候選 A 或 B 之後、LLM **絕對不准**直接把那段文字描述當成已確認、拿去 Cost 複誦扣點。原因：

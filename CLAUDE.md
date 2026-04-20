@@ -164,6 +164,10 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    理由是「避免多扣 400 pts」或「保守估計」或「對使用者比較安全」→ 未經授權扣錢 → 退費
    原因：requested_stripe_count 必須使用者親答（8-21 範圍）、不是 LLM 的成本優化空間
 
+   ❌ LLM 告訴使用者「生 AI 代言人要扣 500 pts / 個」、並據此給「方案 A 先扣 500 看看、方案 B 放棄代言人省 1,000 pts」這類選項
+   → 使用者被誤導、要嘛以為被重複扣錢、要嘛為了「省點數」放棄代言人 → LP hero 首屏沒代言人 → 轉換率下降
+   原因：`generate_ta_spokesperson` **不扣使用者點數**、走**帳號級免費配額**（用 `get_spokesperson_generation_status` 查 `{used, limit, remaining}`）。進 Phase 2.5 第一件事是**查配額、人話告訴使用者剩幾次**、不是搬 pricing 表上的 500 pts 數字。代言人在 LP 實際出現的成本包在 `stripe_cost` 裡、不另外扣
+
    ❌ 使用者從 `spokesperson_prompts` 挑了候選 A / B 之後、LLM 直接把那段文字描述當成已確認、拿去 Cost 複誦扣點、沒 call `generate_ta_spokesperson` 生實際 preview 圖
    → 「50-60 歲午夜藍西裝領導者」這段文字能生出 10 種截然不同的實際視覺（臉型 / 族裔 / 氣質 / 打光差異巨大）、使用者盲簽 → LP 出來代言人「不是他要的」 → 退費
    原因：文字描述 ≠ 可批准的代言人。**必須** call `generate_ta_spokesperson` 拿 `front_url` + `side_url`、markdown 展示、per-TA 逐組等使用者點頭（OK / 重生 / 調整 / 換 B / 都不用）、才進 Cost 複誦。工具本身免費（吃配額、不扣使用者點數）、沒藉口跳過
@@ -1324,7 +1328,7 @@ You must track the full content of **ALL LPs in the current session**. Users may
 | Carousel（N 張） | 300 + 100×N pts |
 | Social Copy | 100 pts/set (~$3) |
 | Reels 影音 | 100 pts/秒 (e.g. 10s = 1,000 pts ~$33) |
-| Spokesperson 生成 | 500 pts (~$17) |
+| Spokesperson 生成 (`generate_ta_spokesperson`) | **0 pts（走帳號免費配額、非使用者點數）**。配額用 `get_spokesperson_generation_status` 查、回傳 `{used, limit, remaining}`。配額用完才需提示使用者（可改上傳照片 / 不用人物）。代言人實際出現在 LP 的費用包在 `stripe_cost` 裡、不重複扣 |
 | SEO 優化 | 500 pts (~$17) |
 | QR Code | 5 pts |
 

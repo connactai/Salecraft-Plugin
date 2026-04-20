@@ -631,8 +631,7 @@ tas    = session_state["wizard_ta_groups"]
     - ta_2 [ta_name]：[spokesperson_prompt 描述 或「不用人物」]{若推斷加標記}
     - …（每組都列、不准合併成一句 shared）
 - 預計扣點：[stripe_cost × stripe_count × num_tas] pts（約 $[USD]）
-    {若代言人另外扣點（看 backend pricing 確認）：
-       + spokesperson: [500 × num_tas_with_spokesperson] pts}
+  （代言人：0 pts——`generate_ta_spokesperson` 走帳號免費配額、已在 Phase 2.5 消耗、不重複扣；代言人在 LP 實際出現的成本包在 stripe_cost 裡）
 
 你目前餘額 [X] pts。**有標「（我幫你配）」的欄位特別看一下、要改現在講**；都對就回「開始」我就跑；回「取消」就先不動。
 ```

@@ -129,7 +129,7 @@ This works on any AI platform that supports MCP connections.
 | Carousel (N images) | 300 + 100xN pts |
 | Social Copy | 100 pts/set (~$3) |
 | Reels video | 100 pts/sec |
-| Spokesperson generation | 500 pts (~$17) |
+| Spokesperson generation (`generate_ta_spokesperson`) | **0 pts (free account quota, not user points)**. Quota queried via `get_spokesperson_generation_status` → `{used, limit, remaining}`. Spokesperson's presence in final LP is included in `stripe_cost` — no double charge. |
 | SEO optimization | 500 pts (~$17) |
 | QR Code | 5 pts |
 
