@@ -502,31 +502,61 @@ D) Done — proceed to homepage building (/salecraft-homepage)
 
 ## Crop & Visual Adjustments
 
-### ⚠️ `crop_stripe` — 謹慎使用
+### Crop a stripe — 明確流程
 
-**Schema**：
-- 文件版：`crop_json: {"x", "y", "width", "height"}`（0.0-1.0 正規化、保留矩形的左上座標 + 寬高）
-- 「不裁」= `{"x": 0, "y": 0, "width": 1, "height": 1}`
-- 部分 backend build 的實際 schema 與文件不一致（見 `lib/dogfooding-findings.md` #42）—— 不確定時**先試文件版**
+**Schema**：`crop_json: {"x", "y", "width", "height"}`（0.0-1.0 正規化、保留矩形的左上座標 + 寬高）。「不裁」= `{"x": 0, "y": 0, "width": 1, "height": 1}`。
 
-**呼叫前必做**：
-- `get_stripe_detail(campaign_id, stripe_idx)` 拿 snapshot、記下 `original_height` / `original_width`
-- 把使用者的視覺描述（「保留上方那塊」）轉成**保留比例**（0.6 / 0.85）、再算成 normalized 座標
+#### 5 步流程
 
-**呼叫後必做**：
-- 立刻再 `get_stripe_detail` 驗證
-- 比對：預期保留範圍 vs 實際 cropped 結果
-- 結果跟預期相差大（例如要 60% 卻剩 10%）→ **停手**、不要立刻改參數再試
+**Step 1 — 釐清使用者要保留什麼**
 
-**絕對禁止**：
-- ❌ 沒先 `get_stripe_detail` 就 call（沒復原參考點）
-- ❌ 第一次結果不對、立刻改參數再 call（accumulating 破壞風險）
-- ❌ 把使用者模糊描述（「切到大拇指那邊」）直接當參數——先請使用者給比例（「保留 60%」）或方向（「上半 / 中間 / 下半」）
+使用者講「切到大拇指那邊」/「只剩人頭」這種模糊描述時、**不要自己猜座標**。先反問：
+- 「保留**上方多少 %**？（例：保留上半 = 50%、保留上 2/3 = 66%）」
+- 或：「**上 / 中 / 下** 哪一塊保留？」
+- 或：「給我畫面上的**參考點**（例：『標題那行往上都留』）、我幫你算」
 
-**踩壞後的回收順序**（每步都先 `get_stripe_detail` 驗）：
-1. `reset_crop(campaign_id, stripe_idx)` — 嘗試還原（免費）
-2. 試 `crop_stripe` 傳 `{"x":0,"y":0,"width":1,"height":1}` — 文件版「全保留」
-3. `regenerate_stripe`（100 pts / 頁）— 重生這頁、會是新 AI 圖、構圖不一定一樣、明確告訴使用者
+**Step 2 — 拿 snapshot**
+
+```
+get_stripe_detail(campaign_id, stripe_idx)
+→ 記下 original_height、original_width（復原參考）
+```
+
+**Step 3 — 算 crop_json 4 個值**
+
+把使用者的「保留範圍」轉成 normalized 座標（不需要 px、整段都是 0.0-1.0）：
+
+| 使用者要保留 | crop_json |
+|---|---|
+| 上方 60% | `{"x": 0, "y": 0, "width": 1, "height": 0.60}` |
+| 下方 40% | `{"x": 0, "y": 0.60, "width": 1, "height": 0.40}` |
+| 中間（上下各砍 20%）| `{"x": 0, "y": 0.20, "width": 1, "height": 0.60}` |
+| 左半邊 | `{"x": 0, "y": 0, "width": 0.50, "height": 1}` |
+| 右下角 1/4 | `{"x": 0.50, "y": 0.50, "width": 0.50, "height": 0.50}` |
+| 不裁（reset 用）| `{"x": 0, "y": 0, "width": 1, "height": 1}` |
+
+口訣：**`x, y` = 保留矩形的左上角座標**、**`width, height` = 保留矩形的大小**。全部 0.0-1.0。
+
+**Step 4 — 呼叫 + 立刻驗證**
+
+```
+crop_stripe(campaign_id, stripe_idx, crop_json=...)
+→ 立刻 get_stripe_detail(campaign_id, stripe_idx)
+→ 比對結果跟預期是否相符（容差 ±5%）
+```
+
+**Step 5 — 結果不符時停手、走回收**
+
+不要「換個參數再試」（每次失敗 call 都可能再壓縮一次）。直接走回收：
+1. `reset_crop(campaign_id, stripe_idx)` — 嘗試還原（免費、無副作用）
+2. `reset_crop` 後再 `get_stripe_detail` 看是否回原 height
+3. 仍救不回 → 告訴使用者「這頁裁切沒成功、要不要 (a) 先接受現狀、(b) 重生這頁（100 pts、會是新 AI 圖、構圖不一定一樣）」
+
+#### 對使用者溝通
+
+- ❌ 「我傳 `{x:0, y:0, width:1, height:0.6}` 給 crop_stripe」
+- ✅ 「這頁我幫你**保留上方 60%**、底下 40% 砍掉」
+- 完成後：「裁好了、你看看這頁、不對的話可以還原或我重裁」
 
 ### Reset crop to original
 ```
