@@ -547,6 +547,75 @@ Then use the **Complete Field Map by Industry** section (below) to determine whi
 - 你列的欄位包括**所有空白**的嗎？只列已填 ☑ = 違規、必須列 ☐ 空白
 - 你有顯示每個 ☑ 欄位的**實際 value**嗎？只列欄位名 + 數量 = 違規
 
+### 🔴 欄位 label 必須用人話、禁止 raw field name（2026-04-22 新 SOP）
+
+**Field name (`brand_name`、`value_proposition`、`trust_satisfaction_rate`) 是 backend schema 的 key、不是給使用者看的 label**。任何時候展示欄位給使用者（fill status 清單、確認關、核對畫面）、一律翻成**中文人話 label**、絕不顯示 snake_case 程式碼。
+
+**2026-04-22 真實失敗範例**（AI 把 24 個欄位全用 code name 列出來）：
+
+> ☑ 核心：brand_name / product_name / tagline / brand_story / value_proposition / base_description / cuisine_type
+> ☑ 特色：key_features (8 點) / signature_dishes
+> ☑ 信任：trust_certifications / trust_awards / trust_satisfaction_rate / trust_guarantee
+> ☑ 政策：kids_policy / dress_code / special_diet_options
+
+**為什麼違規**：一般使用者看不懂 `trust_satisfaction_rate` 是「Google 滿意度 / 評分」、`dress_code` 是「服裝規定」、`value_proposition` 是「核心賣點」、`product_appeal` 是「產品吸引力 / 記憶點」。**就算想核對也看不懂**——直接回「OK 都對」含糊敷衍。這違反 Phase 1 確認關的 spirit：展示形式必須讓使用者能真的判斷對錯、不只是假裝展示。
+
+**必須翻譯的中文 label 對照表**（含官方 Field Map + 常見 `wizard_shared_data` JSONB 欄位）：
+
+| Code name | 中文 label | Code name | 中文 label |
+|-----------|----------|----------|----------|
+| brand_name | 品牌名 | trust_guarantee | 服務保證 |
+| product_name | 產品 / 主打項目 | target_audience | 目標客群 |
+| tagline | 標語 / slogan | event_type | 適合場合 |
+| brand_story | 品牌故事 | capacity_info | 容納人數 / 座位數 |
+| value_proposition | 核心賣點 | founder_background | 主廚 / 創辦人背景 |
+| base_description | 基本介紹 | property_location | 地址 / 交通 |
+| product_appeal | 產品吸引力 / 記憶點 | parking_info | 停車資訊 |
+| key_features | 主要特色（列點）| reservation_policy | 訂位政策 |
+| cuisine_type | 料理類型 | media_specials | 特殊節慶 / 檔期 |
+| signature_dishes | 招牌菜 | research_claims | 獨家特點 / 研究背書 |
+| operating_hours | 營業時間 | partnerships_detail | 合作 / 聯名 |
+| pricing_info | 價位資訊 | special_services | 特殊服務 |
+| trust_certifications | 認證 / 檢驗 | kids_policy | 兒童政策 |
+| trust_awards | 獎項 / 媒體報導 | dress_code | 服裝規定 |
+| trust_satisfaction_rate | 滿意度 / Google 評分 | special_diet_options | 特殊飲食選項 |
+| primary_color | 主色 / 品牌色 | logo_image | Logo |
+| product_images | 產品圖 | cta_text | 行動按鈕文字 |
+| cta_url | 行動按鈕連結 | restaurant_exterior_images | 外觀 / 門面照 |
+| restaurant_interior_images | 內部空間照 | dish_images | 菜色照 |
+| menu_images | 菜單圖 | | |
+
+**未列在上表的欄位 = 自己翻一個中文 label**、用使用者看得懂的詞、不要直接丟 code name。
+
+**正確展示範本**：
+
+```
+【核心】
+☑ 品牌名：饗 A Joy
+☑ 產品：頂級融合餐飲
+☑ 標語：究極和食 × 歐陸美饌 × 台灣情味
+☑ 品牌故事：位於台北 101 的 86 樓、融合日式 × 歐陸 × 台菜...
+
+【信任】
+☑ 認證 / 檢驗：米其林推薦、500 盤入選
+☑ 獎項 / 媒體報導：TVBS 專訪、Forbes 評選...
+☑ 滿意度 / Google 評分：4.3 星（1,200+ 則評論）
+☑ 服務保證：訂金可 7 日前全額退
+```
+
+**絕對禁止**：
+
+- ❌ 列 raw field name 給使用者（`brand_name`、`value_proposition`、`dress_code`、`trust_satisfaction_rate`）
+- ❌ 中英文混雜（「brand_name: 饗 A Joy」、「價位 (pricing_info): ...」）
+- ❌ 在括號裡補 code name 當「給你參考」（「品牌名 (brand_name): 饗 A Joy」）——使用者不需要看 schema key
+- ❌ 「24 個欄位全部寫進去了」這種只報**數量**、不展示每個 label + value 的總結——跟 line 244-274「寫入驗證 vs Phase 1 確認關」是同類偷渡
+
+**code name 什麼時候可以出現**：
+
+- ✅ tool call 的 JSON payload（`update_session` 的 `data_json`）——backend 吃 schema key
+- ✅ debug log / error message（若 silent drop、錯誤訊息提到 key 名）
+- ❌ 任何給使用者看的 prose / 清單 / 確認畫面
+
 ---
 
 ### For PERSONAL BRANDS (students, freelancers, developers):
