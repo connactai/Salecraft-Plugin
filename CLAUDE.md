@@ -84,7 +84,8 @@ Step 5  Wizard Phase 2 spec（generate-landing skill Phase 2.9）
         能推就推、推完宣告、使用者反對才改。**頁數不在這步**
         Shared（所有 TA 共用）：aspect_ratio / cta_url（silent default=官網）/
                                 cta_text（silent default=產業預設）
-        Per-TA（每 TA 可不同）：**language（明確問、不靜默配）**/
+        Per-TA（每 TA 可不同）：**language（明確問、不靜默配、
+                                寫 canonical name 如 "English"、不是 ISO "en"）**/
                                 primary_color / visual_style / font_style
         寫進對應位置（wizard_shared_data vs wizard_ta_groups[i]）
         推斷的欄位標 _spec_inferred_by_llm、Cost 複誦時標「（我幫你配）」
@@ -234,7 +235,7 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
      ← **只傳這三個參數**、其他 spec backend 已經從 session 讀到
    ```
 
-   **違反後果**：使用者講了「TA 2 要英文版」但 LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="en"`、直接 `generate_session` → backend 從 session 讀不到、fallback 到 `wizard_shared_data.default_language`（通常 `zh-TW`）→ TA 2 生出繁中版 → 未經授權扣錢 → 退費。
+   **違反後果**：使用者講了「TA 2 要英文版」但 LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="English"`、直接 `generate_session` → backend 從 session 讀不到、fallback 到 `wizard_shared_data.default_language`（通常 `"Traditional Chinese (Taiwan)"`）→ TA 2 生出繁中版 → 未經授權扣錢 → 退費。
 
    ### 🔴 Pre-deduct 機制 — Cost 複誦必須揭露
 
@@ -290,7 +291,7 @@ Step 8  generate_session(session_id, ta_group_ids_json, requested_stripe_count)
    → Backend `update_session` 只認 4 個頂層 key（`product_name` / `wizard_shared_data` / `wizard_shared_files` / `wizard_ta_groups`）、其他 **silently dropped**、仍回 200 OK + `updated_at` bumped → LLM 以為成功、對使用者說「✅ 寫入」、實際 session 空的 → 生 LP 時 Strategist 走預設、使用者逐批確認的內容 0 影響 → 退費
    原因：backend 沒 `extra="forbid"` 硬擋 unknown key、也不回 warning。**每次 `update_session` 之後必須立刻 `get_session` 逐 key assert**（只看 `updated_at` 變了 = 假驗證）。Brand 欄位必須 nest 在 `wizard_shared_data`、Per-TA 欄位必須在 `wizard_ta_groups[i]`、檔案必須在 `wizard_shared_files` 或 `wizard_ta_group_files[i]`
 
-   ❌ 使用者講「TA 2 要英文版」、LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="en"`、以為 `generate_session(language="en")` 能傳參數
+   ❌ 使用者講「TA 2 要英文版」、LLM 沒 `update_session` 寫 `wizard_ta_groups[ta_2].language="English"`（canonical name、不是 ISO `"en"`）、以為 `generate_session(language="English")` 能傳參數
    → `generate_session` 不吃 language 參數、backend 從 session 讀、讀不到就用 `wizard_shared_data.default_language`（通常 zh-TW）→ TA 2 生繁中版 → 退費
    原因：**規格（language / visual_style / primary_color / stripe_count...）必須在 `generate_session` 之前先 `update_session` 寫進 session**、不是當 call 參數傳。`generate_session` 只收 3 個參數：`session_id / ta_group_ids_json / requested_stripe_count`、其他全部從 session state 讀
 

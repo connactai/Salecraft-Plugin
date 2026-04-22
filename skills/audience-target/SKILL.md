@@ -640,22 +640,31 @@ Recommendation: [N] because [reason]
 
 Which language for the LP content?
 
-Available (9 locales — backend LP generation pipeline actually supports):
-  zh-TW, zh-CN, en, ja, es, pt, vi, id, th
+Available (8 canonical names — must match Wizard UI dropdown exactly):
+  "Traditional Chinese (Taiwan)" / "English" / "Japanese" /
+  "Spanish" / "Portuguese" / "Vietnamese" / "Indonesian" / "Thai"
+
+⚠️ **寫入 `wizard_ta_groups[i].language` 必須用上面 canonical name、不是 ISO code**。
+Wizard UI dropdown 的 SelectItem value 是 canonical name（見
+`marketing_frontend_commercial/app/[locale]/wizard/page.tsx:5427-5434`）。
+寫 `"en"` / `"zh-TW"` 等 ISO code 雖然 backend `_normalize_language` 能吃、但
+Wizard UI dropdown 會顯示空白、使用者以為沒設定。實測確認 2026-04-22。
 
 Notes:
-- zh-TW (繁體中文): Default for Taiwan market
-- zh-CN (简体中文): Mainland China audiences
-- en (English): Best for international / tech audiences
-- ja (日本語): Text tends to be 20-40% longer, ですます体
-- es (Español): ~30% longer than English; accent marks mandatory (á/é/í/ó/ú/ñ/ü)
-- pt (Português): Default PT-BR unless brand specifies PT-PT; accents mandatory
-- vi (Tiếng Việt): Tone marks mandatory (à/á/ả/ã/ạ/ă/â/đ/ê/ô/ơ/ư); ~20% longer
-- id (Bahasa Indonesia): standard BI, avoid regional slang; use "Anda" formal
-- th (ภาษาไทย): no spaces between words, tone/vowel marks critical
+- Traditional Chinese (Taiwan): Default for Taiwan market
+- English: Best for international / tech audiences
+- Japanese: Text 20-40% longer than zh-TW, use ですます体
+- Spanish: ~30% longer than English; accent marks mandatory (á/é/í/ó/ú/ñ/ü)
+- Portuguese: Default PT-BR unless brand specifies PT-PT; accents mandatory
+- Vietnamese: Tone marks mandatory (à/á/ả/ã/ạ/ă/â/đ/ê/ô/ơ/ư); ~20% longer
+- Indonesian: standard BI, avoid regional slang; use "Anda" formal
+- Thai: no spaces between words, tone/vowel marks critical
 
-Not yet supported (wizard UI has translations but backend has no generation path):
-  ko, fr, ar, de, ms, hi — DO NOT write these into session.language; all will silent-fallback to zh-TW and produce incorrect output.
+**URL locale ≠ session language**: URL paths（`/zh-TW/login`、`ui_locale`）用 ISO code、是另一套系統。別混淆。
+
+Not yet supported by Wizard UI dropdown (even though backend may accept):
+  Simplified Chinese (zh-CN), Korean, French, Arabic, German, Malay, Hindi —
+  寫進 `session.language` 後 UI dropdown 會顯示空白、使用者無法視覺確認。
 
 Each language is a fully independent LP generation — no cheap "translation" path exists. If the user wants two languages, they pay for two full LP generations.
 ```
@@ -666,8 +675,9 @@ Backend ta_generator prompt 仍包含 `Bilingual` 為合法 output（`marketing_
 
 **規則**：
 
-- 收到 `suggested_language: "Bilingual"` / `雙語` / `中英` / 任何非 15-locale 值（ISO 639 以外）→ **絕對不寫入 session**
-- 寫進 session 的 `language` 必須是 9 locale 白名單的單一值、不是複合值（`zh-TW+en` / `bi` / `dual` 都是違規自創）
+- 收到 `suggested_language: "Bilingual"` / `雙語` / `中英` → **絕對不寫入 session**
+- 寫進 session 的 `language` 必須是 8 canonical name 白名單的單一值（見上方 4E Available 清單）、不是複合值、不是 ISO code、不是其他自創值
+- 若 `generate_ta_options` 回傳 ISO code（例 `"en"`）→ 轉成 canonical name（`"English"`）再寫入 session、讓 Wizard UI dropdown 能對上
 - 使用者若堅持「要雙語」→ 解釋等於 2 份獨立 LP 生成（2× 扣點）、每份鎖一個 locale（引用 4E「no cheap translation path exists」）
 - 禁止靜默替使用者挑 locale（違反 FIRST-RESPONSE RULE「LLM 不替使用者選規格」）
 - 禁止暗示「雙語 LP」這個產品存在——產品不存在
