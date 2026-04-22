@@ -361,6 +361,21 @@ for key in ["brand_name", "base_description", "value_proposition", ...]:
 - ❌ **LLM 自己列一個 5-6 項的 ✅ icon 清單、使用者回「OK / 全部都留」** → 當成對 25+ 個寫入欄位的 global approval。`value_proposition / key_features / brand_story / target_audience / trust_certifications / base_description` 這些沒上清單的欄位**一樣被你寫進 session、一樣影響後面 Architect 文案走向**——不展示給使用者 = 未經授權寫入。
 - ❌ 使用者回「OK」就當全部點頭 — OK 只是聽到、不代表逐項確認。若使用者回模糊的 OK、再問一次「意思是這批 5 項都對嗎？還是哪項要修？」
 - ❌ 把 4 批合併成 1 批一次列 20 欄位——**節奏會爛、使用者 overload 就會回「都留」含糊帶過**，結果 19/20 欄位沒被真的檢視。
+- ❌ **在 Phase 1 確認關的任何 batch 裡問代言人 / 主廚 / 侍酒師 / 品牌大使 / 人物照相關問題**——這是 Phase 3.5 scope、見下方「Phase bleeding」反面範例。
+
+#### 🚫 2026-04-22 Phase bleeding：把 Phase 3.5 代言人問題混進 Phase 1 圖片 batch
+
+**真實案例**（AI 在「第 4 批：圖片素材歸類」裡夾帶代言人題）：
+
+> 3. **代言人／主廚照**——你們有沒有想放的人物照？例如行政主廚、侍酒師、品牌大使。沒有的話 LP 第一頁的英雄圖會用「料理 + 高空夜景」或「空間氛圍」當主視覺，不放真人。
+
+**為什麼違規（三條）**：
+
+1. **Phase 錯位**：代言人是 Phase 3.5 scope（line 716+）、有自己的 3-option structured dialogue（先 `list_spokespersons` 查 brand 既有代言人 → 使用者挑既有 / AI 生成 / 自備上傳）。塞進 Phase 1 = 使用者誤以為現在就要決定、Phase 3.5 到了還要再問一次、雙重確認 UX 爛
+2. **Per-TA 特性被抹掉**：代言人是 `wizard_ta_groups[i].spokesperson_prompts[]` **per-TA 欄位**（line 341）、不同 TA 可以不同代言人。Phase 1 時 TA 還沒選、問這題無法下決策
+3. **沒跑 `list_spokespersons`**：line 724 明定「先 list_spokespersons 看 brand 既有的、避免重複工作」。AI 直接問使用者「有沒有」= 跳過既有資產檢查、使用者若之前已上傳過會被迫重傳
+
+**正確做法**：Phase 1 批 3 素材只列 **logo / 產品圖 / 社群連結 / trust 認證**（見 line 334-343 範本、不 expand 出代言人題）。使用者若主動問代言人要不要準備、回：「代言人是後面 Phase 3.5 的事、到時我會先 `list_spokespersons` 看你品牌既有的代言人、再決定挑既有 / AI 生 / 自備上傳——現在先確認素材就好。」
 
 **為什麼這關不能省**：LLM 自認為爬下來的資料「看起來合理」但使用者眼裡可能某欄位完全錯（例如品牌名爬錯、產業類別分錯、主打產品挑錯）。這個錯誤若帶進 Strategist → 整份 LP 策略方向都歪掉 → 重生一次 = 使用者付全額。Step 3 停下 30 秒可以避免 100% 的退費申訴。
 
