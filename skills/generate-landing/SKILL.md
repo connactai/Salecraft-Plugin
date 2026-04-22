@@ -1137,6 +1137,38 @@ mcp_tool_call("landing_ai_mcp", "get_public_landing_page", {
 
 ### Step 3: Present ALL links and next actions to user
 
+#### 🔴 列 LP 連結必須列「該 TA 所有 version」、不是只列最新一份
+
+同一個 TA 可以重新生成多次——每次會產生一個新的 campaign / LP。使用者詢問「我的 LP」或者 plugin 幫使用者 recap session 狀態時、**必須列出每個 TA 的所有 version**、不是只給最新一份連結。
+
+**正確做法**：
+
+```python
+s = get_session(session_id)
+for ta in s["ta_group_statuses"]:
+    versions = ta.get("versions", [])  # 按 generation 順序、最舊到最新
+    for v in versions:
+        # v = {project_id, version_number, result_image_path, created_at}
+        # LP URL: https://landingai.info/{locale}/lp/{v["project_id"]}
+        pass
+```
+
+**展示範本**（per-TA 列所有 version）：
+
+```
+TA1 [ta_name] — 共 3 版：
+  v1  2026-04-22 10:15  https://landingai.info/zh-TW/lp/<project_id_1>
+  v2  2026-04-22 11:30  https://landingai.info/zh-TW/lp/<project_id_2>
+  v3（最新）2026-04-22 14:02  https://landingai.info/zh-TW/lp/<project_id_3>
+
+TA2 [ta_name] — 共 1 版：
+  v1  2026-04-22 12:45  https://landingai.info/zh-TW/lp/<project_id_4>
+```
+
+**禁止**：只列最新一版、讓使用者以為舊版已經消失。使用者重生常常要回去比對舊版、所有 version 都要可見。
+
+---
+
 **MANDATORY** — After generation, present the full set of links and capabilities:
 
 ```
