@@ -98,12 +98,12 @@ Follow `skills/generate-landing/SKILL.md` Phase 2.9 Step 5 exactly.
 
 Infer from conversation / brand scrape:
 - aspect_ratio ← channel signal (IG story → 9:16, Google Ads → 16:9)
-- language ← conversation language + brand scrape (per-TA, different TA can have different language)
+- language ← **ALWAYS ASK** (multi-TA: ask per-TA; never silently pick zh-TW from brand locale alone)
 - primary_color ← `analyze_brand_url`'s primary_color (per-TA)
 - font_style ← industry_category typical (cosmetics → serif, SaaS → sans-serif) (per-TA)
-- cta_url ← scraped official site / social link
-- include_qa_section ← industry + price point
-- include_testimonials ← brand has reviews or not
+- cta_url ← **silent default** = scraped official site URL (no user question; post-gen edit via `update_cta_link`)
+- cta_text ← **silent default** = industry preset (restaurant → "立即訂位", health → "立即購買", service → "立即諮詢", general → "了解更多")
+- ❌ `include_qa_section` / `include_testimonials` — **phantom fields, backend does not consume, removed 2026-04-22. Q&A and testimonials are post-gen via edit-landing's `update_faq_content` + testimonial block editing. Never write these keys to `wizard_shared_data`.**
 
 Write inferences to session, mark `_spec_inferred_by_llm=[fields...]`:
 - Shared → `wizard_shared_data`
