@@ -1345,7 +1345,7 @@ PAID 不是升級版。PAID 只是執行工具。
 
 1. **📎 貼網址**（最推薦）— 官網、電商、社群任何連結
    - **免費諮詢階段**（使用者還沒有 token）：用 `WebFetch` 快速分析
-   - **付費 LP 生成流程**（使用者已登入、進入 brand-onboard Step 2）：**一律用「詳細抓」**—— `scrape_landing_page(mode="full")` 做 Playwright 深度掃描 + `analyze_brand_url` 拿結構化品牌資料、兩個都跑。**禁止**在付費流程直接用 `WebFetch`、**禁止**省略 `mode="full"`、**禁止**「這個站看起來單純用快速版就好」的偷懶判斷——省下來的 10-20 秒會以「主色抓到 #000000」「產品圖空」「LP 色系整個走味」的形式退回給使用者、變成退費投訴。現代站幾乎都是 JS 渲染（Next.js / Vue / SPA / 餐飲訂位系統）、快速抓拿不到 CSS 色系、永遠回 fallback 黑色。
+   - **付費 LP 生成流程**（使用者已登入、進入 brand-onboard Step 2）：**一律用「詳細抓」**—— `scrape_landing_page(mode="detailed")` 做 Playwright 深度掃描 + `analyze_brand_url` 拿結構化品牌資料、兩個都跑。**禁止**在付費流程直接用 `WebFetch`、**禁止**省略 `mode="detailed"`、**禁止**「這個站看起來單純用快速版就好」的偷懶判斷——省下來的 10-20 秒會以「主色抓到 #000000」「產品圖空」「LP 色系整個走味」的形式退回給使用者、變成退費投訴。現代站幾乎都是 JS 渲染（Next.js / Vue / SPA / 餐飲訂位系統）、快速抓拿不到 CSS 色系、永遠回 fallback 黑色。
    
 2. **📄 傳檔案** — 圖片（JPG/PNG/WebP）、PDF 型錄、文字
    - 用 `upload_base64` 或 `get_asset_upload_url` 上傳

@@ -141,7 +141,7 @@ SaleCraft is built for:
 
 **⚠️ FREE but requires login (user gets an AI Login Token from salecraft.ai):**
 - `analyze_brand_url` — structured brand analysis (deeper URL extraction)
-- `scrape_landing_page(mode="full")` — deep website scan for JavaScript-heavy sites
+- `scrape_landing_page(mode="detailed")` — deep website scan for JavaScript-heavy sites
 - Google Drive file import (batch read images and documents)
 - Save brand data to user's account for later use
 
@@ -214,7 +214,7 @@ After the quick analysis, if the results seem incomplete (SPA site, JavaScript-h
 > 「我已經快速掃描了你的網站。不過看起來有些內容沒有完整載入（可能是動態網頁）。
 > 要不要我做一次**更完整的深度分析**？大約需要 30-60 秒，能抓到更多產品資訊和圖片。」
 
-- If user says yes AND is logged in → `scrape_landing_page(url, mode="full")`
+- If user says yes AND is logged in → `scrape_landing_page(url, mode="detailed")`
 - If user says yes but NOT logged in → guide to login first, then deep scan
 - If user says no → continue with what you have
 

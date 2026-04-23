@@ -199,7 +199,7 @@ Example dialogue (adapt to user's language):
 ```
 # Step 1: Playwright 深度掃描（拿真實 CSS 色系 / 動態載入的產品圖 / JS render 後的文字）
 mcp_tool_call("landing_ai_mcp", "scrape_landing_page", {
-  "user_token": token, "url": "https://user-website.com", "mode": "full"
+  "user_token": token, "url": "https://user-website.com", "mode": "detailed"
 })
 
 # Step 2: 結構化品牌分析（logo / brand name / product name / industry_category / language）
@@ -212,7 +212,7 @@ mcp_tool_call("landing_ai_mcp", "analyze_brand_url", {
 
 **禁止**的偷懶路徑：
 - ❌ 只跑 `analyze_brand_url`、不跑 `scrape_landing_page` → 色系八成是 `#000000` fallback
-- ❌ 省略 `mode="full"` 參數 → Playwright 不會 render JS、抓到空殼 HTML
+- ❌ 省略 `mode="detailed"` 參數 → Playwright 不會 render JS、抓到空殼 HTML
 - ❌ 在付費流程用 `WebFetch` 替代 MCP 工具 → 資料不會存進 session、brand buffer 也沒寫入
 
 This extracts: logo, brand colors (真實、非 fallback), product images, descriptions, social links, and more.
@@ -232,7 +232,7 @@ This extracts: logo, brand colors (真實、非 fallback), product images, descr
 
 **正確順序**：
 ```
-1. scrape_landing_page(mode="full") + analyze_brand_url 都跑 → 拿到深度結果
+1. scrape_landing_page(mode="detailed") + analyze_brand_url 都跑 → 拿到深度結果
 2. update_session     → 寫進 session（靜默、不報告）
 3. 🛑 停下來、把抓到的每個欄位列給使用者看、等他逐項點頭
 4. Phase 3.5 代言人
@@ -280,12 +280,62 @@ mcp_tool_call("landing_ai_mcp", "update_session", {
 })
 ```
 
-**寫完每批立刻 `get_session` 讀回、逐 key assert**：
+### 🔴 圖片寫入 session — `wizard_shared_files` vs `wizard_shared_data` 分桶（最容易踩的雷）
+
+`scrape_landing_page.images[]` 每張都帶 `zone` 欄位，但**寫入目標欄位依 zone 類型而定**。前端 wizard 只有在**直接** fetch `/scrape_landing_page` 時才會跑 auto-dispatch（`sharedFilesKeys` 白名單，見 `marketing_frontend_commercial/app/[locale]/wizard/page.tsx`）；從 MCP 呼叫時 AI 必須**手動模擬**這段分派邏輯。
+
+後端 `update_session` 對 `wizard_shared_data` 和 `wizard_shared_files` 是**兩個獨立 merge**、沒有自動 sync（`marketing_backend/routers/sessions.py` line 670-680）——寫錯邊 = 另一邊永遠空。
+
+**分桶規則**：
+
+| zone 類型 | 寫入欄位 | 理由 |
+|----------|---------|------|
+| 通用 key：`product_images` / `logo_image` / `logo_images` / `favicon_image` / `font_ref_image` / `font_file` | `wizard_shared_files[zone]` | Factory 生成讀這裡、前端 `sharedFiles` 白名單 |
+| **行業細分桶**：`restaurant_exterior_images` / `restaurant_interior_images` / `dish_images` / `menu_images` / `biotech_*_images` / `clinic_images` / `ingredients_images` / `inner_packaging_images` / `handheld_*` 等（**全表見本檔案下方** `## Complete Field Map by Industry` **段**） | `wizard_shared_data[zone]` | **GUI 顯示「N/M」進度讀這裡**——寫錯邊使用者會看到 0/N 空桶、以為沒匯入 |
+| 特例：`response.logo_image` 頂層欄位（dict，含 `{url, name, type}`） | `wizard_shared_files.logo_image = response["logo_image"]`（保留完整 dict、**不要**只塞 url string） | 前端讀 `sharedFiles.logo_image.url` property |
+
+**How**（pseudocode）：
+```
+SHARED_FILES_KEYS = {"product_images", "logo_image", "logo_images",
+                     "favicon_image", "font_ref_image", "font_file"}
+data_buckets, files_buckets = {}, {}
+for img in response["images"]:
+    target = files_buckets if img["zone"] in SHARED_FILES_KEYS else data_buckets
+    target.setdefault(img["zone"], []).append(img["url"])   # URL string array、非 dict
+
+if response.get("logo_image"):
+    files_buckets["logo_image"] = response["logo_image"]    # 完整 dict
+
+update_session(session_id, data={
+    "wizard_shared_data":  data_buckets,
+    "wizard_shared_files": files_buckets,
+})
+```
+
+**適用範圍**：`scrape_landing_page`（quick + detailed mode）、`import_pdf`（同 response schema）。`analyze_brand_url` 只回 text + `logo_url`（string）、**不會有** `images[]`——別對它套這個規則。
+
+**寫完每批立刻 `get_session` 讀回、逐 key assert**（文字 + 兩種圖片桶都驗）：
 ```python
 session = get_session(session_id)
 shared = session.get("wizard_shared_data") or {}
+files  = session.get("wizard_shared_files") or {}
+
+# 文字欄位驗證
 for key in ["brand_name", "base_description", "value_proposition", ...]:
     assert shared.get(key), f"❌ {key} 被 silently dropped、重寫檢查 nesting"
+
+# 圖片桶驗證 — 按分桶規則分別對 data / files 側查
+SHARED_FILES_KEYS = {"product_images", "logo_image", "logo_images",
+                     "favicon_image", "font_ref_image", "font_file"}
+for img in scrape_response["images"]:
+    z = img["zone"]
+    target = files if z in SHARED_FILES_KEYS else shared
+    assert target.get(z), (
+        f"❌ zone {z} 空：應寫入 {'files' if z in SHARED_FILES_KEYS else 'data'} 側、"
+        f"檢查是否寫錯邊（GUI 行業桶讀 data、Factory 通用 key 讀 files）"
+    )
+if scrape_response.get("logo_image"):
+    assert files.get("logo_image"), "❌ logo_image 沒寫入 wizard_shared_files"
 ```
 
 **絕對不准**：只看 `update_session` 沒報錯、只看 `updated_at` 變了就當寫入成功——**backend 對 unknown top-level key 會 silently drop + 仍回 200 OK**、假驗證會讓使用者 20 分鐘逐批確認的心血全白費。
