@@ -58,8 +58,9 @@ Present:
 ```
 Ad-capable accounts:
 1. 📘 Meta Ads — ACME Ad Account (can create Facebook/Instagram campaigns)
+2. 🎵 TikTok Ads — ACME Advertiser (can create TikTok campaigns; needs TIKTOK_BUSINESS_APP_ID server-side)
 
-Select Meta ad account for campaign:
+Select ad platform for campaign:
 
 (Google Ads campaign creation is NOT supported by this plugin. If user wants Google Ads, generate the creative here via `generate_ad` / `generate_carousel`, then user uploads manually via Google Ads Manager.)
 ```
@@ -183,6 +184,34 @@ Adjust targeting or proceed?
 
 ## Phase 5: Create Campaign
 
+### 🔴 Backend Bug Notice — Meta ads currently broken（截至 2026-04-25）
+
+**Rule: `create_ad_campaign` Meta 路徑目前在 adset 階段必失敗、AI 不要鼓勵用戶嘗試、先告知 capability 暫不可用。**
+
+實測 2026-04-25 兩種失敗模式（都在 step 2 `create_adset`、subcode 不同）：
+
+| target_countries | error_subcode | error_user_msg | 根因 |
+|------------------|---------------|----------------|------|
+| `["TW"]` | 3858495 | 「缺少在台灣刊登廣告所需的廣告主資訊：提供已驗證的廣告主、以鎖定台灣受眾」 | Meta 規定 TW 受眾要做 advertiser verification、test1 的 ad account 沒做 |
+| `["US"]` 或其他 | 1870227 | 「必須設定高效速成廣告受眾標示：在 targeting_automation 欄位中、將 advantage_audience 標示設為 1 或 0」 | Meta Graph API v25.0 強制要求 `targeting_automation.advantage_audience` 欄位、zereo-backend `meta_ads_publisher.create_adset` 沒帶這個欄位 |
+
+✅ **已驗證 OK 的部分**：
+- `create_campaign`（step 1）成功、Campaign 在 Meta 那邊建立
+- 失敗時 backend orphan cleanup 自動跑（campaign 在 Meta 已刪、DB 紀錄留 `status=failed` + `platform_campaign_id=None`）— **AI 不需手動 cleanup、不需 cancel**
+
+❌ **AI 必說的事**：
+> 「Meta 廣告目前後端有個 known bug、所有廣告組合會在 step 2 失敗（subcode 1870227）。已回報、修復前這個功能暫時不能用。如果你急著投廣告、可以用 `generate_ad` 生圖、然後手動到 Meta Ads Manager 自己建 campaign。」
+
+❌ **AI 不要做的事**：
+- 不要鼓勵用戶「再試一次看看」— 確定會 fail、是浪費時間
+- 不要嘗試手動繞過（例如自己加 `advantage_audience` 欄位） — schema `extra=forbid`、會 422
+- 不要嘗試 cleanup orphan — backend 已做、再做會 double delete
+
+**Rule: TW 受眾單獨需要 advertiser verification、是用戶端設定問題（非 plugin bug）。**
+即使 advantage_audience bug 修了、`target_countries: ["TW"]` 仍會卡 subcode 3858495、要求用戶到 Meta Business Manager 完成 advertiser verification（連結：https://www.facebook.com/business/help/983527276402621）。在那個流程跑完前、避免推薦 TW 投放、改用 US/JP/KR 等不需驗證的市場。
+
+---
+
 **⚠️ 參數名照 `AdCampaignCreateRequest` schema 原樣抄（順序不重要，名字錯就 422）：**
 
 ```
@@ -242,6 +271,76 @@ mcp_tool_call("zereo_social_mcp", "create_ad_campaign", {
 | `OUTCOME_ENGAGEMENT` | `POST_ENGAGEMENT` |
 | `OUTCOME_LEADS` | `LEAD_GENERATION` |
 | `OUTCOME_SALES` | `OFFSITE_CONVERSIONS` |
+
+## Phase 5b (TikTok branch): Create TikTok Ad Campaign
+
+當使用者選擇 TikTok 投放、走這條（**不要** call Meta `create_ad_campaign`、schema 完全不同）：
+
+### 先查 TikTok-specific objectives + CTA
+```
+mcp_tool_call("zereo_social_mcp", "get_tiktok_ad_objectives", { "user_token": token })
+→ REACH / TRAFFIC / VIDEO_VIEWS / ENGAGEMENT / LEAD_GENERATION / CONVERSIONS / PRODUCT_SALES / APP_PROMOTION
+mcp_tool_call("zereo_social_mcp", "get_tiktok_ad_cta_types", { "user_token": token })
+```
+
+⚠️ **TikTok objectives 不是 Meta 的 `OUTCOME_*` 命名**——用 `TRAFFIC` 不是 `OUTCOME_TRAFFIC`。passing OUTCOME_* 會 422。
+
+### Create TikTok campaign
+```
+mcp_tool_call("zereo_social_mcp", "create_tiktok_ad_campaign", {
+  "user_token": token,
+  "data_json": "{
+    \"social_account_id\": \"<TikTok account id from list_accounts>\",
+    \"campaign_objective\": \"TRAFFIC\",
+    \"ad_type\": \"video\",
+    \"creative_video_url\": \"<from generate_reels / external video URL>\",
+    \"creative_message\": \"探索自然無毒的保養體驗 — 今天就試試\",
+    \"cta_type\": \"SHOP_NOW\",
+    \"cta_url\": \"https://landingai.info/zh-TW/lp/<campaign_id>\",
+    \"daily_budget\": 20.0,
+    \"target_age_groups\": [\"AGE_25_34\", \"AGE_35_44\"],
+    \"target_genders\": [0],
+    \"target_locations\": [\"158\"],
+    \"placements\": [\"PLACEMENT_TIKTOK\"]
+  }"
+})
+```
+
+### 必填 vs 選填（TikTok schema、跟 Meta 不同）
+
+| 欄位 | 必填 | 預設/值域 | 跟 Meta 的差異 |
+|------|:---:|----------|----------------|
+| `social_account_id` | ✓ | — | 必須是 TikTok 帳號（platform="tiktok"），用 Meta 帳號回 400 |
+| `advertiser_id` | — | 空字串 → fallback 到 social_account.ad_account_id | TikTok-specific |
+| `campaign_objective` | — | `"TRAFFIC"` | **不加 `OUTCOME_` 前綴**——bare 名稱 |
+| `ad_type` | — | `"video"`（TikTok video-first）| Meta 預設 `image` |
+| `creative_video_url` | ✓ if video | — | TikTok 推薦 video |
+| `daily_budget` | — | `20.0` USD | TikTok 建議 ≥ $20/day（Meta 是 $5）|
+| `target_age_groups` | — | `["AGE_25_34","AGE_35_44"]` | **離散桶**：AGE_13_17 / 18_24 / 25_34 / 35_44 / 45_54 / 55_100。**不是** age_min/age_max 整數 |
+| `target_locations` | — | `["158"]` | **TikTok 數字 location_id**（158=Taiwan、1=USA）。**不是** ISO country code |
+| `target_genders` | — | `[0]` | 同 Meta：[0]=all / [1]=male / [2]=female |
+| `placements` | — | `["PLACEMENT_TIKTOK"]` | TikTok-specific 列舉 |
+| `cta_type` | — | `"LEARN_MORE"` | LEARN_MORE / SHOP_NOW / SIGN_UP / DOWNLOAD / BOOK_NOW / CONTACT_US / ORDER_NOW / SUBSCRIBE / INSTALL_NOW / WATCH_NOW |
+
+### 503 NOT_CONFIGURED 處理
+若回 503 + `NOT_CONFIGURED`，server 缺 `TIKTOK_BUSINESS_APP_ID` env var。用人話跟使用者講：
+> 「TikTok 廣告投放尚未在這個帳號的伺服器啟用、暫時無法跑。Meta 廣告可以照常走、或者我幫你生 TikTok 廣告素材、你自己上 TikTok Ads Manager 投。」
+
+不要 retry、不要報技術細節。
+
+### Pause / Resume
+```
+mcp_tool_call("zereo_social_mcp", "pause_tiktok_ad_campaign", {
+  "user_token": token, "campaign_id": "<ZereoAdCampaign id>"
+})
+mcp_tool_call("zereo_social_mcp", "resume_tiktok_ad_campaign", {
+  "user_token": token, "campaign_id": "<ZereoAdCampaign id>"
+})
+```
+
+⚠️ `campaign_id` 是我們 DB 的 ZereoAdCampaign id、不是 TikTok 平台的 platform_campaign_id。
+
+---
 
 ## Phase 6: Monitor
 

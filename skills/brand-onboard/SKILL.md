@@ -87,7 +87,8 @@ logout(user_token) -> end session
 | `analyze_brand_url` / `scrape_landing_page` | **免費** | URL 一給就跑 |
 | `validate_images` / `digitize_product_text` | **免費**（吃 Gemini 配額但使用者無感）| Phase 3.9 Quality Gate |
 | `generate_ta_options` | **免費** | Step 4 TA 選之前 |
-| `generate_ta_spokesperson` | **免費**（吃配額）| 使用者選 AI 生代言人時 |
+| `generate_ta_spokesperson` | **免費**（吃配額）| 使用者選 Phase 3.5 option 2（單人 AI 代言人）時 |
+| `generate_group_spokesperson` | **免費**（吃配額、跟單人共用、一張團體圖算 1 次）| 使用者選 Phase 3.5 option 3（2-5 人合成圖）時 |
 | **`generate_session`** | **扣點！** `stripe_cost × 頁數 × TA 組數` | Step 6 Cost 複誦 + 啟動詞之後 |
 
 **LLM 常犯的錯**：以為 create_session 也扣點、所以故意等到最後才建 session「一次性寫入省錢」。**這是錯的**。create + update 全免費、session 要**儘早建**、讓後續 wizard 每步都有地方寫資料。批次累積答案再一次性寫入會讓對話 context 一斷資料就掉、**每輪答完就 `update_session` 寫回**。
@@ -104,7 +105,7 @@ logout(user_token) -> end session
 | **`get_card_state`** | Vibe Design GUI 卡片狀態持久化（`marketing_backend/routers/sessions.py:4326`）、前端 hook `use-wizard-card-state.ts` | 讀 `wizard_shared_data._card_state`、是給 GUI 換頁 / 刷新後重建 UI 狀態用。AI 根本不需要讀（你有 `update_session` 寫過的欄位、自己的 conversation context 就記得） |
 | **`update_card_state`** | 同上，`marketing_backend/routers/sessions.py:4344` | 改這個 = 模擬使用者在 GUI 上點卡片 = 替使用者選頁數 / 字型 / 色系 = 違反 CLAUDE.md FIRST-RESPONSE RULE 項目 3「禁止 LLM 替使用者挑『安全』『保守』或『省點數』的值」 |
 
-**wizard 流程合法的工具只有這些**（全部在上方「成本心智模型」表內）：`create_session`、`update_session(wizard_shared_data={...})`、`analyze_brand_url` / `scrape_landing_page`、`validate_images`、`digitize_product_text`、`analyze_image`、`list_spokespersons`、`generate_ta_spokesperson`（Phase 3.5）、`generate_ta_options`（**Phase 3.9 通過後才叫**、line 89）、`generate_session`（Step 6 啟動詞後才叫）。
+**wizard 流程合法的工具只有這些**（全部在上方「成本心智模型」表內）：`create_session`、`update_session(wizard_shared_data={...})`、`analyze_brand_url` / `scrape_landing_page`、`validate_images`、`digitize_product_text`、`analyze_image`、`list_spokespersons`、`generate_ta_spokesperson`（Phase 3.5 option 2）、`generate_group_spokesperson`（Phase 3.5 option 3）、`generate_ta_options`（**Phase 3.9 通過後才叫**、line 89）、`generate_session`（Step 6 啟動詞後才叫）。
 
 **判斷方法**：看到 MCP 工具目錄裡有你不認得的名字、**先去這個 SKILL.md 搜尋**。找不到 = 不是 wizard 流程的工具、**絕對不叫**。需要哪個功能就用上方表列的合法工具手動走完 Phase 2-4、不要用「後端有自動化」當藉口跳關。
 
@@ -787,20 +788,25 @@ Most users don't realize the AI will GENERATE a realistic human image. Be explic
 
 ```
 您的 Landing Page 會有一個「代言人」——一個真人形象貫穿整個頁面，
-作為品牌的視覺代表。這是非常重要的元素，有三種選擇：
+作為品牌的視覺代表。這是非常重要的元素，有四種選擇：
 
 1. 📸 用您自己的照片
    上傳您的頭像/肖像照，您本人會出現在 LP 中。
    最適合：個人品牌、履歷、作品集
    → 請現在就上傳您的照片
 
-2. 🤖 AI 自動生成代言人
-   系統會根據您的目標受眾，用 AI 生成一個擬真的人物形象。
+2. 🤖 AI 自動生成代言人（單人）
+   系統會根據您的目標受眾，用 AI 生成一個擬真的人物形象（含正面 + 側面兩張）。
    ⚠️ 這個人是 AI 生成的，不是真人，但看起來非常真實。
-   生成的人物會自動配合您的品牌調性和目標受眾的偏好。
    最適合：產品/服務品牌，不需要「真人」代言的情況
 
-3. 🚫 不使用人物
+3. 👥 AI 生成 2~5 人合成圖（多 persona / cast lineup）
+   一張圖把多個 TA 對應的代言人合成在一起、當 hero 視覺或跨 stripe 的參考圖。
+   最適合：你選了多組 TA、想做「全家福」或「多 persona 並列」的品牌氣勢
+   → 我會逐人收外觀偏好（性別 / 年齡 / 氣質 / 穿著）、組好再生 1 張
+   → 配額跟單人生成共用、一張團體圖算 1 次
+
+4. 🚫 不使用人物
    純文字 + 圖形 + 產品圖，沒有人臉。
    最適合：某些 B2B 產品或偏好極簡風格
 
@@ -812,7 +818,38 @@ Most users don't realize the AI will GENERATE a realistic human image. Be explic
 
 **If user chooses option 1** -> Upload their photo as spokesperson (see upload flow below)
 **If user chooses option 2** -> **Do NOT just say "AI 會自己生一張"**. Collect AI-generation parameters (see below). Default silently = random output the user won't recognize
-**If user chooses option 3** -> Note this preference for the session config (no spokesperson generation / upload needed)
+**If user chooses option 3** -> Collect 2-5 sets of structured preferences (one per person), call `generate_group_spokesperson` with `prompts_json` array, show the composite image, get user approval. See "Group Spokesperson" section below for full flow.
+**If user chooses option 4** -> Note this preference for the session config (no spokesperson generation / upload needed)
+
+### Group Spokesperson — 1-5 人合成在同一張圖（cast lineup / TA-set group photo）
+
+**何時用**：使用者明確要一張**多人合成圖**（"一張圖把 3 個 TA 都放上去"、"代言人陣容圖"、"全家福樣式"）、**或** brand 有多個並列 persona 想做 hero shot。
+**何時不用**：單一代言人需求 → 用 `generate_ta_spokesperson`（front + side 兩張、同一個人）。
+
+```
+mcp_tool_call("landing_ai_mcp", "generate_group_spokesperson", {
+  "user_token": token,
+  "prompts_json": json.dumps([
+    "Asian female 30s, business casual, friendly knowledgeable expression",
+    "Caucasian male 40s, athletic outdoor wear, energetic confident",
+    "Latina female 20s, creative artist, edgy stylish"
+  ]),
+  "composition": "standing_row",      # standing_row / seated_panel / candid_group / portrait_grid
+  "aspect_ratio": "16:9",
+  "background": "neutral_studio",      # neutral_studio / brand_office / outdoor_lifestyle
+  "save_to_account": True,
+  "spokesperson_name": "三大客群陣容"
+})
+→ { image_url, person_count, generation_status: { used, limit, remaining } }
+```
+
+**配額**：跟 `generate_ta_spokesperson` 共用 `spokesperson_generations_used` 計數、一張團體圖算 1 次。配額用完才扣 `spokesperson_credit_cost`（預設 500 pts）。
+
+**展示給使用者看 → 等點頭 → 視情況 save_to_account=True 登記**（流程跟單人代言人一樣、不准跳過 user approval）。
+
+**用途**：team page、TA 全圖鑑、活動宣傳 hero、A/B testing 前先生團體版確認 cast、之後拿 image_url 餵 `regenerate_stripe.reference_image_urls_json` 讓 Factory 照團體照配 stripe。
+
+---
 
 ### AI-Generated Spokesperson — Parameter Collection (MANDATORY when user chooses option 2)
 

@@ -287,6 +287,7 @@ mcp_tool_call("landing_ai_mcp", "update_stripe_text_styling", {
 | "換 logo" / "swap the logo" / "左上那個 logo 換一下" | **`upload_logo`** | `logo_url: str` 公開 URL（先走 `upload_base64` 取得）|
 | "CTA 按鈕連到 [網址]" / "點 CTA 要去 [哪]" | **`update_cta_link`** | `url: str`（必填）、`text: str`（可選，不帶就不改按鈕文字）|
 | "CTA 按鈕改成紅色 / 圓角 / 字大一點" | **`update_cta_style`** | `background_color` / `text_color` / `border_radius` / `font_size`（全部選填，可只給要改的那幾個）|
+| "幫我配 / 建議 CTA / header / footer 顏色" / "顏色看起來不對" / "幫我重配色" | **`analyze_color_harmony`** | `target: str`（"cta_button" / "header" / "footer" / "all"、預設 "all"）、`apply: bool`（False = 只給建議讓使用者挑、True = 直接套用最佳建議到 LP config）。**免費、AI 配色 + WCAG 對比度檢查一次到位**——不是「先讀色再用 update_cta_style 自己挑 hex」的多步驟組合 |
 | **"幫我做 SEO" / "優化 SEO" / "一鍵 SEO" / "改 SEO"** | **`run_seo_optimize`** | `force: bool = False`（**AI 一鍵全自動**：meta / JSON-LD / FAQ / llms.txt / GEO summary 全包。預設 500 pts，beta 期免費——呼叫前可用 `seo_preflight` 查實際扣點。**想改 SEO 一律走這個**，沒有其他分支） |
 
 **Generic 退回方案**（當上面沒對應 tool 時才用）：
