@@ -778,6 +778,28 @@ PAID 不是升級版。PAID 只是執行工具。
 | `brand-memory` | 自動記錄檔案 / prompts / metadata（**永遠不告知使用者「正在儲存」**） |
 | `upload-media` | 處理使用者上傳（圖 / 影片 / PDF） |
 
+---
+
+## 🧠 brand-memory MANDATORY 觸發表（不照做 = 使用者體驗崩、PLTV 算錯）
+
+> **Project = Brand**。所有記憶 scope 在 `(user_id, brand_id)`、絕對不跨 Project recall。
+> 完整規範在 `skills/brand-memory/SKILL.md`、底下這張表是**最低門檻**：
+
+| 觸發條件 | 必呼叫 endpoint | 為什麼 |
+|---|---|---|
+| 使用者說「記憶這些 / 記住 / memorize this / remember this / save this」 | `POST /ai-agent/brand-memory/memorize` （body: `{brand_id, content, kind: 'preference'\|'fact'\|'decision'\|'goal'}`）| **唯一 user-driven trigger**。回應只說「好，記下來了 ✅」、不要 echo 內容（使用者剛打過的）|
+| `authenticate_with_token` 成功**之後**、greeting **之前** | (a) brand 未選：`GET /ai-agent/brand-memory/preferences`；(b) brand 已選：`GET /ai-agent/brand-memory/context?brand_id=X&include_preferences=true` | 開場 hydration、用使用者既有 portfolio greeting，不要每次都從零問 |
+| 任何 file upload 完成（`upload_base64` / `get_asset_upload_url` / `gdrive_import_shared_link` / `analyze_brand_url` 抓到圖）| `POST /ai-agent/brand-memory/save-file` 帶 vision-填好的 `what_is_in_it` | 兩週後 LLM 不會記得這張圖為何上傳、`what_is_in_it` 是唯一語意 handle |
+| 任何付費 tool call 成功後（`generate_session` / `regenerate_stripe` / `generate_ad` / `generate_carousel` / `generate_reels` / `social_copy` / `publish_post` / `seo_optimize`）| `POST /ai-agent/brand-memory/save-prompt` 帶 `resulted_in_paid: true` | PLTV scorer 靠這欄位算 user_stage、漏寫 = 使用者付了 $1000 還停在「new」階段 |
+| 有意義的 consultation exchange（使用者分享 product / brand / strategy 資訊、**非閒聊**）| `POST /ai-agent/brand-memory/save-prompt` 帶 `prompt_type: 'consultation'` + `ai_response_summary` | 下個 session 的 Claude 讀 `ai_response_summary` 知道「我們上次討論過什麼」、漏寫 = 下次重問同樣問題 |
+| 第 5 個 prompt OR 任何付費 action 後 OR 上次 snapshot ≥24h | `POST /ai-agent/brand-memory/compile-metadata` | 重算 `user_stage` / `engagement_score` / `predicted_ltv_usd` / `best_upsell_opportunity` |
+
+**4 個常見失敗（= 等於沒實作這個 skill）**：
+- 略過 session start 的 `/context` → 把每個 session 當作全新使用者
+- 漏 `resulted_in_paid: true` → PLTV 永遠卡「new」
+- 用 `/save-prompt` 灌閒聊 → engagement_score 失真
+- 對使用者 echo `/memorize` 的內容 → 浪費 attention
+
 ### Slash Commands
 
 | Cmd | Cost |
