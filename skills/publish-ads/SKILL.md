@@ -151,40 +151,151 @@ Variant B:
 Select variant(s) or edit:
 ```
 
-## Phase 4: Set Budget & Targeting
+## Phase 4: 逐項確認 13 個廣告欄位（🔴 MANDATORY）
 
-### Budget
+### 🔴 紀律規則
+
+**廣告 = 真的會花錢的東西、且發出去 Meta 那邊就無法即時改回**。CLAUDE.md 的「NO SILENT DEFAULTS」對 LP 生成已嚴、對廣告**更嚴**。
+
+**規則**：每個 schema 欄位都必須處在以下其中一種狀態：
+- **A. 使用者親口答**：LLM 問了、使用者親自回、payload 寫進去
+- **B. LLM 推斷 + 明說**：從 LP / TA / saleskit 對話 signal 推出合理值、**寫進去前在對話宣告「我這邊幫你預設 X、因為你前面提到 Y、要改直接講」**
+
+**禁止第三種狀態**：欄位沒問、LLM 沒推、payload 用 backend default → 使用者花了錢才發現不對 → 投訴退費。
+
+**禁止偷懶範例**：
+- ❌ 直接拷 Phase 5 的 schema 範例 JSON 送出（`OUTCOME_TRAFFIC` / `daily_budget: 5.0` / `target_age_min: 18` 等都是「示範值」、不是給你 silent default 抄的）
+- ❌ 「廣告主要走 Traffic 對吧？」← 這是「假確認」、LLM 自己挑了再要使用者點頭
+- ❌ 「TA 已經選了所以受眾自動帶入、預算我幫你抓 $5/day」← 預算必須使用者親口答、TA 帶入的人口屬性也要逐項複誦讓使用者反對
+
+### 13 個欄位逐項收集（Meta `create_ad_campaign`）
+
+按下面 4 批走、每批問完等使用者回答 + 推斷欄位明說後再進下一批。
+
+#### 批 1 — 帳號 + 素材（2 欄位）
+
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 1 | `social_account_id` | 從 Phase 1 `list_accounts` 列表裡、**讓使用者親自挑**（不要 LLM 替挑「最新一筆」）|
+| 2 | `ad_type` + `creative_image_url` / `creative_video_url` | Phase 3 已生 → 用那張圖 / 影片 URL；多張就讓使用者挑哪張 |
+
+對話模板：
 ```
-Set your daily budget:
+從你的廣告帳號清單我看到 2 個 Meta 帳號：
+1. ACME (FB Page: ...) - 已驗證、可用
+2. Studio (FB Page: ...) - 待驗證
 
-Platform: Meta
-Objective: Traffic
-Recommended: $30-100/day for meaningful data
-
-Your daily budget (USD): ___
-Campaign duration: [start_date] to [end_date]
+你要從哪個帳號投？
 ```
 
-### Targeting
-Audience targeting from Phase 2 (audience-target) carries forward:
-- Demographics (age, gender, location)
-- Interests (from TA profile)
-- Custom audiences (if available)
+#### 批 2 — 廣告目標 + CTA（4 欄位）
+
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 3 | `campaign_objective` | **問**——5 個 OUTCOME_* 完整列出讓使用者挑（不要 LLM 替挑）|
+| 4 | `cta_type` | 依 objective 推 default 但**明說**（OUTCOME_TRAFFIC → LEARN_MORE / OUTCOME_SALES → SHOP_NOW、etc.）、使用者反對才改。完整 8 個值見下方 |
+| 5 | `cta_url` | **問**——不要 silent default 到 brand 官網。提示可拼 UTM 參數追蹤 |
+| 6 | `creative_message` | 廣告貼文文字（Meta feed 顯示的 caption）。Phase 3 已生內容裡通常有 / 可改、**明列給使用者確認** |
+
+對話模板：
+```
+廣告目標選一個：
+A) 👁 OUTCOME_AWARENESS — 讓更多人認識你的品牌
+B) 🔗 OUTCOME_TRAFFIC — 把人導到你的網站 / LP
+C) 💬 OUTCOME_ENGAGEMENT — 收讚、留言、分享
+D) 📝 OUTCOME_LEADS — 收名單（電話 / email）
+E) 💰 OUTCOME_SALES — 直接優化購買轉換
+
+[依 brand 推薦：「你產品是耳機 + 有 LP、我建議 OUTCOME_TRAFFIC（流量）」]
+
+CTA 按鈕文字（點下去使用者會看到的）：
+LEARN_MORE / SHOP_NOW / SIGN_UP / BOOK_TRAVEL / CONTACT_US / DOWNLOAD / GET_QUOTE / WATCH_MORE
+
+CTA 點下去要去哪：（你的 LP / 官網 / 預約頁、可以加 UTM 追蹤）
+```
+
+#### 批 3 — 預算 + 排程（3 欄位）
+
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 7 | `daily_budget` | **問**——USD、最低 $1。建議 $5-30 起跑、**不要 silent default $5** |
+| 8 | `schedule_start` | **問**——ISO datetime（例 `"2026-04-26T00:00:00+08:00"`），預設立即（null）但要明說「我帶 null = 廣告審核完馬上開跑」|
+| 9 | `schedule_end` | **問**——ISO datetime、null = 無結束。建議至少 7 天才看得到數據 |
+
+對話模板：
+```
+預算規劃：
+
+每日預算（USD）：__
+（最低 $1、建議 $5 試水溫起跑、$30+/day 才看得到 Meta 演算法投得準）
+
+開跑時間：
+A) 立即（審核完即刻開跑、通常 24h 內）
+B) 指定日期：____
+
+結束時間：
+A) 不設、跑到我手動暫停
+B) 指定日期：____
+（少於 7 天通常數據還沒收斂、不建議）
+```
+
+#### 批 4 — 受眾定位（4 欄位）
+
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 10 | `target_age_min` | 從 TA 推（「Endurance Athletes」→ 25-45）、**明說推斷源**、使用者反對才改 |
+| 11 | `target_age_max` | 同上 |
+| 12 | `target_genders` | 從 TA 推（[0]=all / [1]=male / [2]=female）、明說 |
+| 13 | `target_countries` | **問**——ISO code 陣列、不要 silent 推 ["TW"]。注意 TW 需 advertiser verification（見下方 Bug Notice）|
+|  | `placements` | 從 LP / 廣告素材 aspect ratio 推（9:16 → IG Stories/Reels；1:1 → 兩邊都通用）。完整選項：`["facebook", "instagram"]`（可選擇性留）|
+
+對話模板：
+```
+受眾鎖定（從你選的 TA「Data-Driven Endurance Athletes」推的、要改直接講）：
+
+- 年齡：25-45（耐力運動族群常見）
+- 性別：不分（耐力運動男女均有）
+- 國家：(請選 ISO code、例 ["TW", "JP", "KR"])
+- 投放位置：Facebook + Instagram（image 1:1 兩邊都通用）
+
+哪一項要改？
+```
+
+### 🔴 Cost 複誦 + 啟動詞（送出 `create_ad_campaign` 之前的最後關卡）
+
+走完 4 批、把所有 13 欄位整理成複誦表（推斷的標「（我幫你配）」、使用者親答的不標）：
 
 ```
-Targeting Summary:
-- Age: 25-40
-- Gender: All
-- Location: Taiwan
-- Interests: Skincare, Beauty, Health
-- Language: zh-TW
+廣告投放規格：
 
-Adjust targeting or proceed?
+帳號：ACME (Meta) ad_account_id=act_123456789
+素材：image, https://...generate_ad_image.png
+目標：OUTCOME_TRAFFIC
+CTA：LEARN_MORE → https://landingai.info/zh-TW/lp/<campaign_id>?utm_source=meta&utm_campaign=launch
+廣告文：「探索無毒保養的真誠選擇——今天就試試。」
+
+預算：$10 USD/day × 14 天 = $140 total
+排程：2026-04-26 ~ 2026-05-10
+受眾：年齡 25-45（我幫你配，根據你選的 Endurance Athletes TA）
+      性別：不分（我幫你配）
+      國家：JP, KR（你親選的）
+      投放：Facebook + Instagram
+
+⚠️ 提醒：所有廣告都先 paused、Meta 審核完進你的 Ads Manager 仍是暫停、要手動 enable 才會花錢
+⚠️ 提醒：[若 target_countries 含 "TW"] TW 受眾要做 advertiser verification、Meta 那邊會擋
+
+確認要建立嗎？
+回「開始」我就送 create_ad_campaign；回「改 XX」就調整；回「取消」先不動。
 ```
+
+**接受的啟動詞**：開始 / go / 執行 / start / do it / 建立
+**不接受**：好 / OK / 嗯 / 可以 — 模糊、要再問一次「確認『開始』嗎？」
 
 ## Phase 5: Create Campaign
 
 ### 🔴 Backend Bug Notice — Meta ads currently broken（截至 2026-04-25）
+
+> **Patch status**: Zereo_backend `meta_ads_publisher.create_adset` 已加入 `targeting_automation: {advantage_audience: 0}`（commit 待 push）。**部署完成後刪除整個 Notice 段落**（從這裡到 `---` 為止），AI 即可恢復正常推薦 Meta ads 流程。
 
 **Rule: `create_ad_campaign` Meta 路徑目前在 adset 階段必失敗、AI 不要鼓勵用戶嘗試、先告知 capability 暫不可用。**
 
@@ -274,7 +385,11 @@ mcp_tool_call("zereo_social_mcp", "create_ad_campaign", {
 
 ## Phase 5b (TikTok branch): Create TikTok Ad Campaign
 
-當使用者選擇 TikTok 投放、走這條（**不要** call Meta `create_ad_campaign`、schema 完全不同）：
+當使用者選擇 TikTok 投放、走這條（**不要** call Meta `create_ad_campaign`、schema 完全不同）。
+
+### 🔴 TikTok 也要逐項確認 13 欄位（紀律同 Phase 4）
+
+跟 Meta 一樣、不准 silent default、每欄位走「使用者親答」or「LLM 推 + 明說」。差別在 TikTok 的值域跟 Meta 不對稱（objective 沒 OUTCOME_ 前綴、年齡用離散桶、location 是數字 ID），別把 Meta 的值複製過來。
 
 ### 先查 TikTok-specific objectives + CTA
 ```
@@ -284,6 +399,60 @@ mcp_tool_call("zereo_social_mcp", "get_tiktok_ad_cta_types", { "user_token": tok
 ```
 
 ⚠️ **TikTok objectives 不是 Meta 的 `OUTCOME_*` 命名**——用 `TRAFFIC` 不是 `OUTCOME_TRAFFIC`。passing OUTCOME_* 會 422。
+
+### TikTok 13 欄位逐項收集（4 批、跟 Meta 同節奏）
+
+#### 批 1 — 帳號 + 素材
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 1 | `social_account_id` | Phase 1 列表挑、**必須是 platform="tiktok" 的帳號**（用 Meta 的回 400） |
+| 2 | `advertiser_id` | 空字串會 fallback 到 social_account.ad_account_id；若 Business Center 沒綁、跳出來請使用者貼 advertiser_id |
+| 3 | `ad_type` + `creative_video_url` / `creative_image_url` | TikTok 強推 video（`ad_type="video"` 為預設）。建議從 `generate_reels` 拿 video，或 `generate_ad` 出 9:16 直版 image |
+
+#### 批 2 — 廣告目標 + CTA
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 4 | `campaign_objective` | **問**——8 個 TikTok 值（REACH / TRAFFIC / **VIDEO_VIEWS** / ENGAGEMENT / LEAD_GENERATION / CONVERSIONS / PRODUCT_SALES / APP_PROMOTION）。Meta 沒 `VIDEO_VIEWS`、TikTok 是常見選擇 |
+| 5 | `cta_type` | TikTok CTA 比 Meta 多 2 個：`ORDER_NOW` / `SUBSCRIBE` / `INSTALL_NOW` / `WATCH_NOW`（共 10 個） |
+| 6 | `cta_url` | 同 Meta、可拼 UTM |
+| 7 | `creative_message` | TikTok 廣告文（max 1024 chars）、**問使用者**或從 `social_copy` 帶過來 |
+
+#### 批 3 — 預算 + 排程
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 8 | `daily_budget` | **問**——USD、TikTok 建議 **≥ $20/day**（高於 Meta 的 $5）。低於 $20 雖能投但 TikTok 演算法投不準 |
+| 9 | `schedule_start` | **問**——ISO datetime、null = 立即。**注意**：TikTok 的 `schedule_type` 規則是「start 跟 end 必須同時有、否則一律 SCHEDULE_FROM_NOW」（已在 backend 處理、但提醒使用者就排程上的差別）|
+| 10 | `schedule_end` | **問**——同上 |
+
+#### 批 4 — 受眾定位
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 11 | `target_age_groups` | **問**——TikTok 用**離散年齡桶**：`AGE_13_17` / `AGE_18_24` / `AGE_25_34` / `AGE_35_44` / `AGE_45_54` / `AGE_55_100`。可選多個。**禁止**直接複製 Meta 的 `target_age_min/max` 整數（schema `extra=forbid`、會 422）|
+| 12 | `target_genders` | 同 Meta：[0]=all / [1]=male / [2]=female（後端會翻成 TikTok 的 `GENDER_UNLIMITED` / `GENDER_MALE` / `GENDER_FEMALE`）|
+| 13 | `target_locations` | **問**——TikTok 用**數字 location_id**（158=Taiwan、1=USA、81=Japan、410=Korea、158 = TW、702 = SG、764 = TH...），**不是** ISO country code。給使用者人話選、然後 LLM 自己對應到 ID |
+|  | `placements` | 預設 `["PLACEMENT_TIKTOK"]`。可加 `PLACEMENT_PANGLE`（TikTok 的廣告聯播網、第三方 app）但通常不建議 |
+
+### Cost 複誦 + 啟動詞（同 Meta 紀律）
+
+跑完 4 批整理複誦表：
+```
+TikTok 廣告投放規格：
+
+帳號：@martin_tiktok（advertiser_id=...）
+素材：video, https://...generate_reels.mp4
+目標：TRAFFIC
+CTA：LEARN_MORE → https://landingai.info/zh-TW/lp/<id>?utm_source=tiktok&utm_campaign=launch
+廣告文：「[800 字以內]」
+
+預算：$25 USD/day × 14 天 = $350 total
+排程：2026-04-26 ~ 2026-05-10
+受眾：年齡桶 [AGE_25_34, AGE_35_44]（從 Endurance Athletes TA 推、要改直接講）
+      性別：[0] 不分（推）
+      地區：[158]=Taiwan, [81]=Japan（你親選的）
+      投放：PLACEMENT_TIKTOK
+
+確認要建立嗎？
+```
 
 ### Create TikTok campaign
 ```
@@ -385,11 +554,44 @@ C) Done
 
 ## Reel Promotion (Instagram/Facebook Boost)
 
+`promote_reel` 是 boost **已發佈的 IG Reel** 的捷徑（比 `create_ad_campaign` 簡單、不用自己挑 image / video URL、直接用發佈過的 Reel）。
+
+### 🔴 8 個欄位逐項確認
+
+跟完整 ad campaign 一樣紀律、不准 silent default：
+
+| # | 欄位 | 怎麼決定 |
+|---|------|---------|
+| 1 | `social_post_id` | 從 `get_post_history(status_filter="published")` 列出 IG Reel 讓使用者挑（**只能 boost 已發佈的 ig_reel、不能是 ig_post / ig_story / fb_post**）|
+| 2 | `cta_type` | 8 個值（LEARN_MORE / SHOP_NOW / SIGN_UP / BOOK_TRAVEL / DOWNLOAD / 等）— **問** |
+| 3 | `cta_url` | **問**——點 CTA 去哪、可拼 UTM |
+| 4 | `daily_budget` | **問**——USD、最低 $1。建議 $5-30 |
+| 5 | `target_age_min` | 從 TA 推 + 明說、預設 18 |
+| 6 | `target_age_max` | 同上、預設 65 |
+| 7 | `target_countries` | **問**——ISO code 陣列、預設 ["TW"]（注意 TW 要 advertiser verification）|
+| 8 | `caption` | **問**——Boost 時可改 ad caption（覆蓋原 Reel）；不傳 = 用原 caption |
+
+### Cost 複誦 + 啟動詞
+```
+要 boost 哪一個 Reel？
+
+A) 「FocusFit 30hr 續航實測」 (post_id=...) — 5,234 views, posted 4-20
+B) 「鐵人三項耳機推薦」 (post_id=...) — 1,892 views, posted 4-22
+
+選好之後：
+- CTA：____ → ____
+- 預算：$__ USD/day
+- 受眾：年齡 __-__、國家 [__]
+- Caption：[沿用原 caption / 改 ___]
+```
+
+接受啟動詞「開始 / boost / go」才送 `promote_reel`。
+
 ### Promote a published reel/post
 ```
 mcp_tool_call("zereo_social_mcp", "promote_reel", {
   "user_token": token,
-  "data_json": "{\"social_post_id\": \"<post_id_from_get_post_history>\", \"cta_type\": \"LEARN_MORE\", \"cta_url\": \"https://landing-page-url\", \"daily_budget\": 10.00, \"duration_days\": 7}"
+  "data_json": "{\"social_post_id\": \"<post_id_from_get_post_history>\", \"cta_type\": \"LEARN_MORE\", \"cta_url\": \"https://landing-page-url\", \"daily_budget\": 10.00, \"target_age_min\": 25, \"target_age_max\": 45, \"target_countries\": [\"TW\"], \"caption\": \"\"}"
 })
 → Returns: { "promotion_id": "..." }
 ```
