@@ -192,6 +192,11 @@ mcp_tool_call("zereo_social_mcp", "publish_post", {
 
 若用戶給的是 PNG 或 domain 未驗證的 URL，先用 `upload_base64` 把圖轉存到 GCS 再發。
 
+**Rule: tt_photo 用任何外部 CDN（unsplash / pexels / 用戶貼的 URL）必失敗 — 不要嘗試。**
+實測 2026-04-25：用 `images.unsplash.com/...` 發 `tt_photo` → `status=failed`、`error_message="Photo init failed: Please review our URL ownership verification rules at https://developers.tiktok.com/doc/content-posting-api-media-transfer-guide/#pull_from_url"`。TikTok Pull-from-URL 嚴格只接受 TikTok Developer Portal 驗證過的 domain。
+- ✅ 只能：用戶把圖上傳到 Salecraft GCS（透過 `get_upload_signed_url` + 確認上傳）後拿到的 internal URL（前提：**finding #46 修好之前該 endpoint 500、tt_photo 無法驗收**）
+- ❌ 不要試：unsplash、pexels、imgur、用戶貼的任何外部 URL — 不管 domain 多有名、TikTok 都認不得
+
 ### 常見錯誤 + 應對
 
 | `error_message` 關鍵字 | 意義 | 該怎麼跟用戶說 |
@@ -298,6 +303,25 @@ Select platforms to publish to (e.g., "1 and 2"):
 ```
 
 If no accounts connected → **go to Phase 0 to connect first.**
+
+### Rule: `sc_live_` 前綴必須 strip 才能當 Bearer token 用
+
+用戶從 SaleCraft 前端複製的 AI Token 字串開頭是 `sc_live_`（例：`sc_live_eyJhbGc...`）。**這個前綴只是給用戶辨識「這是 AI 用的 token」、backend 不認識**。直接帶 `Authorization: Bearer sc_live_eyJhbGc...` 會回 `401 {"detail":"Invalid token"}`。
+
+✅ 正確做法：strip `sc_live_` → 拿後面那段純 JWT → 當 Bearer token：
+```python
+ai_token = user_pasted.removeprefix("sc_live_")
+headers = {"Authorization": f"Bearer {ai_token}"}
+```
+（MCP 工具 `authenticate_with_token` 內部會做這件事；但若直接走 REST、必須自己 strip）
+
+### Rule: `can_publish` 不是 publish gate
+
+`list_accounts` 回傳的 `can_publish` 欄位（與 `account_capability.tasks: []` 一起）**不能用來擋 publish_post / publish_multi**。實測（2026-04-25 test1@test.com FB Page）：`can_publish: false` 帳號的 `fb_post` 仍能成功上線。Backend 真正驗的是 page access_token、不是這個 plugin-side 標記。
+
+❌ 不要寫：「你的 FB Page `can_publish: false`、所以不能發、請去 Meta 補 admin 權限」
+✅ 直接打 `publish_post`、若真的權限不足、`status` 會回 `failed` 並有 `error_message`、那時再轉達給用戶
+（`can_publish: false` 仍是有用訊號 — 可在發文**前**用一句 inline 提醒「這個 Page 偵測上 admin role 不全、可能會 fail」、但**不阻擋**呼叫）
 
 ## Phase 1.5: Generate Social Post Copy (AI)
 
@@ -433,14 +457,18 @@ C) Custom schedule
 ```
 
 ### Publish
+
+**Rule: `targets_json` 必為 wrapped object string `{"targets":[...]}`、不是 raw array。**
+Backend `SocialMultiPublishRequest` 要求外層是 dict 含 `targets` 欄位。傳裸 array 會 422 `model_attributes_type`。MCP 內部目前不會自動包、AI 必須自己包好再丟（實測 2026-04-25）。
+
 ```
 mcp_tool_call("zereo_social_mcp", "publish_multi", {
   "user_token": token,
-  "targets_json": "[
-    {\"social_account_id\": \"fb_123\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
-    {\"social_account_id\": \"ig_456\", \"caption\": \"...\", \"media_ids\": [\"...\"]},
-    {\"social_account_id\": \"tt_789\", \"caption\": \"...\", \"media_ids\": [\"...\"]}
-  ]"
+  "targets_json": "{\"targets\": [
+    {\"social_account_id\": \"fb_123\", \"post_type\": \"fb_post\", \"image_url\": \"...\", \"caption\": \"...\"},
+    {\"social_account_id\": \"ig_456\", \"post_type\": \"ig_post\", \"image_url\": \"...\", \"caption\": \"...\"},
+    {\"social_account_id\": \"tt_789\", \"post_type\": \"tt_video\", \"video_url\": \"...\", \"caption\": \"...\"}
+  ]}"
 })
 ```
 
@@ -460,6 +488,126 @@ mcp_tool_call("zereo_social_mcp", "schedule_post", {
   "data_json": "{\"social_account_id\": \"...\", \"scheduled_at\": \"2026-04-15T19:00:00+08:00\", ...}"
 })
 ```
+
+**Rule: `scheduled_at` 響應顯示必須轉用戶 local TZ、禁止照 raw 顯示。**
+Backend response 的 `scheduled_at` / `published_at` **是 UTC naive datetime**（沒 `Z`、沒 offset）。AI 拿到 `"scheduled_at": "2026-04-25T09:55:00"` 直接照打給用戶、用戶會以為是「上午 9:55 發」、實際是 17:55（+08:00）。
+- ✅ 報給用戶前必先 `+8 小時`（或用戶實際 TZ）轉成 local time
+- ✅ 範例：「已排程到 4/25（六）下午 5:55（台北時間）」
+- ❌ 禁止：「已排程到 09:55」/「scheduled_at = 2026-04-25T09:55:00」
+
+**Rule: 排程精度 ~+10 秒、可宣稱「準時」、不宣稱「秒級準確」。**
+實測（2026-04-25）排 17:55:00 → 實際 published_at 17:55:10。用戶問「精準到秒嗎？」回答：「準到分鐘、有約 10 秒處理 buffer」。
+
+### Batch: 同帳號連發 N 篇（同時段）
+
+當用戶說「今晚 8 點 FB 排 3 篇貼文」/「IG 排 5 篇」這種 **同帳號 + 同時段 + 多篇** 的需求：
+
+**⚠️ 嚴格照做原則**：用戶給的 `scheduled_at` 是什麼就是什麼。**不要**自作主張改成 20:00 / 20:15 / 20:30 — 用戶說 8 點就是 8 點。如果你想提醒「同時段可能影響觸及」，最多只能在排程**之前**用一句話 inline 提醒（不阻擋、不問問題），執行時依然照原時間排。
+
+**Pre-flight 必跑**：
+
+1. `parse_schedule(text)` → 拿 `scheduled_at`
+2. 算總成本：`N × (200 pts generate_ad + 100 pts social_copy) = N × 300 pts`（如 3 篇 = 900 pts ≈ $30）
+3. `get_me(user_token)` → `credits_remaining`，不夠就停下並引導儲值
+4. 跟用戶確認總成本 + 篇數 + 時段，**得到 yes 才往下**
+
+**Rule: `image_url` / `video_url` 必為 direct CDN URL、HEAD 200、不能 redirect。**
+Backend 在排程觸發時會對媒體 URL 做預檢、redirect-based URL（picsum.photos 302 → fastly CDN、URL shortener、未驗證 domain）會回 405 → `status=failed`、`error_message="Image URL returned HTTP 405"`。
+- ✅ 推薦來源：`images.unsplash.com/photo-...`、GitHub raw、GCS public bucket signed URL、Salecraft 自己生成的 CDN（`generate_ad` 回的 `image_url` 都是 direct）
+- ❌ 不要：`picsum.photos/...`、`bit.ly/...`、`tinyurl.com/...`、任何用戶貼的 redirect URL
+- 不確定？先 `curl -I <url>` HEAD 看回 200 + `content-type: image/*` 或 `video/*` 才用
+
+**Rule: `ig_reel` 必為 9:16 直式視頻、否則 IG container 會回 error 2207076。**
+實測 2026-04-25：用 16:9 横向影片發 `ig_reel` → `status=failed`、`error_message="IG container processing failed: Error: Media upload has failed with error code 2207076"`。IG 對 reel 嚴格要 vertical 9:16；横向會被拒。`fb_post` 接受任何比例（同一影片 fb_post 成功、ig_reel 失敗）。
+- ✅ 用戶要發 reel 但只給横向影片 → **不要硬發**、先告訴用戶「Reel 需要直式（9:16）影片、橫向的會被 IG 拒。要嘛改發到 FB（接受橫向）、要嘛重剪成直式再來」
+- ✅ TikTok（`tt_video`）接受任意比例但會被裁切成 9:16 — 横向勉強可發、結果不好看
+
+**標準流程**（以 3 篇 FB 為例）：
+
+```python
+# 1. 找 FB 帳號
+accounts = list_accounts(user_token=token)
+fb_account_id = next(a["id"] for a in accounts if a["platform"] == "facebook")
+
+# 2. 解析時間
+schedule = parse_schedule(user_token=token, text="今晚8點")
+scheduled_at = schedule["schedules"][0]["datetime_iso"]  # e.g. "2026-04-25T20:00:00+08:00"
+
+# 3. Loop 生成 + 排程（每篇獨立內容、共用 scheduled_at）
+results = []
+for i in range(3):
+    # 3a. 生成廣告圖（200 pts）
+    ad = generate_ad(user_token=token, session_id=session_id,
+                     data_json='{"ta_group_id":"ta_1","aspect_ratio":"1:1","ad_goal":"awareness"}')
+    image_url = poll_until_done(get_ad_result, ad["project_id"])  # ~5min
+
+    # 3b. 生成文案（100 pts）
+    copy = social_copy(user_token=token,
+                       data_json=f'{{"conversation_id":"{conv_id}","quantity":1}}')
+    caption = copy["copies"][0]["caption"]
+
+    # 3c. 排程（免費）
+    post = schedule_post(user_token=token, data_json=json.dumps({
+        "social_account_id": fb_account_id,
+        "post_type": "fb_post",
+        "scheduled_at": scheduled_at,   # ⚠ 三篇都用同一個時間
+        "caption": caption,
+        "image_url": image_url,
+    }))
+    results.append(post)
+
+    # Partial failure policy: ABORT
+    # 已成功排程的 N-1 篇留在排程裡（不 cancel），剩下沒做的篇數直接停。
+    # 已扣的 generate_ad / social_copy 點數不退（成果已生成、可給用戶手動補排用）。
+    if post.get("status") == "failed":
+        break  # 跳出 loop、進到下方回報
+
+# 4. 回報結果（區分「全成功」與「abort 中段」兩種情況）
+```
+
+**回報格式 — 全部成功**：
+
+```
+✅ 已排程 3 篇貼文到 Facebook —— ACME Official Page
+   時段：2026-04-25 20:00 (+08:00)
+
+   1. post_id: <id1> — 「<caption 前 20 字>...」
+   2. post_id: <id2> — 「<caption 前 20 字>...」
+   3. post_id: <id3> — 「<caption 前 20 字>...」
+
+   花費：900 pts（剩餘 X pts）
+
+   想取消其中一篇 → 告訴我 post_id，我用 cancel_post 處理
+   想看排程列表 → get_post_history(status_filter="scheduled")
+```
+
+**回報格式 — 中途 abort（partial failure）**：
+
+```
+⚠️ 3 篇貼文中、第 2 篇排程失敗，後續第 3 篇沒嘗試。
+   時段：2026-04-25 20:00 (+08:00)
+
+   ✅ 1. post_id: <id1> — 「<caption 前 20 字>...」（已排程）
+   ❌ 2. 排程失敗：<error_message>
+   ⏸️ 3. 未嘗試（因第 2 篇失敗而中止）
+
+   已扣點數：600 pts（前 2 篇的圖文已生成、不退）
+   已排程的第 1 篇仍會在 8 點發出 — 不想要的話跟我說 cancel <id1>。
+
+   下一步：
+   A) 我幫你重新嘗試剩下沒排的（會再扣 generate_ad + social_copy）
+   B) 我用第 2 篇已生成的圖文重排（要給我新的 scheduled_at）
+   C) 算了，先這樣
+```
+
+**Abort 策略要點**（AI 必讀）：
+- **不**自動 retry — 失敗原因可能是平台層問題（token 過期、rate limit），盲目 retry 只是再扣一次點
+- **不**自動 cancel 已成功的 — 用戶可能就只想要那一篇上線，cancel 等於替用戶做決定
+- **必**列出 abort 後的三個選項（A/B/C），讓用戶自己選下一步
+
+**已知限制**：
+- `publish_multi` 也吃 array of targets，但每個 target 都需要獨立 `social_account_id` — **同帳號連發 3 篇仍要呼叫 3 次 `schedule_post`**，不能用 `publish_multi` 偷懶
+- FB Graph API 對「同帳號 < 5 分鐘內多篇」的觸及降權是平台行為、SaleCraft 後端不擋。**這是文件外觀察、用戶問了才講**
 
 ## Phase 6: QR Code (Optional)
 

@@ -15,6 +15,116 @@ SaleCraft plugin against the production backend.
 
 ## Findings
 
+### #46 — `POST /content/upload/signed-url` 500s on Cloud Run (ADC has no private key) 🟠 high / **fix applied 2026-04-25 (pending Zereo_backend deploy)**
+
+**Fix applied**: `Zereo_backend/zereo_backend/services/gcs_uploader.py` `generate_upload_signed_url()` now detects compute_engine credentials (no `_signer` attr) and falls back to IAM SignBlob by passing `service_account_email` + `access_token` to `generate_signed_url`. Local dev with SA JSON keeps default behavior. **Cloud Run runtime SA needs `roles/iam.serviceAccountTokenCreator`** to actually call signBlob — verify in IAM before deploy.
+
+**Symptom**: Calling `POST /content/upload/signed-url` returns HTTP 500 "Internal Server Error". Cloud Run logs show:
+```
+File "/app/zereo_backend/services/gcs_uploader.py", line 66, in generate_upload_signed_url
+    signed_url = blob.generate_signed_url(...)
+  File ".../google/cloud/storage/_signing.py", line 58, in ensure_signed_credentials
+    raise AttributeError(
+AttributeError: you need a private key to sign credentials. the credentials you are currently
+using <class 'google.auth.compute_engine.credentials.Credentials'> just contains a token.
+```
+
+**Root cause**: `Zereo_backend/zereo_backend/services/gcs_uploader.py:66` calls `blob.generate_signed_url(version="v4")` directly. Cloud Run's ADC provides `compute_engine.Credentials` which has only an OAuth access token, not a private key — v4 signing needs the private key locally.
+
+**Fix (backend)**: use IAM Sign Blob API instead of local signing, e.g.
+```python
+from google.auth import compute_engine, iam
+from google.auth.transport import requests as gauth_requests
+
+signer = iam.Signer(gauth_requests.Request(), credentials,
+                    service_account_email=credentials.service_account_email)
+signed_url = blob.generate_signed_url(
+    version="v4", expiration=timedelta(minutes=15),
+    method="PUT", content_type=content_type,
+    credentials=signer,
+    service_account_email=credentials.service_account_email,
+)
+```
+Or mount a service-account JSON via Secret Manager and use `from_service_account_file`.
+
+**Impact**: Direct GCS upload path is unusable end-to-end. Users cannot upload custom images / videos via the SDK. Only `import_from_session` (which copies LP-generated assets) works for content sourcing.
+
+**Workaround for AI**: prefer `import_from_session(session_id)` to surface user assets, or use `generate_ad` to produce assets from prompts. Do not rely on `get_upload_signed_url` until fix lands.
+
+### #45 — Meta `create_ad_campaign` blocked by Meta v25 enforcement of `advantage_audience` 🔴 critical / **fix applied 2026-04-25 (pending Zereo_backend deploy)**
+
+**Fix applied**: `Zereo_backend/zereo_backend/services/meta_ads_publisher.py` `create_adset()` params dict now includes `"targeting_automation": {"advantage_audience": 0}`. Default 0 = disabled (preserve manual targeting behavior). To expose Advantage+ audience as a user-tunable option later, add `use_advantage_audience: bool = False` to `AdCampaignCreateRequest` and forward to this dict.
+
+**Framing correction (added 2026-04-25 after deeper history check)**: Backend was working fine before — `Zereo_backend` campaign DB shows successful `paused` campaigns on 2026-04-09, 2026-03-26, 2026-03-25. **First failure observed: 2026-04-18 09:56 UTC. Last success: 2026-04-09 13:21 UTC.** Inside that 9-day window, Meta Graph API v25 began enforcing `targeting_automation.advantage_audience` as a mandatory AdSet field. This is a Meta API change, not a code regression — but backend now needs to add the field to keep working.
+
+**Symptom**: Every `POST /social/ads/campaigns` call now fails at step 2 (`create_adset`) with Meta Graph API v25.0 returning HTTP 400 `OAuthException` subcode 1870227 ("must enable or disable Advantage+ audience"). Verified across multiple param combinations (2026-04-25):
+
+| Test | objective | budget | countries | Result |
+|------|-----------|--------|-----------|--------|
+| T6 | OUTCOME_AWARENESS | 1.0 | ["TW"] | subcode 3858495 (TW advertiser verification) |
+| T6US | OUTCOME_AWARENESS | 1.0 | ["US"] | subcode 1870227 (advantage_audience) |
+| T6T | OUTCOME_TRAFFIC | 5.0 | ["US"] | subcode 1870227 (same — confirms not objective/budget related) |
+
+**Reproduce** (any non-TW targeting now triggers it):
+```
+POST https://zereo-backend-s6ykq3ylca-de.a.run.app/social/ads/campaigns
+{ "social_account_id": "<IG account>", "campaign_objective": "OUTCOME_TRAFFIC",
+  "ad_type": "image", "creative_image_url": "<direct CDN>", "daily_budget": 5.0,
+  "target_countries": ["US"], "placements": ["facebook","instagram"] }
+→ HTTP 502, Meta error subcode 1870227
+```
+
+**Root cause**: `Zereo_backend/zereo_backend/services/meta_ads_publisher.py:347-400` `create_adset()` builds AdSet params dict but never sets `targeting_automation`. Worked when Meta defaulted this; broken now that Meta requires explicit value.
+
+**Fix (backend)**: in `create_adset` before `account.create_ad_set(params=params)`, add:
+```python
+params[AdSet.Field.targeting_automation] = {"advantage_audience": 0}  # 0 = disabled, 1 = enabled
+```
+Default `0` = preserve existing behavior (manual targeting). If user wants Advantage+ audience expansion, expose `use_advantage_audience: bool = False` in `AdCampaignCreateRequest` and forward it.
+
+**Plugin-side workaround**: SKILL `publish-ads/SKILL.md` updated with rule to inform users this capability is broken until backend is patched.
+
+**Impact**: 100% of Meta ad campaign creation fails. Any user invoking `/salecraft-publish` → ads branch hits this.
+
+### #44 — `publish_multi` MCP body-shape mismatch with backend 🟠 high / **fix applied 2026-04-25 (pending Service_system deploy)**
+
+**Fix applied**: `Service_system/zereo_social_mcp/tools/publishing.py` `publish_multi()` now wraps a list `body` into `{"targets": body}` before forwarding. Existing dict callers pass through unchanged. SKILL update reverting the `targets_json` example back to raw array string can follow once the MCP fix is deployed.
+
+**Symptom**: Calling `publish_multi(targets_json="[...]")` with a raw JSON array string returns HTTP 422 `model_attributes_type` ("Input should be a valid dictionary or object"). Backend `SocialMultiPublishRequest` requires `{"targets": [...]}` wrapper.
+
+**Reproduce** (2026-04-25):
+```
+POST /social/publish/multi
+[{...}, {...}]
+→ HTTP 422
+
+# Wrap and retry:
+POST /social/publish/multi
+{"targets": [{...}, {...}]}
+→ HTTP 200
+```
+
+**Root cause**: `Service_system/zereo_social_mcp/tools/publishing.py:101` parses `targets_json` and forwards the result directly:
+```python
+body = _parse_json(targets_json, "targets_json")  # returns list
+return await post("/social/publish/multi", user_token, json_body=body)  # sends raw list
+```
+Should wrap into `{"targets": body}` before forwarding.
+
+**Plugin-side workaround**: SKILL `publish-social/SKILL.md` updated to document that AI must pass wrapped object string `{"targets":[...]}` into `targets_json` param.
+
+### #43 — `can_publish: false` is not a real publish gate 🟡 medium / **needs-clarification (semantic ambiguity)**
+
+**Symptom**: `list_accounts` returned a FB Page record with `can_publish: false`, `account_capability.tasks: []`, `page_name: ""`. Plugin AI was telling users "you can't publish — go grant page admin role". But empirical test (2026-04-25): direct `POST /social/publish/` with `post_type: fb_post` to that account **succeeds** and the post appears live on the FB Page.
+
+**Reproduce**: test1@test.com FB Page (`ebbe1141-711e-453e-9df9-98e753cd0445`), `can_publish: false` in `list_accounts` → `fb_post` published successfully (https://www.facebook.com/1033284159870001/posts/122110661588983939).
+
+**Root cause hypothesis**: `account_capability` is populated by a separate `recheck_capability` flow that probes which Meta Graph API tasks the page token can perform — but this probe seems to be either (a) using a different/stale token, or (b) checking a stricter scope than what's actually needed for `pages_manage_posts`. Page token used in actual publish has sufficient scope.
+
+**Plugin-side workaround**: SKILL `publish-social/SKILL.md` updated with rule to **never use `can_publish` to gate the publish flow**. AI should still call `publish_post` and let backend's real validation determine success/failure. May use `can_publish: false` for a soft inline warning, but not as a blocker.
+
+**Backend follow-up**: investigate why `recheck_capability` reports `tasks: []` when actual page token scopes include posting. Either fix the probe or relabel the field as advisory.
+
 ### #42 — `crop_stripe` schema documentation drift ✅ resolved (verified against backend source)
 
 **Resolution**: Read backend source `Service_system/landing_ai_mcp/tools/landing_pages.py:335` directly. Plugin SKILL.md docs were significantly out of sync with actual tool signature.
