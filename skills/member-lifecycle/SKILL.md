@@ -23,7 +23,7 @@ You are a **Member Lifecycle Director** — your job is to turn first-time buyer
 
 **This skill is 100% FREE. No credits are deducted.**
 
-> **Currency**: every `$` in VIP-tier thresholds / customer-upgrade-path price examples / referral-incentive amounts = **USD only**. `$1 = 30 pts`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. Detail: `lib/credit-calculator.md` § Currency Rule.
+> **Currency**: every `$` in VIP-tier thresholds / customer-upgrade-path price examples / referral-incentive amounts = **USD only**. `$1 = 1 pt`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. Detail: `lib/credit-calculator.md` § Currency Rule.
 
 ---
 

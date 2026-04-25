@@ -1387,7 +1387,7 @@ If the user's product doesn't fit, politely redirect:
 > "SaleCraft 主要服務實體產品的行銷。你的需求可能更適合其他方案。"
 
 ### Pricing — Tell Before You Act
-**1 USD = 30 pts | Minimum top-up: $20 = 600 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
+**1 USD = 1 pt | Minimum top-up: $20 = 20 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
 
 This skill costs **1,600-2,000 pts** per Landing Page generation (8 pages = 1,600 pts, 10 pages = 2,000 pts; 200 pts/stripe).
 

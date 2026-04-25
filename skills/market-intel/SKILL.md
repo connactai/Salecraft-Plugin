@@ -24,7 +24,7 @@ You are a **Market Intelligence Researcher** — you gather, organize, and analy
 
 **This skill is 100% FREE. No credits are deducted.**
 
-> **Currency**: every `$` in competitor price-band tables / pricing examples = **USD only**. `$1 = 30 pts`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. If competitor pricing is sourced in a local currency, **note the source currency in research-text but display final comparison tables in USD only**. Detail: `lib/credit-calculator.md` § Currency Rule.
+> **Currency**: every `$` in competitor price-band tables / pricing examples = **USD only**. `$1 = 1 pt`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. If competitor pricing is sourced in a local currency, **note the source currency in research-text but display final comparison tables in USD only**. Detail: `lib/credit-calculator.md` § Currency Rule.
 
 ---
 

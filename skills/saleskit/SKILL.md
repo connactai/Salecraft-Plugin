@@ -376,8 +376,8 @@ Based on answers, recommend the appropriate **SaleCraft Toolbox**:
 
 #### 💰 Pricing
 
-- **1 USD = 30 pts**
-- **最低儲值**: $20 USD = 600 pts
+- **1 USD = 1 pt**
+- **最低儲值**: $20 USD = 20 pts
 - **儲值方式**: Stripe 信用卡（在 `https://salecraft.ai/{locale}/marketingx` 頁面）
 - **Currency**: USD (`$`) only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）
 
@@ -418,7 +418,7 @@ through AI conversation. No login, no token, no credits needed.
 > 同一個頁面也可以：
 > - 綁定 FB/IG（社群發佈需要）
 > - 綁定 Google Drive（直接讀取素材）
-> - 儲值點數（$20 起 = 600 pts）
+> - 儲值點數（$20 起 = 20 pts）
 >
 > 或者，如果你想先繼續做免費的策略規劃，完全不用登入！」
 

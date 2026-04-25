@@ -124,8 +124,8 @@ This works on any AI platform that supports MCP connections.
 
 | Amount | Points |
 |--------|--------|
-| **$1 USD** | 30 pts |
-| **$20 USD** (min) | 600 pts |
+| **$1 USD** | 1 pt |
+| **$20 USD** (min) | 20 pts |
 
 | Action | Cost |
 |--------|------|

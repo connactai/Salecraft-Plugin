@@ -1762,7 +1762,7 @@ If the user's product doesn't fit, politely redirect:
 > "SaleCraft 主要服務實體產品的行銷。你的需求可能更適合其他方案。"
 
 ### Pricing — Tell Before You Act
-**1 USD = 30 pts | Minimum top-up: $20 = 600 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
+**1 USD = 1 pt | Minimum top-up: $20 = 20 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
 
 This skill is **FREE** for consultation and brand analysis. `generate_ta_spokesperson` / `create_spokesperson` / `validate_images` / `analyze_image` / `digitize_product_text` / `analyze_brand_url` / `scrape_landing_page` all run on free account quota — they do NOT deduct user credits. Only `generate_session` (the actual LP generation) deducts credits, at 200 pts per page per TA.
 

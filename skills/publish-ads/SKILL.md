@@ -643,7 +643,7 @@ If the user's product doesn't fit, politely redirect:
 > "SaleCraft 主要服務實體產品的行銷。你的需求可能更適合其他方案。"
 
 ### Pricing — Tell Before You Act
-**1 USD = 30 pts | Minimum top-up: $20 = 600 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
+**1 USD = 1 pt | Minimum top-up: $20 = 20 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
 
 This skill's cost depends on the ad creative generation: quick ad image = 200 pts (~$7), carousel = 300 + 100×N pts. Campaign creation itself uses the generated creative.
 

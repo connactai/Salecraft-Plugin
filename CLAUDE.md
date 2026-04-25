@@ -387,7 +387,7 @@ LLM 試不同參數 / 比對回傳 / 推 schema 語意 = 內部工作。**禁止
 
 Plugin 一律 USD（`$`）。其他全禁：
 ❌ NTD / TWD / 新台幣 / 台幣 / EUR / € / GBP / £ / JPY / ¥ / 円 / CNY / RMB / 人民幣 / KRW / ₩ / THB / ฿ / VND / ₫ / INR / ₹ / SGD / HKD / 港幣 / AUD / CAD / MYR / IDR
-❌ 任何 `$1 = 30 pts` 以外的匯率推算
+❌ 任何 `$1 = 1 pt` 以外的匯率推算
 ✅ 只用 `$` + `pts`、頂多附 `USD`（`$1 USD`、`200 pts ≈ $7 USD`）
 
 使用者用本地貨幣表達（「我月預算 50 萬日圓」/「產品賣 NT$1,200」）→ 確認他講的、然後一律用 pts/USD 報自家成本。**不**幫使用者換算。
@@ -652,7 +652,7 @@ edit-landing（使用者要改再進）
 2. **複製 AI 登入 Token**
 3. 綁定 Meta 帳號（FB/IG）
 4. 綁定 Google 帳號（Drive 素材）
-5. 儲值（Stripe，$1 = 30 pts、最低 $20）
+5. 儲值（Stripe，$1 = 1 pt、最低 $20）
 
 ---
 
@@ -684,11 +684,11 @@ edit-landing（使用者要改再進）
 
 ## 💵 Currency Rule（MANDATORY）
 
-Plugin 一律 USD（`$`）、固定 `$1 = 30 pts`、最低儲值 `$20 = 600 pts`。**沒有其他 FX rate**。
+Plugin 一律 USD（`$`）、固定 `$1 = 1 pt`、最低儲值 `$20 = 20 pts`。**沒有其他 FX rate**。
 
 - ✅ 所有成本報價（LP / ads / reels / regen / topup / 範例 / 腳本 / 模板）：**USD only**
 - ❌ 禁用其他幣別文字 / 符號（見 JARGON BLACKLIST #17）
-- ❌ 禁編 `$1 = 30 pts` 以外的 FX 換算
+- ❌ 禁編 `$1 = 1 pt` 以外的 FX 換算
 - 🔁 使用者用本地貨幣（「月預算 50 萬日圓」）→ 確認後一律用 pts/USD 報自家成本、**不**幫換算
 - 🎨 使用者 LP 上的產品價格（`templates/.../{{this.currency}}`）= **不在規則範圍**
 
@@ -698,8 +698,8 @@ Plugin 一律 USD（`$`）、固定 `$1 = 30 pts`、最低儲值 `$20 = 600 pts`
 
 | Item | Cost |
 |------|------|
-| **1 USD** | 30 pts |
-| **最低儲值** | $20 USD = 600 pts |
+| **1 USD** | 1 pt |
+| **最低儲值** | $20 USD = 20 pts |
 | Landing Page | **200 pts / 頁 線性**。範圍 **8-21 任何整數**（不是只有 8 或 10）。範例：8 × 1 TA = 1,600 pts；12 × 2 TA = 4,800 pts；15 × 1 TA = 3,000 pts。**禁止把 8/10 當 enum** |
 | Regenerate 1 stripe | 100 pts (~$3) |
 | Quick Ad（單張） | 200 pts (~$7) |

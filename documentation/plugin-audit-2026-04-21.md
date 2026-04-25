@@ -44,7 +44,7 @@ Grep patterns scanned (English + Chinese):
 
 | Pricing claim | Ground truth | Status |
 |---|---|---|
-| 1 USD = 30 pts / Min $20 = 600 pts | All sources agree | ✅ |
+| 1 USD = 1 pt / Min $20 = 20 pts | All sources agree | ✅ |
 | LP generation: 200 pts/page × page_count × num_tas | CLAUDE.md pricing table, README, commands/salecraft-create | ✅ |
 | Regenerate single stripe: 100 pts | Multiple sources agree | ✅ |
 | Quick Ad (single image): 200 pts | Multiple sources agree | ✅ |

@@ -23,7 +23,7 @@ You are an **Offer Guard** — you ensure product claims, pricing, comparisons, 
 
 **This skill is 100% FREE. No credits are deducted.**
 
-> **Currency**: every `$` in price-consistency check tables / locked-claim entries / cross-touchpoint comparison = **USD only**. `$1 = 30 pts`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. **Customer's actual product LP can use any currency** (handled by `templates/sections/pricing-table.html` `{{this.currency}}`) — but the audit / consistency-check tables Guard-Offer produces must use USD throughout. Detail: `lib/credit-calculator.md` § Currency Rule.
+> **Currency**: every `$` in price-consistency check tables / locked-claim entries / cross-touchpoint comparison = **USD only**. `$1 = 1 pt`. **Never** use NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別. **Customer's actual product LP can use any currency** (handled by `templates/sections/pricing-table.html` `{{this.currency}}`) — but the audit / consistency-check tables Guard-Offer produces must use USD throughout. Detail: `lib/credit-calculator.md` § Currency Rule.
 
 ---
 

@@ -2,18 +2,18 @@
 
 ## How Credits Work
 
-- Credits are paid in **pts** (`1 USD = 30 pts`, minimum top-up `$20 = 600 pts`)
+- Credits are paid in **pts** (`1 USD = 1 pt`, minimum top-up `$20 = 20 pts`)
 - Credits are consumed on generation tools (`generate_session` / `regenerate_stripe` / `generate_ad` / `generate_carousel` / `generate_reels` etc.)
 - Check balance: `get_me(user_token)` → `credits_remaining`
 
 ## Currency Rule (MANDATORY)
 
-**The plugin uses ONE currency: USD (`$`). The only conversion is `$1 = 30 pts`. No other FX rate exists.**
+**The plugin uses ONE currency: USD (`$`). The only conversion is `$1 = 1 pt`. No other FX rate exists.**
 
 - ✅ **All cost references in skills, examples, scripts, templates, and AI replies: USD (`$`) only**
 - ❌ Never write **NTD / NT$ / TWD / 新台幣 / 台幣 / 新臺幣 / 臺幣** anywhere in plugin docs or AI replies
 - ❌ Never write **EUR / € / GBP / £ / JPY / ¥ / 円 / CNY / RMB / 人民幣 / KRW / ₩ / 韓元 / 韓圜 / THB / ฿ / 銖 / VND / ₫ / 越南盾 / INR / ₹ / SGD / 新元 / HKD / 港幣 / 港元 / AUD / CAD / MYR / 令吉 / IDR / 盾 / 任何其他本地幣別**
-- ❌ Never invent FX rates other than `$1 = 30 pts`. Even when the user asks 「30 pts 等於多少新台幣 / 日圓 / 人民幣」、回答只能限定在 `pts ↔ USD`、不要報外匯（「我這邊只用美元計算——30 pts = $1 USD、其他幣別請以你當下的銀行匯率為準」）
+- ❌ Never invent FX rates other than `$1 = 1 pt`. Even when the user asks 「1 pt 等於多少新台幣 / 日圓 / 人民幣」、回答只能限定在 `pts ↔ USD`、不要報外匯（「我這邊只用美元計算——1 pt = $1 USD、其他幣別請以你當下的銀行匯率為準」）
 - 🔁 **User-input local currency**: 使用者用本地貨幣表達預算或產品價（「我月預算 50 萬日圓」/「我有 NT$30,000 廣告費」/「產品要賣 ¥299」）→ acknowledge their words but **always quote plugin's own cost in pts and USD only**（「好、那大約 X 美金、我這邊的 Y 功能是 Z pts ≈ $W USD」）。**不要**幫使用者把本地貨幣換算成 USD 報出實際數字（「50 萬日圓 ≈ 3,300 美金」這種匯率轉換不做、容易錯）
 - 🎨 **Customer's own LP product prices** (rendered via `templates/sections/pricing-table.html` `{{this.currency}}` variable) are **out of scope of this rule** — those are *the customer's* prices for *their end customers*, set by them in any currency. Currency Rule applies only to **plugin's own cost reporting, examples, scripts, marketing-template placeholders, and AI replies** — not to user-supplied LP product prices
 - 🔧 Backend `daily_budget` is **USD float** (`api-reference.md` §5) — never pass a `"currency"` field

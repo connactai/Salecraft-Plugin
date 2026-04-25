@@ -1067,7 +1067,7 @@ If the user's product doesn't fit, politely redirect:
 > "SaleCraft 主要服務實體產品的行銷。你的需求可能更適合其他方案。"
 
 ### Pricing — Tell Before You Act
-**1 USD = 30 pts | Minimum top-up: $20 = 600 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
+**1 USD = 1 pt | Minimum top-up: $20 = 20 pts | USD only — never NT$ / EUR / £ / ¥ / 円 / 人民幣 / KRW / THB / VND / 任何其他幣別（see `lib/credit-calculator.md` § Currency Rule）**
 
 This skill is **FREE**. `generate_ta_options` / `generate_ta_spokesperson` / `get_spokesperson_generation_status` / `list_spokespersons` / `create_spokesperson` all run on free quota — they do NOT deduct user credits. The user only gets charged later when `generate_session` fires (at 200 pts per page per TA).
 
