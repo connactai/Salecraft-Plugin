@@ -58,10 +58,14 @@ Phase 2: Scriptwriter Agent (Gemini Text)
 
 Phase 3A: Visual Director (Gemini Image + Seedance/Kling)
    → Generates video for each scene/chunk
-   → Outputs: video URLs per scene
-Phase 3B: Voice Agent (ElevenLabs TTS)    [parallel with 3A]
-   → Generates voiceover from dialogue track
-   → Outputs: audio track
+   → Seedance produces video WITH built-in voice + ambient SFX baked in
+     (audio is part of the video output, not a separate track)
+   → Outputs: video URLs per scene (audio embedded)
+Phase 3B: Voice Track (REMOVED — Seedance built-in handles it)
+   → Legacy ElevenLabs TTS path is disabled via settings.json
+     (`voice.elevenlabs_enabled: false`)
+   → No separate voiceover generation; no voice cloning;
+     no AI-generated background music
 
 Phase 4: Critic Agent (Gemini Flash)
    → QC scoring (hook, pacing, clarity, visual, continuity)
@@ -168,24 +172,22 @@ Then proceed to Phase 0.5 / Phase 1.
 
 Before starting generation, ask the user if they have assets to upload:
 
-> 開始製作前，有這些素材會讓影片品質更好：
-> - 📸 代言人照片（清晰正面照，用於影片角色一致性）
-> - 🎤 代言人聲音樣本（30秒以上清晰錄音，用於 AI 語音克隆）
+> 開始製作前、有這些素材會讓影片品質更好：
+> - 📸 代言人照片（清晰正面照、用於影片角色一致性）
 > - 🖼️ 產品圖片（用於影片開場畫面）
 >
-> 有的話直接拖進來或貼 URL，沒有也可以跳過！
+> 有的話直接拖進來或貼 URL、沒有也可以跳過！
 
 **If user provides files:**
 1. Photo → `upload_spokesperson_media(media_type="photo")` or `upload_base64(asset_type="product")`
-2. Voice → `upload_spokesperson_media(media_type="voice")`
-3. URL → `add_spokesperson_photos` / `add_spokesperson_voice`
+2. URL → `add_spokesperson_photos`
 
-**If user skips:** proceed to Phase 1. The pipeline will use AI-generated visuals and AI-selected voice.
+**If user skips:** proceed to Phase 1. The pipeline will use AI-generated visuals and Seedance built-in voice.
 
 **Notes:**
-- Voice samples: 30s-5min recommended for best ElevenLabs clone quality
 - Photos: AI-generated/illustration photos work best (Seedance blocks real human faces)
 - If file > 2MB via base64: guide user to compress or paste a public URL
+- **不需收聲音樣本**：ElevenLabs voice cloning 已停用（`settings.json` `voice.elevenlabs_enabled: false`）、聲音由 Seedance built-in audio 直接生成、不能 clone 用戶聲音。如果用戶**主動**提想用自己的聲音、回「目前 Seedance 出的影片自帶 AI 配音、暫時不能換你的聲音、之後恢復 ElevenLabs 才能 clone」
 
 ---
 

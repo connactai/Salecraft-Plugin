@@ -1181,6 +1181,49 @@ mcp_tool_call("landing_ai_mcp", "get_stripe_detail", {
 - [ ] Brand colors are consistent
 - [ ] No error stripes or blank images
 
+## Phase 5.5: CTA URL Verification & Auto-Apply（🔴 MANDATORY — generate_session 完成後立刻跑）
+
+> **背景**：wizard 階段 cta_url 走 silent default（line 323）— 如果用戶在 wizard 對話中**親口提到**「CTA 要連到 X」/「按鈕點下去去 https://...」/「點完導到我的預約頁」、Plugin 規則是抓進 `wizard_shared_data.cta_url`。但 LLM 漏抓的 case（漏聽 / 寫進 conversation_assets / 忘記）會默默過關、用戶生完才發現 CTA 連回 brand 官網（silent default）、不是他要的。**這個 phase 把這個風險擋掉**。
+
+### 流程（3 步、必跑）
+
+**Step 1 — 掃 conversation 找 CTA URL signal**
+
+回想整個 wizard 對話、有沒有用戶說過：
+- 「CTA 連到 [URL]」/「按鈕點到 [URL]」/「Click 後導到 [URL]」
+- 「點完去我的[預約頁/購買頁/LINE/官網]」
+- 「我有專屬 landing page、CTA 應該指過去」
+- 任何明示要把 CTA 指到非 brand 官網的訊號
+
+**有 signal** → Step 2；**沒任何 signal** → 跳過整個 Phase 5.5（用 silent default 是合理的）。
+
+**Step 2 — 對照 LP 實際 cta_url**
+
+```
+mcp_tool_call("landing_ai_mcp", "get_landing_page", {
+  "user_token": token,
+  "campaign_id": campaign_id
+})
+→ 看 config.cta_url 實際值
+```
+
+**Step 3 — 不對就修、對就 surface 給用戶確認**
+
+| 情境 | 動作 |
+|------|------|
+| `config.cta_url` == 用戶說的 URL | ✅ 已套對。**仍要在 Phase 6 結尾明說**：「你之前說 CTA 連到 X、我已經套上去了、按鈕點下去就會去 X」 |
+| `config.cta_url` ≠ 用戶說的 URL（drift） | 🔧 立刻 `update_cta_link(campaign_id, url=用戶說的 URL)` 修正、再告訴用戶「你之前說 CTA 連到 X、我剛才檢查發現生成時沒套對、已經幫你修好了」 |
+| `config.cta_url` 是 brand 官網（silent default 命中）但用戶從沒提過要客製 | ✅ 預設行為正確、Phase 6 順便提一句「CTA 目前指你的官網 X、要改連到別的（預約頁 / LINE / 第三方 LP）告訴我」 |
+
+### 🔴 這個 phase 為什麼 mandatory
+
+**LLM 在 wizard 階段「不要回頭詢問 CTA URL」是 line 323 的 silent default 規則、目的是省互動成本。但 silent default 配上 LLM 漏抓 = 用戶買了 LP 但 CTA 指錯地方、上線才發現、體感極差**。Phase 5.5 用 post-gen verification 補這個洞、不違反 line 323（不是「回頭問」、是「LP 生完照實匯報實際狀態」）。
+
+**Anti-pattern 禁止**：
+- ❌ 跳過 Phase 5.5、直接進 Phase 6 present link — 這是預設 LLM 自己沒漏抓、賭運氣
+- ❌ Phase 6 結尾完全不提 CTA 連到哪 — 用戶沒辦法 verify
+- ❌ 看到 drift 就問用戶「你之前說連到 X 對嗎？」— 是、但**先修再問**、不要讓用戶等下一輪互動才修好
+
 ## Phase 6: Present Results + All Links (MANDATORY)
 
 ### Step 1: Create share token
