@@ -924,16 +924,16 @@ publish_post({ social_account_id, post_type: "ig_post",
 
 ### landing_ai_mcp
 - Session Wizard（32 tools）— sessions / LP / TA
-- Landing Page Editor（49 tools）— 編 stripes / 文 / 圖 / overlay
+- Landing Page Editor（50 tools）— 編 stripes / 文 / 圖 / overlay / **`analyze_color_harmony`**（AI 配色 + WCAG 對比度評分、apply=True 一鍵套用）
 - Brand Management（29 tools）— Brand CRUD / gap / asset upload
 - Reels（26 tools）
-- Content（45 tools）— URL scrape / PDF / SEO / QR
+- Content（46 tools）— URL scrape / PDF / SEO / QR / **`generate_group_spokesperson`**（1-5 人合成在同一張圖、cast lineup / 多 persona hero）
 - Ad Generation — `generate_ad` / `get_ad_result`
 
 ### zereo_social_mcp
 - Social Accounts（10）— Meta / TikTok 連線
 - Publishing（8）— 多平台發佈
-- Ad Campaigns（11）— **Meta only**（FB/IG）。Google Ads campaign creation 不支援、用 `generate_ad` / `generate_carousel` 出創意後手動匯出
+- Ad Campaigns — **Meta**（FB/IG）11 tools 完整可用 + **TikTok**（5 tools：`get_tiktok_ad_objectives` / `get_tiktok_ad_cta_types` / `create_tiktok_ad_campaign` / `pause_tiktok_ad_campaign` / `resume_tiktok_ad_campaign`）endpoint 已部署、需設 `TIKTOK_BUSINESS_APP_ID` secret 才啟用、未設則回 503 NOT_CONFIGURED。Google Ads campaign creation 不支援、用 `generate_ad` / `generate_carousel` 出創意後手動匯出
 - QR Code（3）
 
 ### Landing Page URL
