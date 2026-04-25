@@ -5,18 +5,24 @@ name: Rebuild marketingx-site on plugin push
 #   https://raw.githubusercontent.com/connactai/Salecraft-Plugin/<COMMIT_SHA>/CLAUDE.md
 #   The SHA is fetched from the GitHub API at *build time* (see
 #   marketingx-site/cloudbuild.yaml) and baked into the JS bundle as
-#   NEXT_PUBLIC_PLUGIN_SHA. So plugin pushes don't reach end users until
+#   NEXT_PUBLIC_PLUGIN_SHA. Plugin pushes don't reach end users until
 #   marketingx-site is rebuilt — this workflow closes that gap.
 #
 # Mechanism:
-#   POST to a Cloud Build webhook trigger (`marketingx-site-on-plugin-push`)
-#   in GCP project `gen-lang-client-0747655769`. The trigger re-runs the
-#   marketingx-site build, which fetches the latest plugin SHA and rebuilds.
+#   Use a dedicated GCP service account (marketingx-rebuild-trigger@...)
+#   to invoke the existing Cloud Build trigger `marketingx-site-on-plugin-push`
+#   in project gen-lang-client-0747655769 / region asia-east1.
+#
+# Why gcloud and not webhook?
+#   The trigger uses 2nd-gen GitHub App connection (sourceToBuild +
+#   gitFileSource). Direct webhook POST returns 400 INVALID_ARGUMENT
+#   regardless of body shape. `gcloud builds triggers run` works
+#   reliably and is the supported invocation path for this trigger
+#   type. SA key is stored in GitHub Secrets (GCP_SA_KEY).
 #
 # Secret:
-#   MARKETINGX_REBUILD_WEBHOOK_URL — full URL with API key + webhook secret
-#   embedded as query params. Stored in GitHub repo secrets; the underlying
-#   secret value lives in GCP Secret Manager (`salecraft-plugin-webhook-secret`).
+#   GCP_SA_KEY — JSON key for marketingx-rebuild-trigger@gen-lang-client-0747655769.iam.gserviceaccount.com
+#   SA has roles/cloudbuild.builds.editor scoped to this project only.
 
 on:
   push:
@@ -31,25 +37,34 @@ concurrency:
 jobs:
   trigger-rebuild:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
-      - name: POST Cloud Build webhook
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Trigger marketingx-site Cloud Build
         run: |
-          HTTP_CODE=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"branchName\":\"master\",\"sha\":\"${{ github.sha }}\"}" \
-            "${{ secrets.MARKETINGX_REBUILD_WEBHOOK_URL }}")
-          echo "Webhook HTTP $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Webhook failed with HTTP $HTTP_CODE"
-            cat /tmp/resp.json
+          gcloud builds triggers run marketingx-site-on-plugin-push \
+            --region=asia-east1 \
+            --project=gen-lang-client-0747655769 \
+            --branch=master \
+            --format="value(metadata.build.id)" > /tmp/build_id.txt 2>&1 || true
+
+          BUILD_ID=$(cat /tmp/build_id.txt | tail -1)
+          echo "Triggered build: $BUILD_ID"
+
+          if [ -z "$BUILD_ID" ] || echo "$BUILD_ID" | grep -qi "error"; then
+            echo "::error::Failed to trigger Cloud Build"
+            cat /tmp/build_id.txt
             exit 1
           fi
-          BUILD_ID=$(jq -r '.metadata.build.id // .name // "unknown"' /tmp/resp.json)
-          echo "✅ Triggered marketingx-site rebuild for plugin ${GITHUB_SHA:0:8}"
-          echo "Build: $BUILD_ID"
+
           echo "## marketingx-site rebuild triggered" >> $GITHUB_STEP_SUMMARY
           echo "- Plugin commit: \`${GITHUB_SHA:0:8}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Build ID: \`$BUILD_ID\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Console: https://console.cloud.google.com/cloud-build/builds;region=asia-east1?project=gen-lang-client-0747655769" >> $GITHUB_STEP_SUMMARY
+          echo "- [Cloud Build console](https://console.cloud.google.com/cloud-build/builds/$BUILD_ID;region=asia-east1?project=gen-lang-client-0747655769)" >> $GITHUB_STEP_SUMMARY
