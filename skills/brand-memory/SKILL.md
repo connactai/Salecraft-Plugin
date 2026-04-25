@@ -44,6 +44,55 @@ context" messages. It just makes SaleCraft smarter over time.
 
 ---
 
+## 🛠 Two transport paths — MCP tools and REST endpoints (pick what your host supports)
+
+Every brand-memory action exists as **both** an MCP tool and a REST
+endpoint. They're 1:1 — the MCP tool is a thin pass-through to the
+REST endpoint. Pick the path your runtime supports; results are
+identical.
+
+| Action | MCP tool | REST endpoint |
+|---|---|---|
+| Explicit "記憶這些" | `memorize(user_token, brand_id, content, kind, ...)` | `POST /ai-agent/brand-memory/memorize` |
+| File upload follow-up | `save_file_memory(user_token, brand_id, file_name, what_is_in_it, ...)` | `POST /ai-agent/brand-memory/save-file` |
+| Paid action / consultation | `save_prompt_memory(user_token, brand_id, prompt_type, user_input, resulted_in_paid, ...)` | `POST /ai-agent/brand-memory/save-prompt` |
+| Recompute snapshot | `compile_brand_memory_metadata(user_token, brand_id)` | `POST /ai-agent/brand-memory/compile-metadata` |
+| Session-start hydration (with brand) | `load_brand_context(user_token, brand_id, include_preferences=true)` | `GET /ai-agent/brand-memory/context?brand_id=X&include_preferences=true` |
+| Session-start hydration (no brand chosen yet) | `get_brand_memory_preferences(user_token)` | `GET /ai-agent/brand-memory/preferences` |
+| List files (full) | `list_brand_memory_files(user_token, brand_id, ...)` | `GET /ai-agent/brand-memory/files?brand_id=X` |
+| List prompts (filtered) | `list_brand_memory_prompts(user_token, brand_id, prompt_type, ...)` | `GET /ai-agent/brand-memory/prompts?brand_id=X` |
+
+**MCP path** (preferred when available — Claude.ai web with SS Deep
+Research connector, Cursor/Cline/Claude Code with the same connector):
+```
+mcp_tool_call("landing_ai_mcp", "memorize", {
+  "user_token": "<access_token>",
+  "brand_id": "<current Project>",
+  "content": "User prefers serif fonts for B2B brand voice",
+  "kind": "preference"
+})
+```
+
+**REST path** (when no MCP is available — direct HTTP POST/GET):
+```
+POST /ai-agent/brand-memory/memorize
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "brand_id": "<current Project>",
+  "content": "User prefers serif fonts for B2B brand voice",
+  "kind": "preference"
+}
+```
+
+The Rule sections below show the REST shape (most explicit about field
+names + types). For MCP path, replace the HTTP verb + URL with the
+corresponding `mcp_tool_call(...)` from the table above and pass each
+JSON body field as a tool argument.
+
+---
+
 ## 🔴 RULE 1 — Explicit memorize trigger (USER-DRIVEN, the only visible one)
 
 When the user says ANY of these (Chinese / English variants):
